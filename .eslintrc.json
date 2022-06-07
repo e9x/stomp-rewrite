@@ -1,0 +1,21 @@
+{
+	"env": {
+		"browser": true,
+		"es2021": true
+	},
+	"extends": ["eslint:recommended", "prettier"],
+	"parserOptions": {
+		"ecmaVersion": "latest",
+		"sourceType": "module"
+	},
+	"globals": {
+		"global": true
+	},
+	"rules": {
+		"no-unused-vars": "error",
+		"no-constant-condition": ["error", { "checkLoops": false }],
+		"no-lone-blocks": "off",
+		"quotes": ["off"],
+		"@typescript-eslint/ban-ts-comment": "off"
+	}
+}
