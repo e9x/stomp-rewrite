@@ -5,11 +5,13 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "webpack --config ./config/webpack.config.js",
+		"build": "NODE_ENV=production webpack --config ./config/webpack.config.js",
+		"build:watch": "tsc -w",
 		"prettier": "^2.6.2",
 		"prettier-plugin-import-sort": "^0.0.7",
 		"prepare": "husky install"
 	},
+	"type": "module",
 	"author": "",
 	"license": "GPL-3.0",
 	"lint-staged": {
@@ -21,17 +23,22 @@
 		}
 	},
 	"devDependencies": {
+		"@types/crypto-js": "^4.1.1",
+		"@types/escodegen": "^0.0.7",
 		"eslint": "^8.16.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-webpack-plugin": "^3.1.1",
 		"husky": "^8.0.1",
-		"meriyah": "^4.2.1",
 		"ts-loader": "^9.3.0",
 		"typescript": "^4.7.3",
 		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
+		"@javascript-obfuscator/escodegen": "^2.3.0",
+		"ast-types": "^0.14.2",
+		"crypto-js": "^4.1.1",
 		"escodegen": "^2.0.0",
+		"meriyah": "^4.2.1",
 		"terser-webpack-plugin": "^5.3.3"
 	}
 }

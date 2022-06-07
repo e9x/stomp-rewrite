@@ -6,8 +6,6 @@ const fs = require('fs');
 const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
-const buildPath = process.env.BUILD_PATH || 'build';
-
 const moduleFileExtensions = [
 	'web.mjs',
 	'mjs',
@@ -39,7 +37,7 @@ const resolveModule = (resolveFn, filePath) => {
 module.exports = {
 	dotenv: resolveApp('.env'),
 	appPath: resolveApp('.'),
-	appBuild: resolveApp(buildPath),
+	appDist: resolveApp(process.env.BUILD_PATH || 'dist'),
 	appPackageJson: resolveApp('package.json'),
 	appSrc: resolveApp('src'),
 	appTsConfig: resolveApp('tsconfig.json'),

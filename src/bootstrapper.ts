@@ -1,4 +1,4 @@
-import { ServiceWorkerConfig } from './serviceWorker';
+import { ServiceWorkerConfig } from './serviceWorker.js';
 
 export default class Bootstrapper {
 	config: ServiceWorkerConfig;
