@@ -1,7 +1,18 @@
 import { NodeKind } from 'ast-types/gen/kinds';
 import { Node } from 'meriyah/dist/src/estree';
 
-export declare type SomeNode = (Node | NodeKind) & { range?: [number, number] };
+const symbolNoResult = Symbol();
+
+export declare type SomeNode = (Node | NodeKind) & {
+	range?: [number, number];
+	[symbolNoResult]?: boolean;
+	iteration?: number;
+};
+
+export function noResult(node: any): any {
+	node[symbolNoResult] = true;
+	return node;
+}
 
 export class AcornContext {
 	root: boolean;
@@ -16,7 +27,7 @@ export class AcornContext {
 		parent: AcornContext | undefined,
 		parentKey: string | number | undefined,
 		stack: AcornContext[],
-		root: boolean
+		root: boolean = false
 	) {
 		this.node = node;
 		this.stack = stack;
@@ -91,15 +102,20 @@ export class AcornContext {
 			node,
 			this.parent,
 			this.parentKey,
-			this.stack,
-			false
+			this.stack
 		);
 
 		delete this.parent;
 
+		this.removeDescendantsFromStack();
+		noResult(node);
+		node.iteration = (this.node.iteration || 0) + 1;
+		this.stack.push(created);
+		created.addEntriesToStack();
+
 		return created;
 	}
-	addDescendantsToStack() {
+	addEntriesToStack() {
 		const entries = [];
 
 		for (let key in this.node) {
@@ -129,17 +145,21 @@ export class AcornContext {
 		let length = entries.length;
 
 		for (let [key, node] of entries) {
-			const ent = new AcornContext(node, this, key, this.stack, false);
-			this.stack[start + length--] = ent;
-			this.entries.push(ent);
+			const ctx = new AcornContext(node, this, key, this.stack);
+			this.stack[start + length--] = ctx;
+			this.entries.push(ctx);
 		}
 	}
 	removeDescendantsFromStack() {
-		const i = this.stack.indexOf(this);
+		for (let i = 0; i < this.entries.length; i++) {
+			const entry = this.entries[i];
 
-		if (i != -1) this.stack.splice(i, 1);
+			const stack_i = this.stack.indexOf(entry);
 
-		for (let entry of this.entries) {
+			if (stack_i !== -1) {
+				this.stack.splice(stack_i, 1);
+			}
+
 			entry.removeDescendantsFromStack();
 		}
 	}
@@ -154,15 +174,21 @@ export default class AcornIterator implements Iterable<AcornContext> {
 		);
 	}
 	next() {
-		const context = this.stack.pop();
+		while (true) {
+			const context = this.stack.pop();
 
-		if (context === undefined) {
-			return { value: undefined, done: true };
+			if (context === undefined) {
+				return { value: undefined, done: true };
+			}
+
+			context.addEntriesToStack();
+
+			if (context.node[symbolNoResult]) {
+				continue;
+			}
+
+			return { value: context, done: false };
 		}
-
-		context.addDescendantsToStack();
-
-		return { value: context, done: false };
 	}
 	[Symbol.iterator]() {
 		return <Iterator<AcornContext>>this;
