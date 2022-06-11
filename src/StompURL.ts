@@ -3,9 +3,7 @@ import Codec from './Codecs.js';
 export default class StompURL {
 	url: URL;
 	codec: Codec;
-	constructor(url: URL, codec: Codec);
-	constructor(url: string, codec: Codec);
-	constructor(url: unknown, codec: Codec) {
+	constructor(url: URL | string, codec: Codec) {
 		if (typeof url === 'string') {
 			this.url = new URL(url);
 		} else if (url instanceof URL) {

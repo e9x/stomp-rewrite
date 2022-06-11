@@ -5,11 +5,12 @@ import AcornIterator, {
 	noResult,
 	SomeNode,
 } from './AcornIterator.js';
-import chalk from 'chalk';
+// import chalk from 'chalk';
 import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
 import { ExpressionKind, IdentifierKind } from 'ast-types/gen/kinds';
 
+/*
 const break_format = ['\t', '\n', '\t', '\r'];
 function visual_range(range: [number, number], source: string) {
 	let output = '';
@@ -35,7 +36,7 @@ function in_range(
 	const result = range[0] >= test[1] != range[1] > test[0];
 	console.log(test, '(a)', result ? 'is' : 'isnt', 'inside of', range, '(b)');
 	return result;
-}
+}*/
 
 declare type LocatedNode = SomeNode & {
 	range: [number, number];
@@ -46,8 +47,8 @@ class LazyGenerate {
 	constructor() {
 		this.modifications = [];
 	}
-	toString(script: string) {
-		let offset = 0;
+	toString(script: string, tree: SomeNode) {
+		/*let offset = 0;
 
 		const generated: {
 			range: [number, number];
@@ -63,7 +64,10 @@ class LazyGenerate {
 			});
 		}
 
-		generated.sort((a, b) => b.generated.length - a.generated.length);
+		// b.generated.length - a.generated.length
+		generated.sort(
+			(a, b) => a.range[0] - b.range[0] || a.range[1] - b.range[1]
+		);
 
 		for (let mod of generated) {
 			console.log(mod.generated.length);
@@ -107,14 +111,21 @@ class LazyGenerate {
 					generated.splice(generated.indexOf(smod), 1);
 				}
 			}
-		}
+		}*/
 
-		return script;
+		return generate(tree);
+		// return script;
 	}
 	replace(context: AcornContext, replace: SomeNode) {
 		const replaced = context.replaceWith(replace);
 
 		if (replaced === false) {
+			console.log(
+				'failed to replace',
+				generate(context.node),
+				'with',
+				generate(replace)
+			);
 			return false;
 		}
 
@@ -124,7 +135,7 @@ class LazyGenerate {
 		// lazy.replace(b.memberExpression(b.literal('no range associated with this child node'), ...))
 
 		if (context.node.range) {
-			for (let mod of this.modifications) {
+			for (const mod of this.modifications) {
 				if (mod.replace === context.node) {
 					return replaced;
 				}
@@ -155,7 +166,7 @@ export function modifyJS(script: string, url: StompURL, module: boolean) {
 		ranges: true,
 	});
 
-	for (let ctx of new AcornIterator(tree)) {
+	for (const ctx of new AcornIterator(tree)) {
 		switch (ctx.node.type) {
 			case 'MemberExpression':
 				console.log('member');
@@ -175,15 +186,34 @@ export function modifyJS(script: string, url: StompURL, module: boolean) {
 
 				break;
 			case 'Identifier':
-				console.log('id', ctx.node, ctx.parent?.node.type, ctx.node.type);
+				console.log(
+					'id',
+					generate(ctx.parent?.node),
+					ctx.node,
+					ctx.parent?.node.type,
+					ctx.node.type
+				);
 				// if (ctx.parent?.node.type === 'MemberExpression') {
-				lazy.replace(ctx, b.identifier('replaced'));
 				// }
+				const replaced = lazy.replace(ctx, b.identifier('replaced'));
+
+				if (replaced instanceof AcornContext) {
+					console.log(
+						'new:',
+						generate(replaced.parent?.node),
+						generate(replaced.node),
+						replaced.parentKey
+					);
+				}
+
 				break;
 		}
 	}
 
-	return lazy.toString(script);
+	return lazy.toString(script, tree);
 }
 
-export function restoreJS(script: string, url: StompURL) {}
+export function restoreJS(script: string, url: StompURL) {
+	url.codec;
+	return script;
+}

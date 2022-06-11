@@ -9,7 +9,8 @@
 		"build:watch": "tsc -w",
 		"prettier": "^2.6.2",
 		"prettier-plugin-import-sort": "^0.0.7",
-		"prepare": "husky install"
+		"prepare": "husky install",
+		"lint": "eslint ./src/"
 	},
 	"type": "module",
 	"author": "",
@@ -25,8 +26,10 @@
 	"devDependencies": {
 		"@types/crypto-js": "^4.1.1",
 		"@types/escodegen": "^0.0.7",
+		"@typescript-eslint/eslint-plugin": "^5.27.1",
+		"@typescript-eslint/parser": "^5.27.1",
 		"chalk": "^5.0.1",
-		"eslint": "^8.16.0",
+		"eslint": "^8.17.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-webpack-plugin": "^3.1.1",
 		"husky": "^8.0.1",

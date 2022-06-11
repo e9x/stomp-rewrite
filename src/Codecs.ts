@@ -52,7 +52,9 @@ import AES from 'crypto-js/aes.js';
 import Utf8 from 'crypto-js/enc-utf8.js';
 
 export default interface Codec {
+	// eslint-disable-next-line no-unused-vars
 	encode(input: string): string;
+	// eslint-disable-next-line no-unused-vars
 	decode(input: string): string;
 }
 

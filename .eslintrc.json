@@ -1,9 +1,16 @@
 {
+	"root": true,
+	"parser": "@typescript-eslint/parser",
+	"plugins": ["@typescript-eslint"],
 	"env": {
 		"browser": true,
 		"es2021": true
 	},
-	"extends": ["eslint:recommended", "prettier"],
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended",
+		"prettier"
+	],
 	"parserOptions": {
 		"ecmaVersion": "latest",
 		"sourceType": "module"
@@ -16,6 +23,7 @@
 		"no-constant-condition": ["error", { "checkLoops": false }],
 		"no-lone-blocks": "off",
 		"quotes": ["off"],
+		"@typescript-eslint/adjacent-overload-signatures": 2,
 		"@typescript-eslint/ban-ts-comment": "off"
 	}
 }

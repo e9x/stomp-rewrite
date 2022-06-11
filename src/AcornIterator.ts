@@ -1,4 +1,5 @@
 import { NodeKind } from 'ast-types/gen/kinds';
+import { generate } from 'escodegen';
 import { Node } from 'meriyah/dist/src/estree';
 
 const symbolNoResult = Symbol();
@@ -27,7 +28,7 @@ export class AcornContext {
 		parent: AcornContext | undefined,
 		parentKey: string | number | undefined,
 		stack: AcornContext[],
-		root: boolean = false
+		root = false
 	) {
 		this.node = node;
 		this.stack = stack;
@@ -66,7 +67,7 @@ export class AcornContext {
 			throw new RangeError('Cannot detach a detached node.');
 
 		if (this.parent_array) {
-			let place = this.parentObject.indexOf(this.node);
+			const place = this.parentObject.indexOf(this.node);
 			if (place == -1) return false;
 			this.parentObject.splice(place, 1);
 		} else {
@@ -85,14 +86,14 @@ export class AcornContext {
 			throw new RangeError('Cannot replace a detached node.');
 
 		if (this.parent_array) {
-			let place = this.parentObject.indexOf(this.node);
-			if (place == -1) return false;
+			const place = this.parentObject.indexOf(this.node);
+			if (place === -1) return false;
 			this.parentObject.splice(place, 1, node);
 		} else {
 			// @ts-ignore
-			delete this.parent.node[this.parent_key];
+			delete this.parent.node[this.parentKey];
 			// @ts-ignore
-			this.parent.node[this.parent_key] = node;
+			this.parent.node[this.parentKey] = node;
 		}
 
 		this.attached = false;
@@ -109,7 +110,6 @@ export class AcornContext {
 
 		this.removeDescendantsFromStack();
 		noResult(node);
-		node.iteration = (this.node.iteration || 0) + 1;
 		this.stack.push(created);
 		created.addEntriesToStack();
 
@@ -118,7 +118,7 @@ export class AcornContext {
 	addEntriesToStack() {
 		const entries = [];
 
-		for (let key in this.node) {
+		for (const key in this.node) {
 			// @ts-ignore
 			const value = this.node[key];
 
@@ -129,7 +129,7 @@ export class AcornContext {
 			if (typeof value.type === 'string') {
 				entries.push([key, value]);
 			} else if (Array.isArray(value)) {
-				for (let sv of value) {
+				for (const sv of value) {
 					if (typeof sv !== 'object' || sv === null) {
 						continue;
 					}
@@ -144,7 +144,7 @@ export class AcornContext {
 		const start = this.stack.length - 1;
 		let length = entries.length;
 
-		for (let [key, node] of entries) {
+		for (const [key, node] of entries) {
 			const ctx = new AcornContext(node, this, key, this.stack);
 			this.stack[start + length--] = ctx;
 			this.entries.push(ctx);
