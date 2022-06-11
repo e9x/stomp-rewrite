@@ -1,8 +1,8 @@
 'use strict';
 
-const path = require('path');
-const paths = require('./paths');
-const TerserPlugin = require('terser-webpack-plugin');
+import { resolve } from 'path';
+import {appDist, appPath, appNodeModules, appSrc} from './paths.js';
+import TerserPlugin from 'terser-webpack-plugin';
 
 const emitErrorsAsWarnings = process.env.ESLINT_NO_DEV_ERRORS === 'true';
 
@@ -18,16 +18,6 @@ const isEnvProductionProfile =
 const common = {
 	devtool: isEnvProduction ? 'source-map' : 'eval-source-map',
 	mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
-	module: {
-		rules: [
-			{
-				test: /\.tsx?$/,
-				use: 'ts-loader',
-				exclude: /node_modules/,
-				options: {},
-			},
-		],
-	},
 	optimization: {
 		minimize: isEnvProduction,
 		minimizer: [
@@ -77,43 +67,40 @@ const common = {
 		isEnvDevelopment &&
 			new (require('eslint-webpack-plugin'))({
 				// Plugin options
-				extensions: ['js', 'mjs', 'jsx', 'ts', 'tsx'],
-				formatter: require.resolve('react-dev-utils/eslintFormatter'),
-				eslintPath: require.resolve('eslint'),
+				extensions: ['js', 'mjs'],
+				formatter: 'react-dev-utils/eslintFormatter',
+				eslintPath: 'eslint',
 				failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
-				context: paths.appSrc,
+				context: appSrc,
 				cache: true,
-				cacheLocation: path.resolve(
-					paths.appNodeModules,
+				cacheLocation: resolve(
+					appNodeModules,
 					'.cache/.eslintcache'
 				),
 				// ESLint class options
-				cwd: paths.appPath,
+				cwd: appPath,
 				resolvePluginsRelativeTo: __dirname,
 			}),
 	].filter(Boolean),
-	resolve: {
-		extensions: ['.tsx', '.ts', '.js'],
-	},
 };
 
-module.exports = [
+export default [
 	{
 		...common,
 		entry: {
-			serviceWorker: './src/serviceWorker.ts',
-			workerClient: './src/workerClient.ts',
-			documentClient: './src/documentClient.ts',
+			serviceWorker: './src/serviceWorker.js',
+			workerClient: './src/workerClient.js',
+			documentClient: './src/documentClient.js',
 		},
 		output: {
 			filename: '[name].js',
-			path: paths.appDist,
+			path: appDist,
 		},
 	},
 	{
 		...common,
 		entry: {
-			bootstrapper: './src/bootstrapper.ts',
+			bootstrapper: './src/bootstrapper.js',
 		},
 		output: {
 			library: {
@@ -121,7 +108,7 @@ module.exports = [
 				type: 'umd',
 			},
 			filename: '[name].js',
-			path: paths.appDist,
+			path: appDist,
 		},
 	},
 ];
