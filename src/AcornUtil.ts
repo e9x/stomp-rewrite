@@ -1,16 +1,13 @@
-import { NodeKind } from 'ast-types/gen/kinds';
-import { generate } from 'escodegen';
 import { Node } from 'meriyah/dist/src/estree';
 
 const symbolNoResult = Symbol();
 
-export declare type SomeNode = (Node | NodeKind) & {
+export declare type SomeNode = Node & {
 	range?: [number, number];
 	[symbolNoResult]?: boolean;
-	iteration?: number;
 };
 
-export function noResult(node: any): any {
+export function noResult(node: SomeNode) {
 	node[symbolNoResult] = true;
 	return node;
 }
@@ -51,11 +48,11 @@ export class AcornContext {
 		// @ts-ignore
 		return this.parent.node[this.parentKey];
 	}
-	get parent_array() {
+	get parentArray() {
 		return Array.isArray(this.parentObject);
 	}
 	get parentIndex() {
-		if (!this.parent_array) {
+		if (!this.parentArray) {
 			throw new Error('Not an array');
 		}
 
@@ -66,7 +63,7 @@ export class AcornContext {
 		else if (!this.attached)
 			throw new RangeError('Cannot detach a detached node.');
 
-		if (this.parent_array) {
+		if (this.parentArray) {
 			const place = this.parentObject.indexOf(this.node);
 			if (place == -1) return false;
 			this.parentObject.splice(place, 1);
@@ -80,12 +77,12 @@ export class AcornContext {
 		return true;
 	}
 	// success = new AcornContext, failure = false
-	replaceWith(node: SomeNode) {
+	replaceWith(node: SomeNode): AcornContext | boolean {
 		if (this.root) throw new RangeError('Cannot replace the root.');
 		else if (!this.attached)
 			throw new RangeError('Cannot replace a detached node.');
 
-		if (this.parent_array) {
+		if (this.parentArray) {
 			const place = this.parentObject.indexOf(this.node);
 			if (place === -1) return false;
 			this.parentObject.splice(place, 1, node);
@@ -165,7 +162,7 @@ export class AcornContext {
 	}
 }
 
-export default class AcornIterator implements Iterable<AcornContext> {
+export class AcornIterator implements Iterable<AcornContext> {
 	stack: AcornContext[];
 	constructor(ast: SomeNode) {
 		this.stack = [];
