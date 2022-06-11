@@ -5,12 +5,11 @@ import AcornIterator, {
 	noResult,
 	SomeNode,
 } from './AcornIterator.js';
-// import chalk from 'chalk';
+import chalk from 'chalk';
 import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
 import { ExpressionKind, IdentifierKind } from 'ast-types/gen/kinds';
 
-/*
 const break_format = ['\t', '\n', '\t', '\r'];
 function visual_range(range: [number, number], source: string) {
 	let output = '';
@@ -36,7 +35,7 @@ function in_range(
 	const result = range[0] >= test[1] != range[1] > test[0];
 	console.log(test, '(a)', result ? 'is' : 'isnt', 'inside of', range, '(b)');
 	return result;
-}*/
+}
 
 declare type LocatedNode = SomeNode & {
 	range: [number, number];
@@ -48,7 +47,7 @@ class LazyGenerate {
 		this.modifications = [];
 	}
 	toString(script: string, tree: SomeNode) {
-		/*let offset = 0;
+		let offset = 0;
 
 		const generated: {
 			range: [number, number];
@@ -111,10 +110,9 @@ class LazyGenerate {
 					generated.splice(generated.indexOf(smod), 1);
 				}
 			}
-		}*/
+		}
 
-		return generate(tree);
-		// return script;
+		return script;
 	}
 	replace(context: AcornContext, replace: SomeNode) {
 		const replaced = context.replaceWith(replace);
@@ -185,6 +183,11 @@ export function modifyJS(script: string, url: StompURL, module: boolean) {
 				);
 
 				break;
+			case 'Literal':
+				if (typeof ctx.node.value === 'string') {
+					lazy.replace(ctx, b.literal('replace str literal'));
+				}
+				break;
 			case 'Identifier':
 				console.log(
 					'id',
@@ -193,8 +196,7 @@ export function modifyJS(script: string, url: StompURL, module: boolean) {
 					ctx.parent?.node.type,
 					ctx.node.type
 				);
-				// if (ctx.parent?.node.type === 'MemberExpression') {
-				// }
+
 				const replaced = lazy.replace(ctx, b.identifier('replaced'));
 
 				if (replaced instanceof AcornContext) {
