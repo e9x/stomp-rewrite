@@ -1,5 +1,8 @@
+import { ServiceWorkerConfig } from './serviceWorker.js';
+
 export default class Bootstrapper {
-	constructor(config) {
+	config: ServiceWorkerConfig;
+	constructor(config: ServiceWorkerConfig) {
 		this.config = config;
 	}
 	async register() {

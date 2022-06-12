@@ -1,11 +1,14 @@
+import GenericCodec from './Codecs.js';
+
 export default class StompURL {
-	/**
-	 *
-	 * @param {string|url} url
-	 * @param {import('./Codecs.js').default | StompURL} codec
-	 * @param {string?} directory
-	 */
-	constructor(url, codec, directory) {
+	codec: GenericCodec;
+	directory: string;
+	url: URL;
+	constructor(
+		url: string | URL,
+		codec: GenericCodec | StompURL,
+		directory?: string
+	) {
 		if (codec instanceof StompURL) {
 			const copy = codec;
 			codec = copy.codec;
@@ -19,6 +22,11 @@ export default class StompURL {
 		} else {
 			throw new TypeError('Unknown overload');
 		}
+
+		if (typeof directory !== 'string') {
+			throw new TypeError(`Directory wasn't string`);
+		}
+
 		this.codec = codec;
 		this.directory = directory;
 	}

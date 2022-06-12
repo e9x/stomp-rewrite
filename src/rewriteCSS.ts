@@ -1,5 +1,4 @@
-import { walk } from 'css-tree';
-import { generate, parse } from 'css-tree';
+import { generate, parse, StringNode, CssLocation, CssNode, CssNodeCommon, Url, walk } from 'css-tree';
 
 import {
 	createDataURI,
@@ -9,12 +8,7 @@ import {
 } from './routeURL.js';
 import StompURL from './StompURL.js';
 
-/**
- *
- * @param {import('./StompURL.js').default} resource
- * @param {import('./StompURL.js').default} url
- */
-export function routeCSS(resource, url) {
+export function routeCSS(resource: StompURL, url: StompURL) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
 		return createDataURI({
@@ -27,14 +21,7 @@ export function routeCSS(resource, url) {
 	return routeURL('css', resource);
 }
 
-// smaller range inside larger range = invalidates larger range
-// smaller modifications called later in script
-
-/**
- *
- * @param {string} url
- */
-function preserveValue(url, value) {
+function preserveValue(url: string, value: string) {
 	{
 		const hashi = url.indexOf('#');
 		if (hashi !== -1) {
@@ -45,11 +32,7 @@ function preserveValue(url, value) {
 	return `${url}#${value}`;
 }
 
-/**
- *
- * @param {string} url
- */
-function restoreValue(url) {
+function restoreValue(url: string) {
 	const hashi = url.indexOf('#');
 
 	if (hashi === -1) {
@@ -59,26 +42,20 @@ function restoreValue(url) {
 	return url.slice(hashi + 1);
 }
 
-/**
- *
- * @param {string} script
- * @param {import('./StompURL.js').default} url
- * @param {string} context
- */
-export function modifyCSS(script, url, context) {
+export function modifyCSS(script: string, url: StompURL, context: string) {
 	const tree = parse(script, { positions: true, context });
 	let offset = 0;
 
-	walk(tree, function (node) {
+	walk(tree, function (n) {
+		const node = <CssNode & CssNodeCommon & { loc: CssLocation }>n;
+		
 		if (node.type === 'Url')
 			try {
-				const resolved = new StompURL(
-					new URL(node.value, url),
-					url.codec,
-					url.directory
-				);
+				console.log(node.value, node);
+				// @ts-ignore
+				const resolved = new StompURL(new URL(node.value, url), url);
 
-				let replace;
+				let replace: Url;
 
 				const raw = script.slice(
 					node.loc.start.offset - offset,
@@ -88,12 +65,12 @@ export function modifyCSS(script, url, context) {
 				if (this.atrule?.name === 'import') {
 					replace = {
 						type: 'Url',
-						value: preserveValue(routeCSS(resolved, url), raw),
+						value: <StringNode><unknown>preserveValue(routeCSS(resolved, url), raw),
 					};
 				} else {
 					replace = {
 						type: 'Url',
-						value: preserveValue(routeBinary(resolved, url), raw),
+						value: <StringNode><unknown>preserveValue(routeCSS(resolved, url), raw),
 					};
 				}
 
@@ -113,23 +90,18 @@ export function modifyCSS(script, url, context) {
 	return script;
 }
 
-/**
- *
- * @param {string} script
- * @param {import('./StompURL.js').default} url
- * @param {string} context
- */
-export function restoreCSS(script, url, context) {
-	const comments = [];
+export function restoreCSS(script: string, url: StompURL, context: string) {
 	const tree = parse(script, {
 		positions: true,
 		context,
-		onComment: (value, loc) => comments.push({ value, loc }),
 	});
 	let offset = 0;
 
-	walk(tree, function (node) {
+	walk(tree, function (n) {
+		const node = <CssNode & CssNodeCommon & { loc: CssLocation }>n;
+		
 		if (node.type === 'Url') {
+			// @ts-ignore
 			const generated = restoreValue(node.value);
 
 			script =

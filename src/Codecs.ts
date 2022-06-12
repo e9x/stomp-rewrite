@@ -2,7 +2,7 @@ const encodeChar = '$';
 const validChars =
 	'-_~:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
-export function validCodecURI(uri) {
+export function validCodecURI(uri: string) {
 	for (let i = 0; i < uri.length; i++) {
 		if (!validChars.includes(uri[i])) {
 			return false;
@@ -11,7 +11,7 @@ export function validCodecURI(uri) {
 	return true;
 }
 
-export function encodeCodecURI(input) {
+export function encodeCodecURI(input: string) {
 	let result = '';
 	for (let i = 0; i < input.length; i++) {
 		const char = input[i];
@@ -25,7 +25,7 @@ export function encodeCodecURI(input) {
 	return result;
 }
 
-export function decodeCodecURI(uri) {
+export function decodeCodecURI(uri: string) {
 	let result = '';
 	for (let i = 0; i < uri.length; i++) {
 		const char = uri[i];
@@ -44,20 +44,18 @@ export function decodeCodecURI(uri) {
 import AES from 'crypto-js/aes.js';
 import Utf8 from 'crypto-js/enc-utf8.js';
 
-export default class CodecBase {
-	constructor(key) {
+export default class GenericCodec {
+	key: string;
+	constructor(key: string) {
 		this.key = key;
 	}
-}
-
-export class PlainCodec extends CodecBase {
-	static generateKey() {
+	static generateKey(): string {
 		return '';
 	}
-	encode(input) {
+	encode(input: string): string {
 		return encodeCodecURI(input);
 	}
-	decode(input) {
+	decode(input: string): string {
 		return decodeCodecURI(input);
 	}
 }
@@ -65,14 +63,14 @@ export class PlainCodec extends CodecBase {
 const URI_max = 0x7f;
 const URI_min = 0x01;
 
-export class XORCodec extends CodecBase {
-	get frequency() {
+export class XORCodec extends GenericCodec {
+	get frequency(): number {
 		return parseInt(this.key, 16) & 0xf;
 	}
-	get xor() {
+	get xor(): number {
 		return parseInt(this.key, 16) >> 0x4;
 	}
-	static generateKey() {
+	static generateKey(): string {
 		const xor = ~~(Math.random() * (URI_max - URI_min)) + URI_min;
 		// 2-4
 		const frequency = Math.min(~~(Math.random() * 0xf), 4);
@@ -80,7 +78,7 @@ export class XORCodec extends CodecBase {
 		// CHAR frequency
 		return ((xor << 4) + frequency).toString(16);
 	}
-	encode(input) {
+	encode(input: string): string {
 		let result = '';
 		for (let i = 0; i < input.length; i++) {
 			if (i % this.frequency === 0) {
@@ -92,7 +90,7 @@ export class XORCodec extends CodecBase {
 		}
 		return encodeCodecURI(result);
 	}
-	decode(input) {
+	decode(input: string): string {
 		input = decodeCodecURI(input);
 		let result = '';
 		for (let i = 0; i < input.length; i++) {
@@ -106,15 +104,15 @@ export class XORCodec extends CodecBase {
 		return result;
 	}
 }
-export class AESCodec extends CodecBase {
-	static generateKey() {
+export class AESCodec extends GenericCodec {
+	static generateKey(): string {
 		return Math.random().toString();
 	}
-	encode(input) {
+	encode(input: string): string {
 		const result = AES.encrypt(input, this.key).toString();
 		return encodeCodecURI(result);
 	}
-	decode(input) {
+	decode(input: string): string {
 		input = decodeCodecURI(input);
 		return AES.decrypt(input, this.key).toString(Utf8);
 	}

@@ -1,13 +1,9 @@
+import GenericCodec from './Codecs.js';
 import StompURL from './StompURL.js';
 
 export const ROUTE_PROTOCOLS = ['http:', 'https:'];
 
-/**
- *
- * @param {string} resource
- * @param {StompURL} url
- */
-export function routeURL(resourceType, url) {
+export function routeURL(resourceType: string, url: StompURL) {
 	if (!ROUTE_PROTOCOLS.includes(url.url.protocol)) {
 		throw new RangeError(
 			`The following protocols are supported: ${ROUTE_PROTOCOLS}`
@@ -17,10 +13,7 @@ export function routeURL(resourceType, url) {
 	return `${url.directory}${resourceType}/${url.encode()}${url.url.hash}`;
 }
 
-/**
- * @param {StompURL} resource
- */
-export function routeBinary(resource) {
+export function routeBinary(resource: StompURL) {
 	if (resource.url.protocol === 'data:') {
 		return resource.toString();
 	}
@@ -39,13 +32,11 @@ export function routeBinary(resource) {
 	return parseRoutedURL()
 }*/
 
-/**
- *
- * @param {string} routed
- * @param {import('./Codecs.js').default} codec
- * @param {string} directory
- */
-export function parseRoutedURL(routed, codec, directory) {
+export function parseRoutedURL(
+	routed: string,
+	codec: GenericCodec,
+	directory: string
+) {
 	if (!routed.startsWith(directory)) {
 		throw new Error('Outside directory');
 	}
@@ -69,20 +60,13 @@ export function parseRoutedURL(routed, codec, directory) {
 	};
 }
 
-/**
- *
- * @typedef {object} DataURI
- * @property {string[]} attributes
- * @property {string} type
- * @property {string} data
- */
+export declare interface DataURI {
+	attributes: string[];
+	mime: string;
+	data: string;
+}
 
-/**
- *
- * @param {string} pathname
- * @returns {DataURI}
- */
-export function parseDataURI(pathname) {
+export function parseDataURI(pathname: string): DataURI {
 	const comma = pathname.indexOf(',');
 	const type = pathname.slice(0, comma);
 	let data = pathname.slice(comma + 1);
@@ -99,11 +83,7 @@ export function parseDataURI(pathname) {
 	};
 }
 
-/**
- *
- * @param {DataURI} data
- */
-export function createDataURI(data) {
+export function createDataURI(data: DataURI) {
 	return `data:${[data.mime, ...data.attributes].join(';')},${
 		data.attributes.includes('base64') ? btoa(data.data) : data.data
 	}`;

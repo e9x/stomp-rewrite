@@ -1,8 +1,8 @@
-'use strict';
-
 import { resolve } from 'path';
-import {appDist, appPath, appNodeModules, appSrc} from './paths.js';
+
 import TerserPlugin from 'terser-webpack-plugin';
+
+import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
 
 const emitErrorsAsWarnings = process.env.ESLINT_NO_DEV_ERRORS === 'true';
 
@@ -18,6 +18,15 @@ const isEnvProductionProfile =
 const common = {
 	devtool: isEnvProduction ? 'source-map' : 'eval-source-map',
 	mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
+	module: {
+		rules: [
+			{
+				test: /\.tsx?$/,
+				use: 'ts-loader',
+				exclude: /node_modules/,
+			},
+		],
+	},
 	optimization: {
 		minimize: isEnvProduction,
 		minimizer: [
@@ -73,24 +82,24 @@ const common = {
 				failOnError: !(isEnvDevelopment && emitErrorsAsWarnings),
 				context: appSrc,
 				cache: true,
-				cacheLocation: resolve(
-					appNodeModules,
-					'.cache/.eslintcache'
-				),
+				cacheLocation: resolve(appNodeModules, '.cache/.eslintcache'),
 				// ESLint class options
 				cwd: appPath,
-				resolvePluginsRelativeTo: __dirname,
+				resolvePluginsRelativeTo: appPath,
 			}),
 	].filter(Boolean),
+	resolve: {
+		extensions: ['.tsx', '.ts', '.js'],
+	},
 };
 
 export default [
 	{
 		...common,
 		entry: {
-			serviceWorker: './src/serviceWorker.js',
-			workerClient: './src/workerClient.js',
-			documentClient: './src/documentClient.js',
+			serviceWorker: './src/serviceWorker.ts',
+			workerClient: './src/workerClient.ts',
+			documentClient: './src/documentClient.ts',
 		},
 		output: {
 			filename: '[name].js',
@@ -100,7 +109,7 @@ export default [
 	{
 		...common,
 		entry: {
-			bootstrapper: './src/bootstrapper.js',
+			bootstrapper: './src/bootstrapper.ts',
 		},
 		output: {
 			library: {
