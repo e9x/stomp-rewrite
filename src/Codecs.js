@@ -83,7 +83,7 @@ export class XORCodec extends CodecBase {
 	encode(input) {
 		let result = '';
 		for (let i = 0; i < input.length; i++) {
-			if (i % this.frequency == 0) {
+			if (i % this.frequency === 0) {
 				const char = (input.charCodeAt(i) ^ this.xor) + URI_min;
 				result += String.fromCharCode(char);
 			} else {
@@ -96,7 +96,7 @@ export class XORCodec extends CodecBase {
 		input = decodeCodecURI(input);
 		let result = '';
 		for (let i = 0; i < input.length; i++) {
-			if (i % this.frequency == 0) {
+			if (i % this.frequency === 0) {
 				const char = (input.charCodeAt(i) - URI_min) ^ this.xor;
 				result += String.fromCharCode(char);
 			} else {

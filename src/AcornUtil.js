@@ -1,4 +1,4 @@
-import { generate } from "@javascript-obfuscator/escodegen";
+import { generate } from '@javascript-obfuscator/escodegen';
 
 const symbolNoResult = Symbol();
 
@@ -42,38 +42,37 @@ export class AcornContext {
 	detach() {
 		if (this.root) {
 			throw new RangeError('Cannot detach the root.');
-		}
-		else if (!this.attached) {
+		} else if (!this.attached) {
 			throw new RangeError('Cannot detach a detached node.');
 		}
 
 		if (this.parentArray) {
 			const place = this.parentObject.indexOf(this.node);
-			if (place == -1) return false;
+			if (place === -1) return false;
 			this.parentObject.splice(place, 1);
 		} else {
 			delete this.parent.node[this.parent_key];
 		}
 
 		this.attached = false;
-		
+
 		return true;
 	}
 	// success = new AcornContext, failure = false
 	replaceWith(node) {
 		if (this.root) {
 			throw new RangeError('Cannot replace the root.');
-		} else if (!this.attached){
+		} else if (!this.attached) {
 			throw new RangeError('Cannot replace a detached node.');
 		}
-		
+
 		if (this.parentArray) {
 			const place = this.parentObject.indexOf(this.node);
 
 			if (place === -1) {
 				return false;
 			}
-			
+
 			this.parentObject.splice(place, 1, node);
 		} else {
 			delete this.parent.node[this.parentKey];
@@ -136,7 +135,7 @@ export class AcornContext {
 		for (let i = 0; i < this.entries.length; i++) {
 			const entry = this.entries[i];
 			const stack_i = this.stack.indexOf(entry);
-			
+
 			if (stack_i !== -1) {
 				this.stack.splice(stack_i, 1);
 			}
@@ -175,8 +174,7 @@ export class AcornIterator {
 }
 
 function inRange(range, test) {
-	return range[0] >= test[1] != range[1] > test[0];
-
+	return range[0] >= test[1] !== range[1] > test[0];
 }
 
 export class LazyGenerate {
