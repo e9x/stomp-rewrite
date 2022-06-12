@@ -14,6 +14,7 @@ export declare type Node = {
 		| string
 		| boolean
 		| undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 } | mNode | any;
 
 export function noResult(node: Node): Node {

@@ -1,4 +1,4 @@
-import { generate, parse, StringNode, CssLocation, CssNode, CssNodeCommon, Url, walk } from 'css-tree';
+import { generate, parse, StringNode, Url, walk } from 'css-tree';
 
 import {
 	createDataURI,
@@ -67,7 +67,7 @@ export function modifyCSS(script: string, url: StompURL, context: string) {
 				} else {
 					replace = {
 						type: 'Url',
-						value: <StringNode><unknown>preserveValue(routeCSS(resolved, url), raw),
+						value: <StringNode><unknown>preserveValue(routeBinary(resolved), raw),
 					};
 				}
 

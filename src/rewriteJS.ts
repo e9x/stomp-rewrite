@@ -6,7 +6,6 @@ import {
 	AcornContext,
 	AcornIterator,
 	LazyGenerate,
-	Node,
 	noResult,
 } from './AcornUtil.js';
 import { createDataURI, parseDataURI, routeURL } from './routeURL.js';

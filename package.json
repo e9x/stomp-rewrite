@@ -13,7 +13,7 @@
 	"author": "",
 	"license": "GPL-3.0",
 	"lint-staged": {
-		"*.{mjs, js,json}": "prettier --write"
+		"*.{mjs, js, ts, json}": "prettier --write"
 	},
 	"importSort": {
 		".mjs, .js, .jsx, .ts, .tsx": {
