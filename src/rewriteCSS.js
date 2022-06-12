@@ -12,16 +12,18 @@ import StompURL from './StompURL.js';
 /**
  *
  * @param {import('./StompURL.js').default} resource
+ * @param {import('./StompURL.js').default} url
  */
 export function routeCSS(resource, url) {
-	if (resource.protocol === 'data:') {
-		const { mime, data, attributes } = parseDataURI(resource.pathname);
-
-		return createDataURI({ mime, data: modifyCSS(data, url), attributes });
+	if (resource.url.protocol === 'data:') {
+		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
+		return createDataURI({
+			mime,
+			data: modifyCSS(data, url, 'stylesheet'),
+			attributes,
+		});
 	}
-	// if url.startsWith('data:')
-	//   do logic with modifycss
-	//   return new data url
+
 	return routeURL('css', resource);
 }
 

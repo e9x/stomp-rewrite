@@ -1,15 +1,40 @@
-import { parse } from 'meriyah';
-import { AcornIterator, AcornContext, LazyGenerate, noResult } from './AcornUtil.js';
 import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
+import { parse } from 'meriyah';
+
+import {
+	AcornContext,
+	AcornIterator,
+	LazyGenerate,
+	noResult,
+} from './AcornUtil.js';
+import { createDataURI, parseDataURI, routeURL } from './routeURL.js';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script
 
 /**
- * 
+ *
+ * @param {import('./StompURL.js').default} resource
+ * @param {import('./StompURL.js').default} url
+ */
+export function routeJS(resource, url, module) {
+	if (resource.url.protocol === 'data:') {
+		const { mime, data, attributes } = parseDataURI(resource.pathname);
+		return createDataURI({
+			mime,
+			data: modifyJS(data, url, module),
+			attributes,
+		});
+	}
+
+	return routeURL('html', resource);
+}
+
+/**
+ *
  * @param {string} script
- * @param {import('./StompURL.js').default} url 
+ * @param {import('./StompURL.js').default} url
  * @param {boolean} module
  */
 export function modifyJS(script, url, module) {
@@ -72,7 +97,7 @@ export function modifyJS(script, url, module) {
 }
 
 /**
- * 
+ *
  * @param {string} script
  * @param {import('./StompURL.js').default} url
  */

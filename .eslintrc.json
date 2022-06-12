@@ -17,6 +17,7 @@
 		"no-constant-condition": ["error", { "checkLoops": false }],
 		"no-lone-blocks": "off",
 		"quotes": ["off"],
-		"eqeqeq": "error"
+		"eqeqeq": "error",
+		"prefer-const": "error"
 	}
 }

@@ -2,10 +2,16 @@ export default class StompURL {
 	/**
 	 *
 	 * @param {string|url} url
-	 * @param {import('./Codecs.js').default} codec
-	 * @param {string} directory
+	 * @param {import('./Codecs.js').default | StompURL} codec
+	 * @param {string?} directory
 	 */
 	constructor(url, codec, directory) {
+		if (codec instanceof StompURL) {
+			const copy = codec;
+			codec = copy.codec;
+			directory = copy.directory;
+		}
+
 		if (typeof url === 'string') {
 			this.url = new URL(url);
 		} else if (url instanceof URL) {
