@@ -5,14 +5,23 @@ import { builders as b } from 'ast-types';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script
+
+/**
+ * 
+ * @param {string} script
+ * @param {import('./StompURL.js').default} url 
+ * @param {boolean} module
+ */
 export function modifyJS(script, url, module) {
 	const lazy = new LazyGenerate();
+
 	const tree = parse(script, {
 		module,
 		next: true,
 		specDeviation: true,
 		ranges: true,
 	});
+
 	for (const ctx of new AcornIterator(tree)) {
 		switch (ctx.node.type) {
 			case 'MemberExpression':
@@ -58,9 +67,15 @@ export function modifyJS(script, url, module) {
 				break;
 		}
 	}
+
 	return lazy.toString(script);
 }
 
+/**
+ * 
+ * @param {string} script
+ * @param {import('./StompURL.js').default} url
+ */
 export function restoreJS(script, url) {
 	url.codec;
 	return script;

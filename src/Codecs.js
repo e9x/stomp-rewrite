@@ -1,6 +1,7 @@
 const encodeChar = '$';
 const validChars =
 	'-_~:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
 export function validCodecURI(uri) {
 	for (let i = 0; i < uri.length; i++) {
 		if (!validChars.includes(uri[i])) {
@@ -9,6 +10,7 @@ export function validCodecURI(uri) {
 	}
 	return true;
 }
+
 export function encodeCodecURI(input) {
 	let result = '';
 	for (let i = 0; i < input.length; i++) {
@@ -22,6 +24,7 @@ export function encodeCodecURI(input) {
 	}
 	return result;
 }
+
 export function decodeCodecURI(uri) {
 	let result = '';
 	for (let i = 0; i < uri.length; i++) {
@@ -37,26 +40,31 @@ export function decodeCodecURI(uri) {
 	}
 	return result;
 }
+
 import AES from 'crypto-js/aes.js';
 import Utf8 from 'crypto-js/enc-utf8.js';
-class CodecBase {
+
+export default class CodecBase {
 	constructor(key) {
 		this.key = key;
 	}
 }
+
 export class PlainCodec extends CodecBase {
 	static generateKey() {
 		return '';
 	}
 	encode(input) {
-		return input;
+		return encodeCodecURI(input);
 	}
 	decode(input) {
-		return input;
+		return decodeCodecURI(input);
 	}
 }
+
 const URI_max = 0x7f;
 const URI_min = 0x01;
+
 export class XORCodec extends CodecBase {
 	get frequency() {
 		return parseInt(this.key, 16) & 0xf;
@@ -73,7 +81,6 @@ export class XORCodec extends CodecBase {
 		return ((xor << 4) + frequency).toString(16);
 	}
 	encode(input) {
-		console.log(this.xor, this.frequency);
 		let result = '';
 		for (let i = 0; i < input.length; i++) {
 			if (i % this.frequency == 0) {

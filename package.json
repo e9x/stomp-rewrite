@@ -24,17 +24,19 @@
 		"@javascript-obfuscator/escodegen": "^2.3.0",
 		"ast-types": "^0.14.2",
 		"crypto-js": "^4.1.1",
+		"css-tree": "^2.1.0",
 		"escodegen": "^2.0.0",
 		"meriyah": "^4.2.1",
 		"terser-webpack-plugin": "^5.3.3"
 	},
 	"devDependencies": {
-		"prettier": "^2.6.2",
-		"prettier-plugin-import-sort": "^0.0.7",
 		"eslint": "^8.17.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-webpack-plugin": "^3.1.1",
 		"husky": "^8.0.1",
+		"import-sort-style-module": "^6.0.0",
+		"prettier": "^2.6.2",
+		"prettier-plugin-import-sort": "^0.0.7",
 		"webpack-cli": "^4.9.2"
 	}
 }
