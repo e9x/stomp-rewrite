@@ -30,6 +30,35 @@ export function routeCSS(resource, url) {
 
 /**
  *
+ * @param {string} url
+ */
+function preserveValue(url, value) {
+	{
+		const hashi = url.indexOf('#');
+		if (hashi !== -1) {
+			url = url.slice(0, hashi);
+		}
+	}
+
+	return `${url}#${value}`;
+}
+
+/**
+ *
+ * @param {string} url
+ */
+function restoreValue(url) {
+	const hashi = url.indexOf('#');
+
+	if (hashi === -1) {
+		throw new Error('Invalid value URL');
+	}
+
+	return url.slice(hashi + 1);
+}
+
+/**
+ *
  * @param {string} script
  * @param {import('./StompURL.js').default} url
  * @param {string} context
@@ -49,24 +78,24 @@ export function modifyCSS(script, url, context) {
 
 				let replace;
 
+				const raw = script.slice(
+					node.loc.start.offset - offset,
+					node.loc.end.offset - offset
+				);
+
 				if (this.atrule?.name === 'import') {
 					replace = {
 						type: 'Url',
-						value: routeCSS(resolved, url),
+						value: preserveValue(routeCSS(resolved, url), raw),
 					};
 				} else {
 					replace = {
 						type: 'Url',
-						value: routeBinary(resolved, url),
+						value: preserveValue(routeBinary(resolved, url), raw),
 					};
 				}
 
-				const generated = `/*${JSON.stringify(
-					script.slice(
-						node.loc.start.offset - offset,
-						node.loc.end.offset - offset
-					)
-				)}*/${generate(replace)}`;
+				const generated = generate(replace);
 
 				script =
 					script.slice(0, node.loc.start.offset - offset) +
@@ -98,33 +127,15 @@ export function restoreCSS(script, url, context) {
 	let offset = 0;
 
 	walk(tree, function (node) {
-		if (node.type === 'Url')
-			for (const comment of comments) {
-				// url begins as soon as comment ends
-				if (node.loc.start.offset !== comment.loc.end.offset) {
-					continue;
-				}
+		if (node.type === 'Url') {
+			const generated = restoreValue(node.value);
 
-				// remove comment
-				comments.splice(comments.indexOf(comment), 1);
-
-				script =
-					script.slice(0, comment.loc.start.offset - offset) +
-					script.slice(comment.loc.end.offset - offset);
-
-				offset += comment.loc.end.offset - comment.loc.start.offset;
-
-				const generated = JSON.parse(comment.value);
-
-				script =
-					script.slice(0, node.loc.start.offset - offset) +
-					generated +
-					script.slice(node.loc.end.offset - offset);
-				offset +=
-					node.loc.end.offset - node.loc.start.offset - generated.length;
-
-				break;
-			}
+			script =
+				script.slice(0, node.loc.start.offset - offset) +
+				generated +
+				script.slice(node.loc.end.offset - offset);
+			offset += node.loc.end.offset - node.loc.start.offset - generated.length;
+		}
 	});
 
 	return script;

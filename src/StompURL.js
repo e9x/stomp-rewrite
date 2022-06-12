@@ -1,6 +1,6 @@
 export default class StompURL {
 	/**
-	 * 
+	 *
 	 * @param {string|url} url
 	 * @param {import('./Codecs.js').default} codec
 	 * @param {string} directory
@@ -17,7 +17,10 @@ export default class StompURL {
 		this.directory = directory;
 	}
 	encode() {
-		return this.codec.encode(this.url.toString());
+		// hash isn't encoded
+		return this.codec.encode(
+			this.url.origin + this.url.pathname + this.url.search
+		);
 	}
 	toString() {
 		return this.url.toString();
