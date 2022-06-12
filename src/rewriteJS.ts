@@ -6,21 +6,18 @@ import {
 	AcornContext,
 	AcornIterator,
 	LazyGenerate,
+	Node,
 	noResult,
 } from './AcornUtil.js';
 import { createDataURI, parseDataURI, routeURL } from './routeURL.js';
+import StompURL from './StompURL.js';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script
 
-/**
- *
- * @param {import('./StompURL.js').default} resource
- * @param {import('./StompURL.js').default} url
- */
-export function routeJS(resource, url, module) {
+export function routeJS(resource: StompURL, url: StompURL, module = false) {
 	if (resource.url.protocol === 'data:') {
-		const { mime, data, attributes } = parseDataURI(resource.pathname);
+		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
 		return createDataURI({
 			mime,
 			data: modifyJS(data, url, module),
@@ -31,13 +28,7 @@ export function routeJS(resource, url, module) {
 	return routeURL('html', resource);
 }
 
-/**
- *
- * @param {string} script
- * @param {import('./StompURL.js').default} url
- * @param {boolean} module
- */
-export function modifyJS(script, url, module) {
+export function modifyJS(script: string, url: StompURL, module = false) {
 	const lazy = new LazyGenerate();
 
 	const tree = parse(script, {
@@ -96,12 +87,7 @@ export function modifyJS(script, url, module) {
 	return lazy.toString(script);
 }
 
-/**
- *
- * @param {string} script
- * @param {import('./StompURL.js').default} url
- */
-export function restoreJS(script, url) {
+export function restoreJS(script: string, url: StompURL) {
 	url.codec;
 	return script;
 }

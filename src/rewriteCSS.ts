@@ -46,20 +46,17 @@ export function modifyCSS(script: string, url: StompURL, context: string) {
 	const tree = parse(script, { positions: true, context });
 	let offset = 0;
 
-	walk(tree, function (n) {
-		const node = <CssNode & CssNodeCommon & { loc: CssLocation }>n;
-		
+	walk(tree, function (node) {
 		if (node.type === 'Url')
 			try {
-				console.log(node.value, node);
 				// @ts-ignore
 				const resolved = new StompURL(new URL(node.value, url), url);
 
 				let replace: Url;
 
 				const raw = script.slice(
-					node.loc.start.offset - offset,
-					node.loc.end.offset - offset
+					node.loc!.start.offset - offset,
+					node.loc!.end.offset - offset
 				);
 
 				if (this.atrule?.name === 'import') {
@@ -77,11 +74,11 @@ export function modifyCSS(script: string, url: StompURL, context: string) {
 				const generated = generate(replace);
 
 				script =
-					script.slice(0, node.loc.start.offset - offset) +
+					script.slice(0, node.loc!.start.offset - offset) +
 					generated +
-					script.slice(node.loc.end.offset - offset);
+					script.slice(node.loc!.end.offset - offset);
 				offset +=
-					node.loc.end.offset - node.loc.start.offset - generated.length;
+					node.loc!.end.offset - node.loc!.start.offset - generated.length;
 			} catch (error) {
 				console.error(error);
 			}
@@ -97,18 +94,16 @@ export function restoreCSS(script: string, url: StompURL, context: string) {
 	});
 	let offset = 0;
 
-	walk(tree, function (n) {
-		const node = <CssNode & CssNodeCommon & { loc: CssLocation }>n;
-		
+	walk(tree, function (node) {
 		if (node.type === 'Url') {
 			// @ts-ignore
 			const generated = restoreValue(node.value);
 
 			script =
-				script.slice(0, node.loc.start.offset - offset) +
+				script.slice(0, node.loc!.start.offset - offset) +
 				generated +
-				script.slice(node.loc.end.offset - offset);
-			offset += node.loc.end.offset - node.loc.start.offset - generated.length;
+				script.slice(node.loc!.end.offset - offset);
+			offset += node.loc!.end.offset - node.loc!.start.offset - generated.length;
 		}
 	});
 

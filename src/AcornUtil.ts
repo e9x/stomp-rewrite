@@ -1,19 +1,46 @@
 import { generate } from '@javascript-obfuscator/escodegen';
+import { Node as mNode } from 'meriyah/dist/src/estree';
 
 const symbolNoResult = Symbol();
 
-export function noResult(node) {
+declare type NodeRange = [number, number];
+
+export declare type Node = {
+	range?: NodeRange;
+	[key: string | symbol]:
+		| Node
+		| Node[]
+		| NodeRange
+		| string
+		| boolean
+		| undefined;
+} | mNode | any;
+
+export function noResult(node: Node): Node {
 	node[symbolNoResult] = true;
 	return node;
 }
 
 export class AcornContext {
-	constructor(node, parent, parentKey, stack, root = false) {
+	node: Node;
+	parent?: AcornContext;
+	parentKey?: string | undefined;
+	attached: boolean;
+	root: boolean;
+	stack: AcornContext[];
+	entries: AcornContext[];
+	constructor(
+		node: Node,
+		parent: AcornContext | undefined,
+		parentKey: string | undefined,
+		stack: AcornContext[],
+		root = false
+	) {
 		this.node = node;
 		this.stack = stack;
 		this.entries = [];
 
-		if (parent !== undefined) {
+		if (parent) {
 			this.parent = parent;
 			this.parentKey = parentKey;
 			this.attached = true;
@@ -26,14 +53,15 @@ export class AcornContext {
 		this.root = root;
 	}
 	// only used by array() and index()
-	get parentObject() {
-		return this.parent.node[this.parentKey];
-	}
-	get parentArray() {
-		return Array.isArray(this.parentObject);
+	get parentObject(): Node | Node[] {
+		if (!this.parent || !this.parentKey) {
+			throw new Error('No parent');
+		}
+
+		return <Node | Node[]>this.parent.node[this.parentKey];
 	}
 	get parentIndex() {
-		if (!this.parentArray) {
+		if (!(this.parentObject instanceof Array)) {
 			throw new Error('Not an array');
 		}
 
@@ -46,12 +74,12 @@ export class AcornContext {
 			throw new RangeError('Cannot detach a detached node.');
 		}
 
-		if (this.parentArray) {
+		if (this.parentObject instanceof Array) {
 			const place = this.parentObject.indexOf(this.node);
 			if (place === -1) return false;
 			this.parentObject.splice(place, 1);
 		} else {
-			delete this.parent.node[this.parentKey];
+			delete this.parent!.node[this.parentKey!];
 		}
 
 		this.attached = false;
@@ -59,14 +87,14 @@ export class AcornContext {
 		return true;
 	}
 	// success = new AcornContext, failure = false
-	replaceWith(node) {
+	replaceWith(node: Node) {
 		if (this.root) {
 			throw new RangeError('Cannot replace the root.');
 		} else if (!this.attached) {
 			throw new RangeError('Cannot replace a detached node.');
 		}
 
-		if (this.parentArray) {
+		if (this.parentObject instanceof Array) {
 			const place = this.parentObject.indexOf(this.node);
 
 			if (place === -1) {
@@ -75,16 +103,16 @@ export class AcornContext {
 
 			this.parentObject.splice(place, 1, node);
 		} else {
-			delete this.parent.node[this.parentKey];
-			this.parent.node[this.parentKey] = node;
+			delete this.parent!.node[this.parentKey!];
+			this.parent!.node[this.parentKey!] = node;
 		}
 
 		this.attached = false;
 
 		const created = new AcornContext(
 			node,
-			this.parent,
-			this.parentKey,
+			this.parent!,
+			this.parentKey!,
 			this.stack
 		);
 
@@ -98,7 +126,7 @@ export class AcornContext {
 		return created;
 	}
 	addEntriesToStack() {
-		const entries = [];
+		const entries: [string, Node][] = [];
 
 		for (const key in this.node) {
 			const value = this.node[key];
@@ -107,9 +135,7 @@ export class AcornContext {
 				continue;
 			}
 
-			if (typeof value.type === 'string') {
-				entries.push([key, value]);
-			} else if (Array.isArray(value)) {
+			if (value instanceof Array) {
 				for (const sv of value) {
 					if (typeof sv !== 'object' || sv === null) {
 						continue;
@@ -119,6 +145,8 @@ export class AcornContext {
 						entries.push([key, sv]);
 					}
 				}
+			} else if (typeof value.type === 'string') {
+				entries.push([key, value]);
 			}
 		}
 
@@ -145,7 +173,8 @@ export class AcornContext {
 	}
 }
 export class AcornIterator {
-	constructor(ast) {
+	stack: AcornContext[];
+	constructor(ast: Node) {
 		this.stack = [];
 		this.stack.push(
 			new AcornContext(ast, undefined, undefined, this.stack, true)
@@ -168,25 +197,33 @@ export class AcornIterator {
 			return { value: context, done: false };
 		}
 	}
-	[Symbol.iterator]() {
-		return this;
+	[Symbol.iterator](): Iterator<AcornContext> {
+		return <Iterator<AcornContext>>this;
 	}
 }
 
-function inRange(range, test) {
+function inRange(range: NodeRange, test: NodeRange) {
 	return range[0] >= test[1] !== range[1] > test[0];
 }
 
+declare type Modification = {
+	node: Node;
+	replace: Node;
+};
+
 export class LazyGenerate {
+	modifications: Modification[];
 	constructor() {
 		this.modifications = [];
 	}
-	toString(script) {
+	toString(script: string) {
 		let offset = 0;
-		const generated = [];
+		const generated: { range: NodeRange; replace: Node; generated: string }[] =
+			[];
+
 		for (const mod of this.modifications) {
 			generated.push({
-				range: mod.node.range,
+				range: mod.node.range!,
 				replace: mod.replace,
 				generated: generate(mod.replace),
 			});
@@ -205,7 +242,7 @@ export class LazyGenerate {
 				const diff = mod.generated.length - oldLength;
 				offset += diff;
 			}
-			const futureRange = [
+			const futureRange: NodeRange = [
 				range[0] + offset,
 				range[0] + offset + mod.generated.length,
 			];
@@ -214,7 +251,10 @@ export class LazyGenerate {
 					continue;
 				}
 				const srange = smod.range;
-				const testFutureRange = [srange[0] + offset, srange[1] + offset];
+				const testFutureRange: NodeRange = [
+					srange[0] + offset,
+					srange[1] + offset,
+				];
 				if (inRange(futureRange, testFutureRange)) {
 					console.log('removed overlapping', generate(smod.replace));
 					generated.splice(generated.indexOf(smod), 1);
@@ -223,7 +263,7 @@ export class LazyGenerate {
 		}
 		return script;
 	}
-	replace(context, replace) {
+	replace(context: AcornContext, replace: Node) {
 		const replaced = context.replaceWith(replace);
 		if (replaced === false) {
 			console.log(
