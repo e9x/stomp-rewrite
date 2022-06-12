@@ -51,7 +51,7 @@ export class AcornContext {
 			if (place === -1) return false;
 			this.parentObject.splice(place, 1);
 		} else {
-			delete this.parent.node[this.parent_key];
+			delete this.parent.node[this.parentKey];
 		}
 
 		this.attached = false;
@@ -134,10 +134,10 @@ export class AcornContext {
 	removeDescendantsFromStack() {
 		for (let i = 0; i < this.entries.length; i++) {
 			const entry = this.entries[i];
-			const stack_i = this.stack.indexOf(entry);
+			const stackI = this.stack.indexOf(entry);
 
-			if (stack_i !== -1) {
-				this.stack.splice(stack_i, 1);
+			if (stackI !== -1) {
+				this.stack.splice(stackI, 1);
 			}
 
 			entry.removeDescendantsFromStack();
@@ -201,8 +201,8 @@ export class LazyGenerate {
 				mod.generated +
 				script.slice(offset + range[1]);
 			{
-				const old_length = range[1] - range[0];
-				const diff = mod.generated.length - old_length;
+				const oldLength = range[1] - range[0];
+				const diff = mod.generated.length - oldLength;
 				offset += diff;
 			}
 			const futureRange = [
