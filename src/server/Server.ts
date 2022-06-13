@@ -1,13 +1,25 @@
+import createHttpError from 'http-errors';
 import { openDB } from 'idb';
 
 import GenericCodec from '../Codecs.js';
 import { Config, generateConfigCodecKey, parseConfig } from '../config.js';
 import { parseRoutedURL } from '../routeURL.js';
 import StompURL from '../StompURL.js';
+import process from './process.js';
+import rewrites from './rewrites.js';
 
 interface ServerInit {
 	codec: GenericCodec;
 	directory: string;
+}
+
+function json(status: number, data: object | number | string): Response {
+	return new Response(JSON.stringify(data, null, '\t'), {
+		status,
+		headers: {
+			'content-type': 'application/json',
+		},
+	});
 }
 
 export default class Server {
@@ -23,13 +35,6 @@ export default class Server {
 		this.codec = init.codec;
 		this.directory = init.directory;
 	}
-	rewrites: { [key: string]: (url: StompURL) => Response } = {
-		js(url: StompURL) {
-			return new Response(url.toString(), {
-				status: 200,
-			});
-		},
-	};
 	willRoute(url: string): boolean {
 		const { pathname } = new URL(url);
 
@@ -37,7 +42,7 @@ export default class Server {
 			return true;
 		}
 
-		for (const rewrite in this.rewrites) {
+		for (const rewrite in rewrites) {
 			if (pathname.startsWith(`${this.directory}${rewrite}/`)) {
 				return true;
 			}
@@ -45,20 +50,24 @@ export default class Server {
 
 		return false;
 	}
-	route(request: Request): Response {
+	async tryRoute(request: Request): Promise<Response> {
 		const url = new URL(request.url);
 
 		if (url.pathname === `${this.directory}process`) {
-			return new Response(undefined, {
-				headers: {
-					refresh: '',
-				},
-			});
+			const params = new URLSearchParams(await request.text());
+
+			if (!params.has('url')) {
+				throw new Error('Missing URL param');
+			}
+
+			return await process(
+				new StompURL(params.get('url')!, this.codec, this.directory)
+			);
 		}
 
-		for (const rewrite in this.rewrites) {
+		for (const rewrite in rewrites) {
 			if (url.pathname.startsWith(`${this.directory}${rewrite}/`)) {
-				const callback = this.rewrites[rewrite];
+				const callback = rewrites[rewrite];
 
 				const parsed = parseRoutedURL(
 					url.href,
@@ -66,11 +75,80 @@ export default class Server {
 					`${url.origin}${this.directory}`
 				);
 
-				return callback(parsed.url);
+				return await callback(parsed.url);
 			}
 		}
 
 		throw new Error(`${request.url} shouldn't have been routed`);
+	}
+	async route(request: Request): Promise<Response> {
+		try {
+			return await this.tryRoute(request);
+		} catch (error) {
+			let httpError;
+			let id;
+
+			if (createHttpError.isHttpError(error)) {
+				httpError = error;
+			} else {
+				if (error instanceof Error) {
+					httpError = new createHttpError.InternalServerError(error.message);
+					httpError.stack = error.stack;
+					id = error.name;
+				} else {
+					httpError = new createHttpError.InternalServerError(String(error));
+					id = 'UNKNOWN';
+				}
+			}
+
+			if (request.destination === 'document') {
+				return new Response(
+					`<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset='utf-8' />
+<title>Error</title>
+</head>
+<body>
+<h1>An error occurred. (${httpError.status})</h1>
+<hr />
+<p>Code: <span id='errname'></span></p>
+<p>ID: <span id='errid'></span></p>
+<p>Message: <span id='errmessage'></span></p>
+<p>Stack trace:</p>
+<pre id='errstack'></pre>
+<script>
+const name = ${JSON.stringify(httpError.name)};
+const stack = ${JSON.stringify(httpError.stack)};
+const message = ${JSON.stringify(httpError.message)};
+const id = ${JSON.stringify(id)};
+
+errname.textContent = name;
+errmessage.textContent = message;
+errstack.textContent = stack;
+errid.textContent = id;
+
+const error = new Error(message);
+error.name = name;
+error.stack = stack;
+console.error(error);
+</script>
+</body>
+</html>`,
+					{
+						status: httpError.status,
+						headers: {
+							'content-type': 'text/html',
+						},
+					}
+				);
+			} else {
+				return json(httpError.status, {
+					message: httpError.message,
+					status: httpError.status,
+				});
+			}
+		}
 	}
 }
 
@@ -85,7 +163,10 @@ export async function createServer(config: Config) {
 	const store = tx.objectStore('consts');
 
 	if (!(await store.get(`codecKey:${config.codec}`))) {
-		await store.put(generateConfigCodecKey(config.codec), `codecKey:${config}`);
+		await store.put(
+			generateConfigCodecKey(config.codec),
+			`codecKey:${config.codec}`
+		);
 	}
 
 	const codecKey = await store.get(`codecKey:${config.codec}`);

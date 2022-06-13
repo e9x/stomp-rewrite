@@ -12,7 +12,7 @@ createServer(config).then(s => (server = s));
 declare global {
 	type FetchEvent = Event & {
 		request: Request;
-		respondWith: (response: Response) => void;
+		respondWith: (response: Promise<Response>) => void;
 	};
 	interface WindowEventMap {
 		fetch: FetchEvent;

@@ -106,7 +106,7 @@ export class XORCodec extends GenericCodec {
 }
 export class AESCodec extends GenericCodec {
 	static generateKey(): string {
-		return Math.random().toString();
+		return Math.random().toString(36).slice(2);
 	}
 	encode(input: string): string {
 		const result = AES.encrypt(input, this.key).toString();

@@ -22,17 +22,19 @@
 	"dependencies": {
 		"@javascript-obfuscator/escodegen": "^2.3.0",
 		"ast-types": "^0.14.2",
+		"bare-client": "github:tomphttp/bare-client",
 		"crypto-js": "^4.1.1",
 		"css-tree": "^2.1.0",
 		"escodegen": "^2.0.0",
+		"http-errors": "^2.0.0",
 		"idb": "^7.0.1",
 		"meriyah": "^4.2.1"
 	},
 	"devDependencies": {
-		"terser-webpack-plugin": "^5.3.3",
 		"@types/crypto-js": "^4.1.1",
 		"@types/css-tree": "^1.0.7",
 		"@types/escodegen": "^0.0.7",
+		"@types/http-errors": "^1.8.2",
 		"@typescript-eslint/eslint-plugin": "^5.27.1",
 		"@typescript-eslint/parser": "^5.27.1",
 		"eslint": "^8.17.0",
@@ -43,6 +45,7 @@
 		"prettier": "^2.6.2",
 		"prettier-plugin-import-sort": "^0.0.7",
 		"resolve-typescript-plugin": "^1.2.0",
+		"terser-webpack-plugin": "^5.3.3",
 		"ts-loader": "^9.3.0",
 		"typescript": "^4.7.3",
 		"webpack-cli": "^4.9.2"
