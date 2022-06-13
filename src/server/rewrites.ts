@@ -3,6 +3,9 @@
 import BareClient from 'bare-client';
 
 import { modifyCSS } from '../rewriteCSS.js';
+import { modifyHTML } from '../rewriteHTML.js';
+import { modifyJS } from '../rewriteJS.js';
+import { modifyManifest } from '../rewriteManifest.js';
 import StompURL from '../StompURL.js';
 import { capitalizeHeaders } from './headers.js';
 
@@ -56,8 +59,17 @@ function genericForward(callback: genericForwardTransform) {
 	};
 }
 
+const js = genericForward(async (url, response) =>
+	modifyJS(await response.text(), url)
+);
 const css = genericForward(async (url, response) =>
 	modifyCSS(await response.text(), url)
+);
+const html = genericForward(async (url, response) =>
+	modifyHTML(await response.text(), url)
+);
+const manifest = genericForward(async (url, response) =>
+	modifyManifest(await response.text(), url)
 );
 const binary = genericForward(async (_url, response) => response.body!);
 
@@ -68,7 +80,10 @@ const rewrites: {
 		bare: BareClient
 	) => Promise<Response>;
 } = {
+	js,
 	css,
+	html,
+	manifest,
 	binary,
 };
 
