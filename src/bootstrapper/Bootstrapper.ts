@@ -1,4 +1,4 @@
-import { Config, ConfigCodec } from "./config.js";
+import { Config, ConfigCodec } from "../config.js";
 
 const currentScript = <HTMLScriptElement>document.currentScript;
 
@@ -28,7 +28,7 @@ export default class Bootstrapper {
 			throw new Error('Your browser does not support service workers.');
 		await navigator.serviceWorker.register(
 			new URL(
-				'serviceworker.js?' + new URLSearchParams({ config: JSON.stringify(this.config) }),
+				'serviceWorker.js?' + new URLSearchParams({ config: JSON.stringify(this.config) }),
 				this.directory
 			),
 			{

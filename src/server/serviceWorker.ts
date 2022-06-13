@@ -1,4 +1,4 @@
-import { Config } from './config.js';
+import { Config } from '../config.js';
 import Server, { createServer } from './Server.js';
 
 const config: Config = JSON.parse(

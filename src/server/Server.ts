@@ -1,9 +1,9 @@
 import { openDB } from 'idb';
 
-import GenericCodec from './Codecs';
-import { Config, generateConfigCodecKey, parseConfig } from './config';
-import { parseRoutedURL } from './routeURL';
-import StompURL from './StompURL';
+import GenericCodec from '../Codecs.js';
+import { Config, generateConfigCodecKey, parseConfig } from '../config.js';
+import { parseRoutedURL } from '../routeURL.js';
+import StompURL from '../StompURL.js';
 
 interface ServerInit {
 	codec: GenericCodec;

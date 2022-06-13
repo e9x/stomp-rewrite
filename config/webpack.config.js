@@ -102,9 +102,9 @@ export default [
 	{
 		...common,
 		entry: {
-			workerclient: './src/worker.ts',
-			documentclient: './src/document.ts',
-			serviceworker: './src/serviceWorker.ts',
+			injectWorker: './src/inject/worker.ts',
+			injectDocument: './src/inject/document.ts',
+			serviceWorker: './src/server/serviceWorker.ts',
 		},
 		output: {
 			libraryExport: 'default',
@@ -115,7 +115,7 @@ export default [
 	{
 		...common,
 		entry: {
-			bootstrapper: './src/bootstrapper.ts',
+			Bootstrapper: './src/bootstrapper/Bootstrapper.ts',
 		},
 		output: {
 			library: {
@@ -130,7 +130,7 @@ export default [
 	{
 		...common,
 		entry: {
-			searchbuilder: './src/SearchBuilder.ts',
+			SearchBuilder: './src/bootstrapper/SearchBuilder.ts',
 		},
 		output: {
 			library: {
