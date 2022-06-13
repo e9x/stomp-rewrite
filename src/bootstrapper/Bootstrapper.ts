@@ -5,9 +5,18 @@ const currentScript = <HTMLScriptElement>document.currentScript;
 export default class Bootstrapper {
 	config: Config;
 	directory: URL;
-	constructor(config: { codec: ConfigCodec, directory: string | URL | undefined }) {
+	constructor(config: { codec: ConfigCodec, directory?: string | URL, bareServer: string | URL }) {
 		let directory: URL;
-		
+		let bareServer: URL;
+
+		if (config.bareServer instanceof URL) {
+			bareServer = config.bareServer;
+		} else if (typeof config.bareServer === 'string') {
+			bareServer = new URL(config.bareServer, location.toString());
+		} else {
+			throw new TypeError('config.bareServer not specified');
+		}
+
 		if (config.directory instanceof URL) {
 			directory = config.directory;
 		} else if (typeof config.directory === 'string') {
@@ -16,11 +25,14 @@ export default class Bootstrapper {
 			directory = new URL('.', currentScript.src);
 		}
 
+
+
 		this.directory = directory;
 		
 		this.config = {
+			...config,
+			bareServer: bareServer.toString(),
 			directory: directory.pathname,
-			codec: config.codec,
 		}
 	}
 	async register() {

@@ -8,25 +8,40 @@ declare module 'bare-client' {
 		cached: boolean;
 	};
 	export type BareResponseFetch = BareResponse & { finalURL: string };
+	export type BareBodyInit =
+		| Blob
+		| BufferSource
+		| FormData
+		| URLSearchParams
+		| ReadableStream;
 	export type BareFetchInit = {
-		method: 'GET' | 'POST' | 'DELETE' | 'OPTIONS' | 'PUT' | 'PATCH' | 'UPDATE';
-		headers: Headers | BareHeaders;
-		body: Blob | BufferSource | FormData | URLSearchParams | ReadableStream;
-		cache:
+		method?:
+			| 'GET'
+			| 'POST'
+			| 'DELETE'
+			| 'OPTIONS'
+			| 'PUT'
+			| 'PATCH'
+			| 'UPDATE'
+			| string;
+		headers?: Headers | BareHeaders;
+		body?: BareBodyInit;
+		cache?:
 			| 'default'
 			| 'no-store'
 			| 'reload'
 			| 'no-cache'
 			| 'force-cache'
-			| 'only-if-cached';
-		redirect: 'follow' | 'manual' | 'error';
-		signal: AbortSignal;
+			| 'only-if-cached'
+			| string;
+		redirect?: 'follow' | 'manual' | 'error' | string;
+		signal?: AbortSignal;
 	};
 	export type BareClientData = object;
 
 	export default class BareClient {
 		data: BareClientData;
-		constructor(server: string | URL, data: BareClientData);
+		constructor(server: string | URL, data?: BareClientData);
 		request(
 			method:
 				| 'GET'
@@ -35,9 +50,10 @@ declare module 'bare-client' {
 				| 'OPTIONS'
 				| 'PUT'
 				| 'PATCH'
-				| 'UPDATE',
+				| 'UPDATE'
+				| string,
 			request_headers: BareHeaders,
-			body: Blob | BufferSource | FormData | URLSearchParams | ReadableStream,
+			body: BareBodyInit,
 			protocol: 'http:' | 'https:',
 			host: string,
 			port: string | number,
@@ -48,7 +64,8 @@ declare module 'bare-client' {
 				| 'reload'
 				| 'no-cache'
 				| 'force-cache'
-				| 'only-if-cached',
+				| 'only-if-cached'
+				| string,
 			signal: AbortSignal
 		): Promise<BareResponse>;
 		connect(
@@ -58,9 +75,6 @@ declare module 'bare-client' {
 			port: string | number,
 			path: string
 		): Promise<BareWebSocket>;
-		fetch(
-			url: string | URL,
-			init: BareFetchInit | undefined
-		): Promise<BareResponseFetch>;
+		fetch(url: string | URL, init?: BareFetchInit): Promise<BareResponseFetch>;
 	}
 }

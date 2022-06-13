@@ -13,7 +13,7 @@ export function routeCSS(resource: StompURL, url: StompURL) {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
 		return createDataURI({
 			mime,
-			data: modifyCSS(data, url, 'stylesheet'),
+			data: modifyCSS(data, url),
 			attributes,
 		});
 	}
@@ -42,7 +42,7 @@ function restoreValue(url: string) {
 	return url.slice(hashi + 1);
 }
 
-export function modifyCSS(script: string, url: StompURL, context: string) {
+export function modifyCSS(script: string, url: StompURL, context = 'stylesheet') {
 	const tree = parse(script, { positions: true, context });
 	let offset = 0;
 

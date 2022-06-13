@@ -5,11 +5,11 @@ export declare type ConfigCodec = 'generic' | 'xor' | 'aes';
 export interface Config {
 	codec: ConfigCodec;
 	directory: string;
+	bareServer: string;
 }
 
-export interface ParsedConfig {
+export interface ParsedConfig extends Omit<Config, 'codec'> {
 	codec: GenericCodec;
-	directory: string;
 }
 
 export function parseConfig(config: Config, codecKey: string): ParsedConfig {
@@ -29,7 +29,7 @@ export function parseConfig(config: Config, codecKey: string): ParsedConfig {
 	}
 
 	return {
-		directory: config.directory,
+		...config,
 		codec,
 	};
 }

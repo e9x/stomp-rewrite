@@ -1,17 +1,18 @@
+import BareClient from 'bare-client';
 import createHttpError from 'http-errors';
 import { openDB } from 'idb';
 
 import GenericCodec from '../Codecs.js';
-import { Config, generateConfigCodecKey, parseConfig } from '../config.js';
+import {
+	Config,
+	ParsedConfig,
+	generateConfigCodecKey,
+	parseConfig,
+} from '../config.js';
 import { parseRoutedURL } from '../routeURL.js';
 import StompURL from '../StompURL.js';
 import process from './process.js';
 import rewrites from './rewrites.js';
-
-interface ServerInit {
-	codec: GenericCodec;
-	directory: string;
-}
 
 function json(status: number, data: object | number | string): Response {
 	return new Response(JSON.stringify(data, null, '\t'), {
@@ -25,7 +26,8 @@ function json(status: number, data: object | number | string): Response {
 export default class Server {
 	codec: GenericCodec;
 	directory: string;
-	constructor(init: ServerInit) {
+	bare: BareClient;
+	constructor(init: ParsedConfig) {
 		if (!init.directory.startsWith('/') || !init.directory.endsWith('/')) {
 			throw new Error(
 				'init.directory was not an absolute directory (without origin)'
@@ -34,6 +36,7 @@ export default class Server {
 
 		this.codec = init.codec;
 		this.directory = init.directory;
+		this.bare = new BareClient(init.bareServer);
 	}
 	willRoute(url: string): boolean {
 		const { pathname } = new URL(url);
@@ -75,7 +78,7 @@ export default class Server {
 					`${url.origin}${this.directory}`
 				);
 
-				return await callback(parsed.url);
+				return await callback(parsed.url, request, this.bare);
 			}
 		}
 

@@ -6,6 +6,6 @@ export default async function process(url: StompURL): Promise<Response> {
 		headers: {
 			location: routeHTML(url, url),
 		},
-		status: 307,
+		status: 301,
 	});
 }
