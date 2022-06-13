@@ -1,13 +1,14 @@
 import { resolve } from 'path';
 
+import ResolveTypescriptPlugin from 'resolve-typescript-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 
 import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
 
 const emitErrorsAsWarnings = process.env.ESLINT_NO_DEV_ERRORS === 'true';
 
-const isEnvDevelopment = process.env === 'development';
-const isEnvProduction = process.env === 'production';
+const isEnvDevelopment = process.env.NODE_ENV === 'development';
+const isEnvProduction = process.env.NODE_ENV === 'production';
 
 const isEnvProductionProfile =
 	isEnvProduction && process.argv.includes('--profile');
@@ -26,6 +27,10 @@ const common = {
 				exclude: /node_modules/,
 			},
 		],
+	},
+	resolve: {
+		extensions: ['.ts', '.js'],
+		plugins: [new ResolveTypescriptPlugin()],
 	},
 	optimization: {
 		minimize: isEnvProduction,
@@ -74,7 +79,7 @@ const common = {
 	},
 	plugins: [
 		isEnvDevelopment &&
-			new (require('eslint-webpack-plugin'))({
+			new (await import('eslint-webpack-plugin')).default({
 				// Plugin options
 				extensions: ['js', 'mjs'],
 				formatter: 'react-dev-utils/eslintFormatter',
@@ -88,20 +93,21 @@ const common = {
 				resolvePluginsRelativeTo: appPath,
 			}),
 	].filter(Boolean),
-	resolve: {
-		extensions: ['.tsx', '.ts', '.js'],
-	},
 };
 
+/**
+ * @type {import('webpack').Configuration[]}
+ */
 export default [
 	{
 		...common,
 		entry: {
-			serviceWorker: './src/serviceWorker.ts',
-			workerClient: './src/workerClient.ts',
-			documentClient: './src/documentClient.ts',
+			workerclient: './src/worker.ts',
+			documentclient: './src/document.ts',
+			serviceworker: './src/serviceWorker.ts',
 		},
 		output: {
+			libraryExport: 'default',
 			filename: '[name].js',
 			path: appDist,
 		},
@@ -116,6 +122,22 @@ export default [
 				name: 'StompBootstrapper',
 				type: 'umd',
 			},
+			libraryExport: 'default',
+			filename: '[name].js',
+			path: appDist,
+		},
+	},
+	{
+		...common,
+		entry: {
+			searchbuilder: './src/SearchBuilder.ts',
+		},
+		output: {
+			library: {
+				name: 'SearchBuilder',
+				type: 'umd',
+			},
+			libraryExport: 'default',
 			filename: '[name].js',
 			path: appDist,
 		},

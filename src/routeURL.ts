@@ -32,11 +32,16 @@ export function routeBinary(resource: StompURL) {
 	return parseRoutedURL()
 }*/
 
+export interface ParsedRoutedURL {
+	resource: string;
+	url: StompURL;
+}
+
 export function parseRoutedURL(
 	routed: string,
 	codec: GenericCodec,
 	directory: string
-) {
+): ParsedRoutedURL {
 	if (!routed.startsWith(directory)) {
 		throw new Error('Outside directory');
 	}
