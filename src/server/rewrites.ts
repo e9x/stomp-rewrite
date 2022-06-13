@@ -2,12 +2,12 @@
 
 import BareClient from 'bare-client';
 
+import { capitalizeHeaders } from '../headers.js';
 import { modifyCSS } from '../rewriteCSS.js';
 import { modifyHTML } from '../rewriteHTML.js';
 import { modifyJS } from '../rewriteJS.js';
 import { modifyManifest } from '../rewriteManifest.js';
 import StompURL from '../StompURL.js';
-import { capitalizeHeaders } from './headers.js';
 
 // native as in the browser requesting an image from /binary/ or document from /html/
 function filterNativeRequestHeaders(headers: Headers): Headers {
