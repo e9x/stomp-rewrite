@@ -1,3 +1,6 @@
+import { parse, parseFragment, serialize, serializeOuter } from 'parse5';
+import { Node } from 'parse5/dist/tree-adapters/default.js';
+
 import { createDataURI, parseDataURI, routeURL } from './routeURL.js';
 import StompURL from './StompURL.js';
 
@@ -15,7 +18,7 @@ export function modifyHTML(
 	url: StompURL,
 	fragment = false
 ): string {
-	fragment;
-	url.codec;
-	return script;
+	const tree: Node = fragment ? parseFragment(script) : parse(script);
+
+	return fragment ? serialize(tree) : serializeOuter(tree);
 }

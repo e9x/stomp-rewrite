@@ -28,7 +28,8 @@
 		"escodegen": "^2.0.0",
 		"http-errors": "^2.0.0",
 		"idb": "^7.0.1",
-		"meriyah": "^4.2.1"
+		"meriyah": "^4.2.1",
+		"parse5": "^7.0.0"
 	},
 	"devDependencies": {
 		"@types/crypto-js": "^4.1.1",
