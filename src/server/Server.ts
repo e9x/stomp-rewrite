@@ -9,9 +9,9 @@ import {
 	generateConfigCodecKey,
 	parseConfig,
 } from '../config.js';
+import { routeHTML } from '../rewriteHTML.js';
 import { parseRoutedURL } from '../routeURL.js';
 import StompURL from '../StompURL.js';
-import process from './process.js';
 import rewrites from './rewrites.js';
 
 function json(status: number, data: object | number | string): Response {
@@ -63,9 +63,15 @@ export default class Server {
 				throw new Error('Missing URL param');
 			}
 
-			return await process(
-				new StompURL(params.get('url')!, this.codec, this.directory)
-			);
+			const surl = new StompURL(params.get('url')!, this.codec, this.directory);
+
+			return new Response(undefined, {
+				headers: {
+					location: routeHTML(surl, surl),
+				},
+				// force client to drop body and method
+				status: 301,
+			});
 		}
 
 		for (const rewrite in rewrites) {
