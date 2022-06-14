@@ -26,6 +26,7 @@
 		"quotes": "off",
 		"eqeqeq": "error",
 		"prefer-const": "error",
+		"no-var": "error",
 		"@typescript-eslint/no-non-null-assertion": "off",
 		"@typescript-eslint/ban-ts-comment": "off"
 	}

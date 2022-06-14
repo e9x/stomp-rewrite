@@ -32,3 +32,21 @@ export function restoreHTML(
 
 	return serialize(tree);
 }
+
+const REFRESH = /([; ]|^)url=(?:(['"])(((?!\2).)*)\2?|(.*);)/i;
+
+// excellent resource
+// https://web.archive.org/web/20210514140514/https://www.otsukare.info/2015/03/26/refresh-http-header
+export function modifyRefresh(script: string, url: StompURL) {
+	return script.replace(
+		REFRESH,
+		(_match, pre, _1, resource1, _3, resource2) => {
+			const resource: string = resource1 || resource2;
+
+			return `${pre}url=${routeHTML(
+				new StompURL(new URL(resource, url.toString()), url),
+				url
+			)}`;
+		}
+	);
+}
