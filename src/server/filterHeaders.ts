@@ -1,3 +1,4 @@
+import { trimNonStandardHeaders } from '../headers';
 import StompURL from '../StompURL';
 
 export declare type RouteTransform = (
@@ -32,7 +33,7 @@ export function filterResponseHeaders(
 	transformRoute: RouteTransform,
 	additionalFilter?: AdditionalFilter
 ): Headers {
-	const filteredHeaders = new Headers(headers);
+	const filteredHeaders = trimNonStandardHeaders(headers);
 
 	if (headers.has('location')) {
 		transformRoute(

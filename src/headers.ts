@@ -134,7 +134,7 @@ export const lowercaseStandardHeaderNames = standardHeaderNames.map(header =>
 
 export type RawHeaders = { [key: string]: string | string[] };
 
-export function capitalizeHeaderName(header: string) {
+export function capitalizeHeader(header: string) {
 	const index = lowercaseStandardHeaderNames.indexOf(header);
 
 	// non-standard
@@ -149,8 +149,24 @@ export function capitalizeHeaders(headers: Headers): RawHeaders {
 	const rawHeaders: RawHeaders = {};
 
 	for (const [header, value] of headers) {
-		rawHeaders[capitalizeHeaderName(header)] = value;
+		rawHeaders[capitalizeHeader(header)] = value;
 	}
 
 	return rawHeaders;
+}
+
+export function isStandardHeader(header: string) {
+	return lowercaseStandardHeaderNames.includes(header.toLowerCase());
+}
+
+export function trimNonStandardHeaders(headers: Headers): Headers {
+	const result = new Headers(headers);
+
+	for (const [header, value] of headers) {
+		if (isStandardHeader(header)) {
+			result.set(header, value);
+		}
+	}
+
+	return result;
 }
