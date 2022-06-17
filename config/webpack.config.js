@@ -2,6 +2,7 @@ import { resolve } from 'path';
 
 import ResolveTypescriptPlugin from 'resolve-typescript-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
+import webpack from 'webpack';
 
 import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
 
@@ -101,9 +102,33 @@ const common = {
 export default [
 	{
 		...common,
+		plugins: [
+			...common.plugins,
+			new webpack.ProvidePlugin({
+				...Object.fromEntries(
+					['Reflect', 'fetch', 'XMLHttpRequest', 'EventSource', 'URL'].map(
+						name => [name, resolve('./src/inject/snapshot.ts')]
+					)
+				),
+			}),
+		],
 		entry: {
 			injectWorker: './src/inject/worker.ts',
 			injectDocument: './src/inject/document.ts',
+		},
+		output: {
+			library: {
+				name: 'createClient',
+				type: 'umd',
+			},
+			libraryExport: 'default',
+			filename: '[name].js',
+			path: appDist,
+		},
+	},
+	{
+		...common,
+		entry: {
 			serviceWorker: './src/server/serviceWorker.ts',
 		},
 		output: {

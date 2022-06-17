@@ -1,11 +1,13 @@
 import GenericCodec from './Codecs.js';
 
+export declare type urlLike = URL | string;
+
 export default class StompURL {
 	codec: GenericCodec;
 	directory: string;
 	url: URL;
 	constructor(
-		url: string | URL,
+		url: urlLike,
 		codec: GenericCodec | StompURL,
 		directory?: string
 	) {

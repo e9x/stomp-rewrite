@@ -14,6 +14,8 @@ import StompURL from './StompURL.js';
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script
 
+export const CLIENT_KEY = '(stomp)';
+
 export function routeJS(resource: StompURL, url: StompURL, module = false) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);

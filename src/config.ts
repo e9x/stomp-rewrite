@@ -1,3 +1,5 @@
+import { BareClientData } from 'bare-client';
+
 import GenericCodec, { AESCodec, XORCodec } from './Codecs.js';
 
 export declare type ConfigCodec = 'generic' | 'xor' | 'aes';
@@ -6,6 +8,7 @@ export interface Config {
 	codec: ConfigCodec;
 	directory: string;
 	bareServer: string;
+	bareClientData?: BareClientData;
 }
 
 export interface ParsedConfig extends Omit<Config, 'codec'> {
