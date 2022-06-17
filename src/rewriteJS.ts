@@ -7,7 +7,7 @@ import {
 	AcornIterator,
 	LazyGenerate,
 	noResult,
-} from './AcornUtil.js';
+} from './acornUtil.js';
 import { createDataURI, parseDataURI, routeURL } from './routeURL.js';
 import StompURL from './StompURL.js';
 
