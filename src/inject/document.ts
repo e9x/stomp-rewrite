@@ -6,6 +6,7 @@ export class DocumentClient extends Client {
 	constructor(init: ParsedConfig) {
 		super(init);
 		baseModules(this);
+		this.apply();
 	}
 }
 

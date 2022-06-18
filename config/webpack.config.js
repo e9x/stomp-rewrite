@@ -107,7 +107,7 @@ export default [
 			new webpack.ProvidePlugin({
 				...Object.fromEntries(
 					['Reflect', 'fetch', 'XMLHttpRequest', 'EventSource', 'URL'].map(
-						name => [name, resolve('./src/inject/snapshot.ts')]
+						name => [name, [resolve('./src/inject/snapshot.ts'), name]]
 					)
 				),
 			}),

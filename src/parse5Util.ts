@@ -111,10 +111,6 @@ export default class Parse5Iterator {
 			let length = context.node.childNodes.length;
 
 			for (const node of context.node.childNodes) {
-				if (!((<Element>node).childNodes instanceof Array)) {
-					continue;
-				}
-
 				this.stack[start + length--] = new Parse5Context(
 					<Element>node,
 					context,
@@ -125,7 +121,7 @@ export default class Parse5Iterator {
 
 		return { value: context, done: false };
 	}
-	[Symbol.iterator]() {
-		return this;
+	[Symbol.iterator](): Iterator<Parse5Context> {
+		return <Iterator<Parse5Context>>this;
 	}
 }

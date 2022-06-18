@@ -45,6 +45,25 @@ export default class FetchModule extends Module {
 				),
 		});
 
+		Reflect.defineProperty(global.Response.prototype, 'url', {
+			configurable: true,
+			enumerable: true,
+			get: this.client
+				.getModule(ProxyModule)!
+				.wrapFunction(
+					Reflect.getOwnPropertyDescriptor(global.Response.prototype, 'url')!
+						.get!,
+					(target, that, args) => {
+						if (this.responseURLs.has(that)) {
+							return this.responseURLs.get(that);
+						} else {
+							// eslint-disable-next-line @typescript-eslint/ban-types
+							return Reflect.apply(<Function>target, that, args);
+						}
+					}
+				),
+		});
+
 		global.Request = this.client
 				.getModule(ProxyModule)!
 				.wrapFunction(

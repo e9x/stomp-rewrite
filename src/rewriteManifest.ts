@@ -1,3 +1,4 @@
+import { Config } from './config.js';
 import { routeHTML } from './rewriteHTML.js';
 import {
 	createDataURI,
@@ -7,10 +8,18 @@ import {
 } from './routeURL.js';
 import StompURL from './StompURL.js';
 
-export function routeManifest(resource: StompURL, url: StompURL) {
+export function routeManifest(
+	resource: StompURL,
+	url: StompURL,
+	config: Config
+) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
-		return createDataURI({ mime, data: modifyManifest(data, url), attributes });
+		return createDataURI({
+			mime,
+			data: modifyManifest(data, url, config),
+			attributes,
+		});
 	}
 
 	return routeURL('manifest', resource);
@@ -107,19 +116,21 @@ declare interface Manifest {
 	theme_color?: string;
 }
 
-export function modifyManifest(script: string, url: StompURL) {
+export function modifyManifest(script: string, url: StompURL, config: Config) {
 	const manifest: Manifest = JSON.parse(script);
 
 	if (manifest.scope)
 		manifest.scope = routeHTML(
 			new StompURL(new URL(manifest.scope, url.toString()), url),
-			url
+			url,
+			config
 		);
 
 	if (manifest.start_url)
 		manifest.start_url = routeHTML(
 			new StompURL(new URL(manifest.start_url, url.toString()), url),
-			url
+			url,
+			config
 		);
 
 	if (manifest.shortcuts)

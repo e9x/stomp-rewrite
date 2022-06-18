@@ -6,6 +6,7 @@ import GenericCodec from '../Codecs.js';
 import {
 	Config,
 	ParsedConfig,
+	codecType,
 	generateConfigCodecKey,
 	parseConfig,
 } from '../config.js';
@@ -27,6 +28,7 @@ export default class Server {
 	codec: GenericCodec;
 	directory: string;
 	bare: BareClient;
+	bareServer: string;
 	constructor(init: ParsedConfig) {
 		if (!init.directory.startsWith('/') || !init.directory.endsWith('/')) {
 			throw new Error(
@@ -34,6 +36,7 @@ export default class Server {
 			);
 		}
 
+		this.bareServer = init.bareServer;
 		this.codec = init.codec;
 		this.directory = init.directory;
 		this.bare = new BareClient(init.bareServer);
@@ -53,6 +56,14 @@ export default class Server {
 
 		return false;
 	}
+	getConfig(): Config {
+		return {
+			directory: this.directory,
+			codec: codecType(this.codec),
+			bareServer: this.bareServer,
+			bareClientData: this.bare.data,
+		};
+	}
 	async tryRoute(request: Request): Promise<Response> {
 		const url = new URL(request.url);
 
@@ -67,7 +78,7 @@ export default class Server {
 
 			return new Response(undefined, {
 				headers: {
-					location: routeHTML(surl, surl),
+					location: routeHTML(surl, surl, this.getConfig()),
 				},
 				// force client to drop body and method
 				status: 301,
@@ -84,7 +95,7 @@ export default class Server {
 					`${url.origin}${this.directory}`
 				);
 
-				return await callback(parsed.url, request, this.bare);
+				return await callback(parsed.url, request, this.bare, this.getConfig());
 			}
 		}
 

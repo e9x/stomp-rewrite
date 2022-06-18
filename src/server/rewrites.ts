@@ -2,6 +2,7 @@
 
 import BareClient from 'bare-client';
 
+import { Config } from '../config.js';
 import { capitalizeHeaders } from '../headers.js';
 import { modifyCSS, routeCSS } from '../rewriteCSS.js';
 import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML.js';
@@ -21,7 +22,8 @@ const BODY_ILLEGAL = ['GET', 'HEAD'];
 type BodyTransform = (
 	url: StompURL,
 	response: Response,
-	responseHeaders: Headers
+	responseHeaders: Headers,
+	config: Config
 ) => Promise<BodyInit>;
 
 async function genericForwardBind(
@@ -31,11 +33,13 @@ async function genericForwardBind(
 	additionalResponseFilter: AdditionalFilter | undefined,
 	url: StompURL,
 	serverRequest: Request,
-	bare: BareClient
+	bare: BareClient,
+	config: Config
 ) {
 	const requestHeaders = filterNativeRequestHeaders(
 		serverRequest.headers,
 		url,
+		config,
 		additionalRequestFilter
 	);
 
@@ -51,15 +55,19 @@ async function genericForwardBind(
 	const responseHeaders = filterResponseHeaders(
 		response.headers,
 		url,
+		config,
 		transformRoute,
 		additionalResponseFilter
 	);
 
-	return new Response(await transformBody(url, response, responseHeaders), {
-		status: response.status,
-		statusText: response.statusText,
-		headers: responseHeaders,
-	});
+	return new Response(
+		await transformBody(url, response, responseHeaders, config),
+		{
+			status: response.status,
+			statusText: response.statusText,
+			headers: responseHeaders,
+		}
+	);
 }
 
 function genericForward(
@@ -68,7 +76,12 @@ function genericForward(
 	additionalRequestFilter?: AdditionalFilter,
 	additionalResponseFilter?: AdditionalFilter
 ) {
-	return function (url: StompURL, serverRequest: Request, bare: BareClient) {
+	return function (
+		url: StompURL,
+		serverRequest: Request,
+		bare: BareClient,
+		config: Config
+	) {
 		return genericForwardBind(
 			transform,
 			route,
@@ -76,7 +89,8 @@ function genericForward(
 			additionalResponseFilter,
 			url,
 			serverRequest,
-			bare
+			bare,
+			config
 		);
 	};
 }
@@ -94,26 +108,27 @@ const css = genericForward(
 	(resource, url) => routeCSS(resource, url)
 );
 const html = genericForward(
-	async (url, response, responseHeaders) => {
+	async (url, response, responseHeaders, config) => {
 		if (responseHeaders.get('content-type') === 'application/pdf') {
 			return response.body!;
 		}
 
-		return modifyHTML(await response.text(), url);
+		return modifyHTML(await response.text(), url, config);
 	},
-	(resource, url) => routeHTML(resource, url),
-	(headers, filteredHeaders, url) => {
+	(resource, url, config) => routeHTML(resource, url, config),
+	(headers, filteredHeaders, url, config) => {
 		if (headers.has('refresh')) {
 			filteredHeaders.set(
 				'refresh',
-				modifyRefresh(headers.get('refresh')!, url)
+				modifyRefresh(headers.get('refresh')!, url, config)
 			);
 		}
 	}
 );
 const manifest = genericForward(
-	async (url, response) => modifyManifest(await response.text(), url),
-	(resource, url) => routeManifest(resource, url)
+	async (url, response, _responseHeaders, config) =>
+		modifyManifest(await response.text(), url, config),
+	(resource, url, config) => routeManifest(resource, url, config)
 );
 const binary = genericForward(
 	async (_url, response) => response.body!,
@@ -124,7 +139,8 @@ const rewrites: {
 	[key: string]: (
 		url: StompURL,
 		serverRequest: Request,
-		bare: BareClient
+		bare: BareClient,
+		config: Config
 	) => Promise<Response>;
 } = {
 	js,

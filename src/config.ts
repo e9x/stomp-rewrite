@@ -41,13 +41,20 @@ export function generateConfigCodecKey(codec: ConfigCodec): string {
 	switch (codec) {
 		case 'aes':
 			return AESCodec.generateKey();
-			break;
 		case 'xor':
 			return XORCodec.generateKey();
-			break;
 		case 'generic':
 		default:
 			return GenericCodec.generateKey();
-			break;
+	}
+}
+
+export function codecType(codec: GenericCodec): ConfigCodec {
+	if (codec instanceof AESCodec) {
+		return 'aes';
+	} else if (codec instanceof XORCodec) {
+		return 'xor';
+	} else {
+		return 'generic';
 	}
 }

@@ -25,7 +25,7 @@ export const XMLHttpRequest = global.XMLHttpRequest;
 
 export const EventSource = global.EventSource;
 
-export const URL = class extends global.URL {
+export class URL extends global.URL {
 	static createObjectURL = global.URL.createObjectURL;
 	static revokeObjectURL = global.URL.revokeObjectURL;
-};
+}

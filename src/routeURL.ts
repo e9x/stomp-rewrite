@@ -21,6 +21,14 @@ export function routeBinary(resource: StompURL) {
 	return routeURL('binary', resource);
 }
 
+export function injectDocumentJS(url: StompURL) {
+	return `${url.directory}injectDocument.js`;
+}
+
+export function injectWorkerJS(url: StompURL) {
+	return `${url.directory}injectWorker.js`;
+}
+
 /*
 // url will not be unrouted
 // always store original url
