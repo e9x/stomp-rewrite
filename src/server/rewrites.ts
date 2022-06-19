@@ -17,6 +17,8 @@ import {
 	filterResponseHeaders,
 } from './filterHeaders.js';
 
+const integrityHeaders: string[] = ['Content-MD5'];
+
 const BODY_ILLEGAL = ['GET', 'HEAD'];
 
 type BodyTransform = (
@@ -97,15 +99,33 @@ function genericForward(
 
 const js = genericForward(
 	async (url, response) => modifyJS(await response.text(), url),
-	(resource, url) => routeJS(resource, url)
+	(resource, url) => routeJS(resource, url),
+	undefined,
+	(_headers, filteredHeaders) => {
+		for (const header of integrityHeaders) {
+			filteredHeaders.delete(header);
+		}
+	}
 );
 const mjs = genericForward(
 	async (url, response) => modifyJS(await response.text(), url, true),
-	(resource, url) => routeJS(resource, url, true)
+	(resource, url) => routeJS(resource, url, true),
+	undefined,
+	(_headers, filteredHeaders) => {
+		for (const header of integrityHeaders) {
+			filteredHeaders.delete(header);
+		}
+	}
 );
 const css = genericForward(
 	async (url, response) => modifyCSS(await response.text(), url),
-	(resource, url) => routeCSS(resource, url)
+	(resource, url) => routeCSS(resource, url),
+	undefined,
+	(_headers, filteredHeaders) => {
+		for (const header of integrityHeaders) {
+			filteredHeaders.delete(header);
+		}
+	}
 );
 const html = genericForward(
 	async (url, response, responseHeaders, config) => {
@@ -123,12 +143,22 @@ const html = genericForward(
 				modifyRefresh(headers.get('refresh')!, url, config)
 			);
 		}
+
+		for (const header of integrityHeaders) {
+			filteredHeaders.delete(header);
+		}
 	}
 );
 const manifest = genericForward(
 	async (url, response, _responseHeaders, config) =>
 		modifyManifest(await response.text(), url, config),
-	(resource, url, config) => routeManifest(resource, url, config)
+	(resource, url, config) => routeManifest(resource, url, config),
+	undefined,
+	(_headers, filteredHeaders) => {
+		for (const header of integrityHeaders) {
+			filteredHeaders.delete(header);
+		}
+	}
 );
 const binary = genericForward(
 	async (_url, response) => response.body!,

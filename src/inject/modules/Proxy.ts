@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { restoreJS } from '../../rewriteJS.js';
 import Module from '../Module.js';
 import { isNative } from '../nativeUtil.js';
@@ -29,7 +30,6 @@ export default class ProxyModule extends Module {
 			}
 		);
 	}
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	mirrorAttributes<F extends Function, T extends Function>(
 		from: F,
 		to: T
@@ -52,7 +52,6 @@ export default class ProxyModule extends Module {
 
 		return to;
 	}
-	// eslint-disable-next-line @typescript-eslint/ban-types
 	wrapFunction<T extends Function>(
 		fn: T,
 		wrap: (target: T, that: any, args: any[], newTarget?: any) => any,
@@ -60,8 +59,8 @@ export default class ProxyModule extends Module {
 	): T {
 		const wrapped =
 			'prototype' in fn
-				? function attach(...args: any[]) {
-						let newTarget = new.target;
+				? function attach(this: any, ...args: any[]) {
+						let newTarget: Function = new.target;
 
 						if (construct) {
 							if (new.target === undefined) {
@@ -69,11 +68,8 @@ export default class ProxyModule extends Module {
 								throw new Error('Placeholder');
 								// fn();
 							} else if (new.target === wrapped) {
-								// @ts-ignore
 								newTarget = fn;
-								// @ts-ignore
 								Reflect.setPrototypeOf(this, fn.prototype);
-								// @ts-ignore
 								this.constructor = fn;
 							}
 						}
@@ -81,11 +77,11 @@ export default class ProxyModule extends Module {
 						// @ts-ignore
 						return wrap(fn, this, args, newTarget);
 				  }
-				: {
-						attach(...args: any[]) {
-							return wrap(fn, this, args);
-						},
-				  }['attach'];
+				: ({
+					attach(this: any, ...args: any[]) {
+						return wrap(fn, this, args);
+					}
+				}).attach;
 
 		this.mirrorAttributes(fn, wrapped);
 

@@ -1,6 +1,37 @@
-import { Config } from '../config';
-import { trimNonStandardHeaders } from '../headers';
-import StompURL from '../StompURL';
+import { Config } from '../config.js';
+import { trimNonStandardHeaders } from '../headers.js';
+import StompURL from '../StompURL.js';
+
+const cspHeaders: string[] = [
+	'Content-Security-Policy',
+	'Content-Security-Policy-Report-Only',
+	'X-Content-Security-Policy',
+	'X-Content-Security-Policy-Report-Only',
+	'X-WebKit-CSP',
+	'X-WebKit-CSP-Report-Only',
+];
+
+const corsHeaders: string[] = [
+	'Cross-Origin-Resource-Policy',
+	'Cross-Origin-Opener-Policy',
+];
+
+const accessControlHeaders: string[] = [
+	'Access-Control-Allow-Credentials',
+	'Access-Control-Allow-Headers',
+	'Access-Control-Allow-Methods',
+	'Access-Control-Allow-Origin',
+	'Access-Control-Expose-Headers',
+	'Access-Control-Max-Age',
+	'Access-Control-Request-Headers',
+	'Access-Control-Request-Method',
+];
+
+const removeHeaders: string[] = [
+	...cspHeaders,
+	...corsHeaders,
+	...accessControlHeaders,
+];
 
 export declare type RouteTransform = (
 	resource: StompURL,
@@ -54,6 +85,10 @@ export function filterResponseHeaders(
 
 	if (additionalFilter) {
 		additionalFilter(headers, filteredHeaders, url, config);
+	}
+
+	for (const header of removeHeaders) {
+		filteredHeaders.delete(header);
 	}
 
 	return filteredHeaders;
