@@ -2,18 +2,18 @@ import BareClient from 'bare-client';
 import createHttpError from 'http-errors';
 import { openDB } from 'idb';
 
-import GenericCodec from '../Codecs.js';
+import GenericCodec from '../Codecs';
 import {
 	Config,
 	ParsedConfig,
 	codecType,
 	generateConfigCodecKey,
 	parseConfig,
-} from '../config.js';
-import { routeHTML } from '../rewriteHTML.js';
-import { parseRoutedURL } from '../routeURL.js';
-import StompURL from '../StompURL.js';
-import rewrites from './rewrites.js';
+} from '../config';
+import { routeHTML } from '../rewriteHTML';
+import { parseRoutedURL } from '../routeURL';
+import StompURL from '../StompURL';
+import rewrites from './rewrites';
 
 function json(status: number, data: object | number | string): Response {
 	return new Response(JSON.stringify(data, null, '\t'), {

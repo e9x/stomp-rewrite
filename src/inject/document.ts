@@ -1,6 +1,6 @@
-import { ParsedConfig } from '../config.js';
-import baseModules from './baseModules.js';
-import { Client, createClientFactory } from './Client.js';
+import { ParsedConfig } from '../config';
+import baseModules from './baseModules';
+import { Client, createClientFactory } from './Client';
 
 export class DocumentClient extends Client {
 	constructor(init: ParsedConfig) {
