@@ -1,7 +1,7 @@
-import BareClient from 'bare-client';
+import BareClient from '@tomphttp/bare-client';
 
 import GenericCodec from '../Codecs.js';
-import { Config, ParsedConfig, parseConfig } from '../config.js';
+import { Config, parseConfig, ParsedConfig } from '../config.js';
 import { CLIENT_KEY } from '../rewriteJS.js';
 import StompURL from '../StompURL.js';
 import Module from './Module.js';
@@ -40,7 +40,6 @@ export class Client {
 		this.modules.set(Module, new Module(this));
 	}
 	getModule<T extends ModuleCtor>(Module: T): InstanceType<T> | undefined {
-		
 		if (!this.modules.has(Module)) {
 			return undefined;
 		}

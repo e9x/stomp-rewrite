@@ -1,6 +1,6 @@
 // import createHttpError from 'http-errors';
 
-import BareClient from 'bare-client';
+import BareClient from '@tomphttp/bare-client';
 
 import { Config } from '../config.js';
 import { capitalizeHeaders } from '../headers.js';
@@ -12,10 +12,12 @@ import { routeBinary } from '../routeURL.js';
 import StompURL from '../StompURL.js';
 import {
 	AdditionalFilter,
-	RouteTransform,
 	filterNativeRequestHeaders,
 	filterResponseHeaders,
+	RouteTransform,
 } from './filterHeaders.js';
+
+export const statusEmpty = [101, 204, 205, 304];
 
 const integrityHeaders: string[] = ['Content-MD5'];
 
@@ -47,6 +49,8 @@ async function genericForwardBind(
 
 	const response = await bare.fetch(url.toString(), {
 		method: serverRequest.method,
+		cache: serverRequest.cache,
+		redirect: serverRequest.redirect,
 		body:
 			(!BODY_ILLEGAL.includes(serverRequest.method) &&
 				(await serverRequest.blob())) ||
@@ -63,7 +67,9 @@ async function genericForwardBind(
 	);
 
 	return new Response(
-		await transformBody(url, response, responseHeaders, config),
+		statusEmpty.includes(+response.status)
+			? undefined
+			: await transformBody(url, response, responseHeaders, config),
 		{
 			status: response.status,
 			statusText: response.statusText,
@@ -162,7 +168,7 @@ const manifest = genericForward(
 );
 const binary = genericForward(
 	async (_url, response) => response.body!,
-	resource => routeBinary(resource)
+	(resource) => routeBinary(resource)
 );
 
 const rewrites: {

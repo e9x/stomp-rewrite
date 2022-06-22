@@ -10,8 +10,7 @@
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/eslint-recommended",
-		"plugin:@typescript-eslint/recommended",
-		"prettier"
+		"plugin:@typescript-eslint/recommended"
 	],
 	"parserOptions": {
 		"ecmaVersion": "latest",
@@ -21,13 +20,20 @@
 		"global": true
 	},
 	"rules": {
-		"no-constant-condition": ["error", { "checkLoops": false }],
-		"no-lone-blocks": "off",
+		"indent": "off",
 		"quotes": "off",
+		"no-mixed-spaces-and-tabs": "off",
+		"no-lone-blocks": "off",
 		"eqeqeq": "error",
 		"prefer-const": "error",
 		"no-var": "error",
 		"@typescript-eslint/no-non-null-assertion": "off",
-		"@typescript-eslint/ban-ts-comment": "off"
+		"@typescript-eslint/ban-ts-comment": "off",
+		"no-constant-condition": [
+			"error",
+			{
+				"checkLoops": false
+			}
+		]
 	}
 }

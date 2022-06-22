@@ -1,21 +1,26 @@
 import { generate } from '@javascript-obfuscator/escodegen';
 import { Node as mNode } from 'meriyah/dist/src/estree';
 
-const symbolNoResult = Symbol();
+export const symbolNoResult = Symbol();
+
+export const ctxReplacement = Symbol();
 
 declare type NodeRange = [number, number];
 
-export declare type Node = {
-	range?: NodeRange;
-	[key: string | symbol]:
-		| Node
-		| Node[]
-		| NodeRange
-		| string
-		| boolean
-		| undefined;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-} | mNode | any;
+export declare type Node =
+	| {
+			range?: NodeRange;
+			[key: string | symbol]:
+				| Node
+				| Node[]
+				| NodeRange
+				| string
+				| boolean
+				| undefined;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	  }
+	| mNode
+	| any;
 
 export function noResult(node: Node): Node {
 	node[symbolNoResult] = true;
@@ -273,15 +278,21 @@ export class LazyGenerate {
 				'with',
 				generate(replace)
 			);
+
 			return false;
 		}
+
+		replaced.node[ctxReplacement] = true;
+
 		if (context.node.range) {
 			for (const mod of this.modifications) {
 				if (mod.replace === context.node) {
 					return replaced;
 				}
 			}
+
 			replace.range = context.node.range;
+
 			this.modifications.push({
 				node: context.node,
 				replace,

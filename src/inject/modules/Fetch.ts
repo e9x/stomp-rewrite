@@ -1,11 +1,11 @@
-import { BareFetchInit } from 'bare-client';
+import { BareFetchInit } from '@tomphttp/bare-client';
 import { routeBinary } from '../../routeURL.js';
 import StompURL, { urlLike } from '../../StompURL.js';
 import Module from '../Module.js';
 import ProxyModule from './Proxy.js';
 
 export default class FetchModule extends Module {
-	eventSourceURLs = new WeakMap<EventSource,string>();
+	eventSourceURLs = new WeakMap<EventSource, string>();
 	responseURLs = new WeakMap<Response, string>();
 	apply() {
 		global.EventSource = this.client.getModule(ProxyModule)!.wrapFunction(
@@ -64,9 +64,7 @@ export default class FetchModule extends Module {
 				),
 		});
 
-		global.Request = this.client
-				.getModule(ProxyModule)!
-				.wrapFunction(
+		global.Request = this.client.getModule(ProxyModule)!.wrapFunction(
 			global.Request,
 			(target, _that, args, newTarget) => {
 				if (args.length === 0) {
@@ -96,15 +94,14 @@ export default class FetchModule extends Module {
 					url = args[0].url;
 					init = <BareFetchInit>args[0];
 				} else {
-					url = new URL(args[0], this.client.url.toString());	
+					url = new URL(args[0], this.client.url.toString());
 					init = args[1];
 				}
 
-				
 				// [input, init]
 				//TODO: COOKIES
 				const res = await this.client.bare.fetch(url, init);
-				
+
 				// res.url is bad
 
 				const newRes = new Response(res.body, res);

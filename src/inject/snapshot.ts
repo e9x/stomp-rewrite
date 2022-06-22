@@ -25,6 +25,8 @@ export const XMLHttpRequest = global.XMLHttpRequest;
 
 export const EventSource = global.EventSource;
 
+export const WebSocket = global.WebSocket;
+
 export class URL extends global.URL {
 	static createObjectURL = global.URL.createObjectURL;
 	static revokeObjectURL = global.URL.revokeObjectURL;

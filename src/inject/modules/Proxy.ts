@@ -30,10 +30,7 @@ export default class ProxyModule extends Module {
 			}
 		);
 	}
-	mirrorAttributes<F extends Function, T extends Function>(
-		from: F,
-		to: T
-	): T {
+	mirrorAttributes<F extends Function, T extends Function>(from: F, to: T): T {
 		this.functionStrings.set(to, from.toString());
 
 		Reflect.defineProperty(to, 'length', {
@@ -77,11 +74,11 @@ export default class ProxyModule extends Module {
 						// @ts-ignore
 						return wrap(fn, this, args, newTarget);
 				  }
-				: ({
-					attach(this: any, ...args: any[]) {
-						return wrap(fn, this, args);
-					}
-				}).attach;
+				: {
+						attach(this: any, ...args: any[]) {
+							return wrap(fn, this, args);
+						},
+				  }.attach;
 
 		this.mirrorAttributes(fn, wrapped);
 
@@ -90,6 +87,6 @@ export default class ProxyModule extends Module {
 			wrapped.prototype.constructor = wrapped;
 		}
 
-		return <T><unknown>wrapped;
+		return <T>(<unknown>wrapped);
 	}
 }

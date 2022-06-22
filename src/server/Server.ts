@@ -1,21 +1,21 @@
-import BareClient from 'bare-client';
+import BareClient from '@tomphttp/bare-client';
 import createHttpError from 'http-errors';
 import { openDB } from 'idb';
 
 import GenericCodec from '../Codecs';
 import {
-	Config,
-	ParsedConfig,
 	codecType,
+	Config,
 	generateConfigCodecKey,
 	parseConfig,
+	ParsedConfig,
 } from '../config';
 import { routeHTML } from '../rewriteHTML';
 import { parseRoutedURL } from '../routeURL';
 import StompURL from '../StompURL';
 import rewrites from './rewrites';
 
-function json(status: number, data: object | number | string): Response {
+export function json(status: number, data: object | number | string): Response {
 	return new Response(JSON.stringify(data, null, '\t'), {
 		status,
 		headers: {
@@ -48,6 +48,10 @@ export default class Server {
 			return true;
 		}
 
+		if (pathname === `${this.directory}client`) {
+			return true;
+		}
+
 		for (const rewrite in rewrites) {
 			if (pathname.startsWith(`${this.directory}${rewrite}/`)) {
 				return true;
@@ -67,21 +71,21 @@ export default class Server {
 	async tryRoute(request: Request): Promise<Response> {
 		const url = new URL(request.url);
 
+		if (url.pathname === `${this.directory}client`) {
+			return new Response();
+		}
+
 		if (url.pathname === `${this.directory}process`) {
-			const params = new URLSearchParams(await request.text());
+			const surl = new StompURL(
+				await request.text(),
+				this.codec,
+				this.directory
+			);
 
-			if (!params.has('url')) {
-				throw new Error('Missing URL param');
-			}
-
-			const surl = new StompURL(params.get('url')!, this.codec, this.directory);
-
-			return new Response(undefined, {
+			return new Response(routeHTML(surl, surl, this.getConfig()), {
 				headers: {
-					location: routeHTML(surl, surl, this.getConfig()),
+					'content-type': 'text/plain',
 				},
-				// force client to drop body and method
-				status: 301,
 			});
 		}
 
@@ -99,12 +103,17 @@ export default class Server {
 			}
 		}
 
-		throw new Error(`${request.url} shouldn't have been routed`);
+		throw new createHttpError.NotFound(
+			`${request.url} shouldn't have been routed`
+		);
 	}
 	async route(request: Request): Promise<Response> {
 		try {
 			return await this.tryRoute(request);
 		} catch (error) {
+			console.error(`At ${request.method} ${request.url}`);
+			console.error(error);
+
 			let httpError;
 			let id;
 

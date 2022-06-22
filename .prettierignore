@@ -1,6 +1,4 @@
 /node_modules
-/build/
-/public/ruffle/
-/public/stomp/
-/public/uv/
-/uv/
+/dist
+/build
+/.vscode

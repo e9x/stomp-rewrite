@@ -1,4 +1,4 @@
-import { BareClientData } from 'bare-client';
+import { BareManifest } from '@tomphttp/bare-client';
 
 import GenericCodec, { AESCodec, XORCodec } from './Codecs.js';
 
@@ -8,7 +8,7 @@ export interface Config {
 	codec: ConfigCodec;
 	directory: string;
 	bareServer: string;
-	bareClientData?: BareClientData;
+	bareClientData?: BareManifest;
 }
 
 export interface ParsedConfig extends Omit<Config, 'codec'> {

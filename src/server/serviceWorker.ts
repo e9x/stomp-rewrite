@@ -7,7 +7,7 @@ const config: Config = JSON.parse(
 
 let server: Server | undefined;
 
-createServer(config).then(s => (server = s));
+createServer(config).then((s) => (server = s));
 
 declare global {
 	type FetchEvent = Event & {
@@ -19,7 +19,7 @@ declare global {
 	}
 }
 
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
 	if (!server) return;
 
 	if (server.willRoute(event.request.url)) {

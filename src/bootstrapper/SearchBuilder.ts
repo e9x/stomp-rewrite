@@ -1,5 +1,5 @@
-const whitespace = /\s/;
-const http_s_protocol = /^https?:\/\//;
+const HOST = /^(\S*?\.\S*|^localhost(:\d+)?)(\/.*?)?$/;
+const HTTP = /^https?:\/\//;
 
 export default class SearchBuilder {
 	template: string;
@@ -7,9 +7,9 @@ export default class SearchBuilder {
 		this.template = template;
 	}
 	query(input: string) {
-		if (input.match(http_s_protocol)) {
+		if (HTTP.test(input)) {
 			return input;
-		} else if (input.includes('.') && !input.match(whitespace)) {
+		} else if (HOST.test(input)) {
 			return `http://${input}`;
 		} else {
 			return this.template.replace('%s', encodeURIComponent(input));

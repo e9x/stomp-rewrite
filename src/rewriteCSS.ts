@@ -42,7 +42,11 @@ function restoreValue(url: string) {
 	return url.slice(hashi + 1);
 }
 
-export function modifyCSS(script: string, url: StompURL, context = 'stylesheet') {
+export function modifyCSS(
+	script: string,
+	url: StompURL,
+	context = 'stylesheet'
+) {
 	const tree = parse(script, { positions: true, context });
 	let offset = 0;
 
@@ -62,12 +66,16 @@ export function modifyCSS(script: string, url: StompURL, context = 'stylesheet')
 				if (this.atrule?.name === 'import') {
 					replace = {
 						type: 'Url',
-						value: <StringNode><unknown>preserveValue(routeCSS(resolved, url), raw),
+						value: <StringNode>(
+							(<unknown>preserveValue(routeCSS(resolved, url), raw))
+						),
 					};
 				} else {
 					replace = {
 						type: 'Url',
-						value: <StringNode><unknown>preserveValue(routeBinary(resolved), raw),
+						value: <StringNode>(
+							(<unknown>preserveValue(routeBinary(resolved), raw))
+						),
 					};
 				}
 
@@ -103,7 +111,8 @@ export function restoreCSS(script: string, url: StompURL, context: string) {
 				script.slice(0, node.loc!.start.offset - offset) +
 				generated +
 				script.slice(node.loc!.end.offset - offset);
-			offset += node.loc!.end.offset - node.loc!.start.offset - generated.length;
+			offset +=
+				node.loc!.end.offset - node.loc!.start.offset - generated.length;
 		}
 	});
 
