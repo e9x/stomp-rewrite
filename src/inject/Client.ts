@@ -1,10 +1,9 @@
 import BareClient from '@tomphttp/bare-client';
-
-import GenericCodec from '../Codecs.js';
-import { Config, parseConfig, ParsedConfig } from '../config.js';
-import { CLIENT_KEY } from '../rewriteJS.js';
-import StompURL from '../StompURL.js';
-import Module from './Module.js';
+import GenericCodec from '../Codecs';
+import { Config, parseConfig, ParsedConfig } from '../config';
+import { CLIENT_KEY } from '../rewriteJS';
+import StompURL from '../StompURL';
+import Module from './Module';
 
 export interface ModuleCtor {
 	new (client: Client): Module;

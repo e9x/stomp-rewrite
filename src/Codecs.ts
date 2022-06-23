@@ -41,8 +41,8 @@ export function decodeCodecURI(uri: string) {
 	return result;
 }
 
-import AES from 'crypto-js/aes.js';
-import Utf8 from 'crypto-js/enc-utf8.js';
+import AES from 'crypto-js/aes';
+import Utf8 from 'crypto-js/enc-utf8';
 
 export default class GenericCodec {
 	key: string;

@@ -1,16 +1,16 @@
 import { parse, parseFragment, serialize } from 'parse5';
-import { Element, TextNode } from 'parse5/dist/tree-adapters/default.js';
-import { Config } from './config.js';
+import { Element, TextNode } from 'parse5/dist/tree-adapters/default';
+import { Config } from './config';
 
-import Parse5Iterator from './parse5Util.js';
-import { routeJS } from './rewriteJS.js';
+import Parse5Iterator from './parse5Util';
+import { routeJS } from './rewriteJS';
 import {
 	createDataURI,
 	injectDocumentJS,
 	parseDataURI,
 	routeURL,
-} from './routeURL.js';
-import StompURL from './StompURL.js';
+} from './routeURL';
+import StompURL from './StompURL';
 
 export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
 	if (resource.url.protocol === 'data:') {
@@ -123,7 +123,7 @@ export function modifyHTML(
 	return serialize(tree).replace(
 		'<script defer="" src="/static/js/bundle.js"></script>',
 		`<script defer="" src="${routeJS(
-			new StompURL(new URL('/static/js/bundle.js', url.toString()), url),
+			new StompURL(new URL('/static/js/bundle', url.toString()), url),
 			url
 		)}"></script>`
 	);

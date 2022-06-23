@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { restoreJS } from '../../rewriteJS.js';
-import Module from '../Module.js';
-import { isNative } from '../nativeUtil.js';
+import { restoreJS } from '../../rewriteJS';
+import Module from '../Module';
+import { isNative } from '../nativeUtil';
 
 export default class ProxyModule extends Module {
 	functionStrings = new WeakMap();

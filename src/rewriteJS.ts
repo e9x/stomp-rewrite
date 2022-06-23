@@ -5,12 +5,12 @@ import { parse } from 'meriyah';
 import {
 	AcornContext,
 	AcornIterator,
-	ctxReplacement,
 	LazyGenerate,
-} from './acornUtil.js';
-import { ACCESS_KEY } from './inject/modules/Access.js';
-import { createDataURI, parseDataURI, routeURL } from './routeURL.js';
-import StompURL from './StompURL.js';
+	ctxReplacement,
+} from './acornUtil';
+import { ACCESS_KEY } from './inject/modules/Access';
+import { createDataURI, parseDataURI, routeURL } from './routeURL';
+import StompURL from './StompURL';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script

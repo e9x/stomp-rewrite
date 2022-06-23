@@ -1,12 +1,7 @@
-import { Config } from './config.js';
-import { routeHTML } from './rewriteHTML.js';
-import {
-	createDataURI,
-	parseDataURI,
-	routeBinary,
-	routeURL,
-} from './routeURL.js';
-import StompURL from './StompURL.js';
+import { Config } from './config';
+import { routeHTML } from './rewriteHTML';
+import { createDataURI, parseDataURI, routeBinary, routeURL } from './routeURL';
+import StompURL from './StompURL';
 
 export function routeManifest(
 	resource: StompURL,

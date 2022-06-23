@@ -1,4 +1,4 @@
-import Module from '../Module.js';
+import Module from '../Module';
 
 export const ACCESS_KEY = '$s$a';
 

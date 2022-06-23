@@ -5,8 +5,8 @@ import {
 	parseDataURI,
 	routeBinary,
 	routeURL,
-} from './routeURL.js';
-import StompURL from './StompURL.js';
+} from './routeURL';
+import StompURL from './StompURL';
 
 export function routeCSS(resource: StompURL, url: StompURL) {
 	if (resource.url.protocol === 'data:') {

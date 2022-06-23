@@ -2,20 +2,20 @@
 
 import BareClient from '@tomphttp/bare-client';
 
-import { Config } from '../config.js';
-import { capitalizeHeaders } from '../headers.js';
-import { modifyCSS, routeCSS } from '../rewriteCSS.js';
-import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML.js';
-import { modifyJS, routeJS } from '../rewriteJS.js';
-import { modifyManifest, routeManifest } from '../rewriteManifest.js';
-import { routeBinary } from '../routeURL.js';
-import StompURL from '../StompURL.js';
+import { Config } from '../config';
+import { capitalizeHeaders } from '../headers';
+import { modifyCSS, routeCSS } from '../rewriteCSS';
+import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
+import { modifyJS, routeJS } from '../rewriteJS';
+import { modifyManifest, routeManifest } from '../rewriteManifest';
+import { routeBinary } from '../routeURL';
+import StompURL from '../StompURL';
 import {
 	AdditionalFilter,
+	RouteTransform,
 	filterNativeRequestHeaders,
 	filterResponseHeaders,
-	RouteTransform,
-} from './filterHeaders.js';
+} from './filterHeaders';
 
 export const statusEmpty = [101, 204, 205, 304];
 

@@ -1,4 +1,4 @@
-import { Config, ConfigCodec } from '../config.js';
+import { Config, ConfigCodec } from '../config';
 
 const currentScript = <HTMLScriptElement>document.currentScript;
 

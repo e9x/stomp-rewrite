@@ -1,5 +1,5 @@
-import GenericCodec from './Codecs.js';
-import StompURL from './StompURL.js';
+import GenericCodec from './Codecs';
+import StompURL from './StompURL';
 
 export const ROUTE_PROTOCOLS = ['http:', 'https:'];
 

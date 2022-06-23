@@ -1,5 +1,5 @@
-import { Config } from '../config.js';
-import Server, { createServer } from './Server.js';
+import { Config } from '../config';
+import Server, { createServer } from './Server';
 
 const config: Config = JSON.parse(
 	new URLSearchParams(location.search).get('config')!

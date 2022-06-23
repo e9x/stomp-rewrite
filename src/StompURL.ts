@@ -1,4 +1,4 @@
-import GenericCodec from './Codecs.js';
+import GenericCodec from './Codecs';
 
 export declare type urlLike = URL | string;
 

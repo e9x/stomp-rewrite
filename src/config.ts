@@ -1,6 +1,5 @@
 import { BareManifest } from '@tomphttp/bare-client';
-
-import GenericCodec, { AESCodec, XORCodec } from './Codecs.js';
+import GenericCodec, { AESCodec, XORCodec } from './Codecs';
 
 export declare type ConfigCodec = 'generic' | 'xor' | 'aes';
 
