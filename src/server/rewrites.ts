@@ -168,7 +168,7 @@ const manifest = genericForward(
 );
 const binary = genericForward(
 	async (_url, response) => response.body!,
-	(resource) => routeBinary(resource)
+	resource => routeBinary(resource)
 );
 
 const rewrites: {

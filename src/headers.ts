@@ -128,7 +128,7 @@ export const standardHeaderNames: string[] = [
 	'WWW-Authenticate',
 ];
 
-export const lowercaseStandardHeaderNames = standardHeaderNames.map((header) =>
+export const lowercaseStandardHeaderNames = standardHeaderNames.map(header =>
 	header.toLowerCase()
 );
 
