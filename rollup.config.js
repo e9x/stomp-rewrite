@@ -19,8 +19,10 @@ export default [
 			format: 'umd',
 			name: 'createClient',
 			exports,
+			sourcemap: true,
 		},
 		plugins: [
+			typescript(),
 			inject({
 				...Object.fromEntries(
 					[
@@ -36,12 +38,9 @@ export default [
 				),
 			}),
 			inject({
-				modules: {
-					global: resolve('src/global.ts'),
-				},
-				include: resolve('src'),
+				global: resolve('src/global.ts'),
+				exclude: /node_modules/,
 			}),
-			typescript(),
 			babel({ babelHelpers: 'bundled', extensions: ['.ts'] }),
 			terser(),
 			commonjs({
@@ -58,6 +57,7 @@ export default [
 			format: 'umd',
 			name: 'StompBootstrapper',
 			exports: 'default',
+			sourcemap: true,
 		},
 		plugins: [
 			typescript(),
@@ -72,6 +72,7 @@ export default [
 			format: 'umd',
 			name: 'SearchBuilder',
 			exports: 'default',
+			sourcemap: true,
 		},
 		plugins: [
 			typescript(),
