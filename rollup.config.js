@@ -4,6 +4,7 @@ import inject from '@rollup/plugin-inject';
 import json from '@rollup/plugin-json';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import { resolve } from 'path';
+import shim from 'rollup-plugin-shim';
 import { terser } from 'rollup-plugin-terser';
 import typescript from 'rollup-plugin-typescript2';
 
@@ -36,6 +37,11 @@ export default [
 						'EventSource',
 					].map(name => [resolve('src/inject/snapshot.ts'), name])
 				),
+			}),
+			shim({
+				// hack so we can use http-errors
+				depd: 'export default function(reason){ console.warn(reason); }',
+				module: 'export function createRequire(){}',
 			}),
 			inject({
 				global: resolve('src/global.ts'),
