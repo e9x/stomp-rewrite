@@ -2,7 +2,7 @@ import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
 import { parse } from 'meriyah';
 
-import { AcornContext, AcornIterator, LazyGenerate, result } from './acornUtil';
+import { AcornContext, AcornIterator, result } from './acornUtil';
 import { ACCESS_KEY } from './inject/baseModules/Access';
 import { createDataURI, parseDataURI, routeURL } from './routeURL';
 import StompURL from './StompURL';
@@ -48,8 +48,6 @@ export function routeJS(resource: StompURL, url: StompURL, module = false) {
 }
 
 export function modifyJS(script: string, url: StompURL, module = false) {
-	const lazy = new LazyGenerate();
-
 	const tree = parse(script, {
 		module,
 		next: true,
@@ -183,8 +181,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						(ctx.parent?.node.type === 'AssignmentExpression' &&
 							ctx.parentKey === 'left')
 					) {
-						lazy.replace(
-							ctx.parent,
+						ctx.parent.replaceWith(
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -233,8 +230,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 							)
 						);
 					} else {
-						lazy.replace(
-							ctx,
+						ctx.replaceWith(
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -300,8 +296,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						ctx.parent?.node.type === 'NewExpression' &&
 						ctx.parentKey === 'callee'
 					) {
-						lazy.replace(
-							ctx.parent!,
+						ctx.parent!.replaceWith(
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -319,8 +314,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						ctx.parent?.node.type === 'CallExpression' &&
 						ctx.parentKey === 'callee'
 					) {
-						lazy.replace(
-							ctx.parent!,
+						ctx.parent!.replaceWith(
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -339,8 +333,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						(ctx.parent?.node.type === 'AssignmentExpression' &&
 							ctx.parentKey === 'left')
 					) {
-						lazy.replace(
-							ctx.parent!,
+						ctx.parent!.replaceWith(
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -383,8 +376,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 							)
 						);
 					} else {
-						lazy.replace(
-							ctx,
+						ctx.replaceWith(
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -403,7 +395,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		}
 	}
 
-	return lazy.toString(script);
+	return generate(tree);
 }
 
 export function restoreJS(script: string, url: StompURL) {
