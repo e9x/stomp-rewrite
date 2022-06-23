@@ -3,9 +3,8 @@
 	"version": "1.0.0",
 	"description": "",
 	"scripts": {
-		"start": "node scripts/start.js",
-		"build": "rollup -c",
-		"build:watch": "rollup -cw",
+		"build": "NODE_ENV=production webpack --config ./config/webpack.config.js",
+		"build:watch": "NODE_ENV=development webpack --watch --config ./config/webpack.config.js",
 		"prepare": "node scripts/prepare.js"
 	},
 	"type": "module",
@@ -14,14 +13,14 @@
 	"lint-staged": {
 		"*.{mjs, js, ts, json}": "prettier --write"
 	},
+	"importSort": {
+		".mjs, .js, .jsx, .ts, .tsx": {
+			"style": "module"
+		}
+	},
 	"dependencies": {
 		"@javascript-obfuscator/escodegen": "^2.3.0",
-		"@rollup/plugin-babel": "^5.3.1",
-		"@rollup/plugin-commonjs": "^22.0.0",
-		"@rollup/plugin-json": "^4.1.0",
-		"@rollup/plugin-node-resolve": "^13.3.0",
 		"@tomphttp/bare-client": "^1.0.2-beta-readme3",
-		"@tomphttp/bare-server-node": "^1.0.2-beta-rollup1",
 		"ast-types": "^0.14.2",
 		"crypto-js": "^4.1.1",
 		"css-tree": "^2.1.0",
@@ -29,12 +28,9 @@
 		"http-errors": "^2.0.0",
 		"idb": "^7.0.1",
 		"meriyah": "^4.2.1",
-		"parse5": "^7.0.0",
-		"rollup": "^2.75.7",
-		"rollup-plugin-typescript2": "^0.32.1"
+		"parse5": "^7.0.0"
 	},
 	"devDependencies": {
-		"@rollup/plugin-inject": "^4.0.4",
 		"@types/crypto-js": "^4.1.1",
 		"@types/css-tree": "^1.0.7",
 		"@types/escodegen": "^0.0.7",
@@ -45,11 +41,10 @@
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-webpack-plugin": "^3.1.1",
 		"husky": "^8.0.1",
-		"prettier": "^2.7.1",
-		"prettier-plugin-organize-imports": "^3.0.0",
+		"import-sort-style-module": "^6.0.0",
+		"prettier": "^2.6.2",
+		"prettier-plugin-import-sort": "^0.0.7",
 		"resolve-typescript-plugin": "^1.2.0",
-		"rollup-plugin-shim": "^1.0.0",
-		"rollup-plugin-terser": "^7.0.2",
 		"terser-webpack-plugin": "^5.3.3",
 		"ts-loader": "^9.3.0",
 		"typescript": "^4.7.3",

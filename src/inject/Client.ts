@@ -51,10 +51,14 @@ export function createClientFactory(Client: {
 	new (init: ParsedConfig): Client;
 }) {
 	return function (config: Config, codecKey: string) {
+		const client = new Client(parseConfig(config, codecKey))
+	
 		Reflect.defineProperty(global, CLIENT_KEY, {
-			value: new Client(parseConfig(config, codecKey)),
+			value: client,
 			configurable: false,
 			enumerable: false,
 		});
+
+		client.apply();
 	};
 }

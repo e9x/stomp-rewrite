@@ -6,7 +6,6 @@ class WorkerClient extends Client {
 	constructor(init: ParsedConfig) {
 		super(init);
 		baseModules(this);
-		this.apply();
 	}
 }
 
