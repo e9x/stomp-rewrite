@@ -2,13 +2,8 @@ import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
 import { parse } from 'meriyah';
 
-import {
-	AcornContext,
-	AcornIterator,
-	LazyGenerate,
-	ctxReplacement,
-} from './acornUtil';
-import { ACCESS_KEY } from './inject/modules/Access';
+import { AcornContext, AcornIterator, LazyGenerate, result } from './acornUtil';
+import { ACCESS_KEY } from './inject/baseModules/Access';
 import { createDataURI, parseDataURI, routeURL } from './routeURL';
 import StompURL from './StompURL';
 
@@ -25,9 +20,9 @@ const cProp = 't$p';
 const cValue = 't$v';
 
 function generatePartial(script: string, ctx: AcornContext) {
-	let result = ctx.node[ctxReplacement]
-		? generate(ctx.node)
-		: script.slice(ctx.node.range[0], ctx.node.range[1]);
+	let result = ctx.node.range
+		? script.slice(ctx.node.range[0], ctx.node.range[1])
+		: generate(ctx.node);
 
 	if (
 		ctx.node.type.includes('Expression') &&
@@ -62,7 +57,17 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		ranges: true,
 	});
 
+	let catchLoop = 0;
+
 	for (const ctx of new AcornIterator(tree)) {
+		if (catchLoop === 500) {
+			console.log('etc');
+			console.log(generate(ctx.node), 'Over', catchLoop, 'iterations...');
+			break;
+		}
+
+		catchLoop++;
+
 		typeLoop: switch (ctx.node.type) {
 			/*case 'ImportExpression':
 				// todo: add tompc$.import(meta, url)
@@ -132,130 +137,123 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 				}
 
 				break;*/
-			/*case 'Identifier':
-				if (
-					ctx.parent.type === 'ArrayPattern' ||
-					ctx.parent.type === 'ObjectPattern'
-				)
-					break;
-				if (
-					ctx.parent.type === 'MemberExpression' &&
-					ctx.parent_key === 'property'
-				)
-					break; // window.location;
-				if (ctx.parent.type === 'LabeledStatement') break; // { location: null, };
-				if (ctx.parent.type === 'VariableDeclarator' && ctx.parent_key === 'id')
-					break;
-				if (ctx.parent.type === 'Property' && ctx.parent_key === 'key') break;
-				if (ctx.parent.type === 'MethodDefinition') break;
-				if (ctx.parent.type === 'ClassDeclaration') break;
-				if (ctx.parent.type === 'RestElement') break;
-				if (ctx.parent.type === 'ExportSpecifier') break;
-				if (ctx.parent.type === 'ImportSpecifier') break;
-				if (
-					(ctx.parent.type === 'FunctionDeclaration' ||
-						ctx.parent.type === 'FunctionExpression' ||
-						ctx.parent.type === 'ArrowFunctionExpression') &&
-					ctx.parent_key === 'params'
-				)
-					break;
-				if (
-					(ctx.parent.type === 'FunctionDeclaration' ||
-						ctx.parent.type === 'FunctionExpression') &&
-					ctx.parent_key === 'id'
-				)
-					break;
-				if (
-					ctx.parent.type === 'AssignmentPattern' &&
-					ctx.parent_key === 'left'
-				)
-					break;
-				if (!undefinable.includes(ctx.node.name)) break;
+			case 'Identifier':
+				{
+					let broke = true;
+					setTimeout(() => {
+						if (broke) {
+							console.log('broke', generate(ctx.node));
+						}
+					});
+					switch (ctx.parent?.node.type) {
+						case 'ArrayPattern':
+						case 'ObjectPattern':
+						case 'LabeledStatement':
+						case 'MethodDefinition':
+						case 'ClassDeclaration':
+						case 'RestElement':
+						case 'ExportSpecifier':
+						case 'ImportSpecifier':
+							break typeLoop;
+						case 'MemberExpression':
+							if (ctx.parentKey === 'property') break typeLoop;
+							break;
+						case 'VariableDeclarator':
+							if (ctx.parentKey === 'id') break typeLoop;
+							break;
+						case 'Property':
+							if (ctx.parentKey === 'key') break typeLoop;
+							break;
+						case 'FunctionDeclaration':
+						case 'FunctionExpression':
+							if (ctx.parentKey === 'id') break typeLoop;
+						// fallthrough
+						case 'ArrowFunctionExpression':
+							if (ctx.parentKey === 'params') break typeLoop;
+							break;
+						case 'AssignmentPattern':
+							if (ctx.parentKey === 'left') break typeLoop;
+							break;
+					}
+					if (!UNDEFINABLE.includes(ctx.node.name)) break;
+					broke = false;
 
-				if (
-					ctx.parent.type === 'UpdateExpression' ||
-					(ctx.parent.type === 'AssignmentExpression' &&
-						ctx.parent_key === 'left')
-				) {
-					modify.replace(
-						ctx.parent,
-						b.callExpression(
-							b.memberExpression(global_access, b.identifier('set1')),
-							[
-								ctx.node,
-								b.literal(ctx.node.name),
-								// return what the intended value is
-								b.arrowFunctionExpression(
-									[
-										b.identifier(c_target),
-										b.identifier(c_prop),
-										b.identifier(c_value),
-									],
-									ctx.parent.type === 'UpdateExpression'
-										? b.updateExpression(
-												ctx.parent.node.operator,
-												b.memberExpression(
-													b.identifier(c_target),
-													b.identifier(c_prop),
-													true
-												),
-												ctx.parent.node.prefix
-										  )
-										: b.assignmentExpression(
-												ctx.parent.node.operator,
-												b.memberExpression(
-													b.identifier(c_target),
-													b.identifier(c_prop),
-													true
-												),
-												b.identifier(c_value)
-										  )
+					if (
+						ctx.parent?.node.type === 'UpdateExpression' ||
+						(ctx.parent?.node.type === 'AssignmentExpression' &&
+							ctx.parentKey === 'left')
+					) {
+						lazy.replace(
+							ctx.parent,
+							b.callExpression(
+								b.memberExpression(
+									b.identifier(ACCESS_KEY),
+									b.identifier('set1')
 								),
-								// set
-								b.arrowFunctionExpression(
-									[b.identifier(c_value)],
-									b.assignmentExpression('=', ctx.node, b.identifier(c_value))
+								[
+									ctx.node,
+									b.literal(ctx.node.name),
+									// return what the intended value is
+									b.arrowFunctionExpression(
+										[
+											b.identifier(cTarget),
+											b.identifier(cProp),
+											b.identifier(cValue),
+										],
+										ctx.parent.node!.type === 'UpdateExpression'
+											? b.updateExpression(
+													ctx.parent.node.operator,
+													b.memberExpression(
+														b.identifier(cTarget),
+														b.identifier(cProp),
+														true
+													),
+													ctx.parent.node.prefix
+											  )
+											: b.assignmentExpression(
+													ctx.parent.node.operator,
+													b.memberExpression(
+														b.identifier(cTarget),
+														b.identifier(cProp),
+														true
+													),
+													b.identifier(cValue)
+											  )
+									),
+									// set
+									b.arrowFunctionExpression(
+										[b.identifier(cValue)],
+										b.assignmentExpression('=', ctx.node, b.identifier(cValue))
+									),
+									ctx.parent!.node.type === 'UpdateExpression'
+										? b.identifier('undefined')
+										: ctx.parent.node.right,
+									b.literal(generatePartial(script, ctx.parent)),
+								]
+							)
+						);
+					} else {
+						lazy.replace(
+							ctx,
+							b.callExpression(
+								b.memberExpression(
+									b.identifier(ACCESS_KEY),
+									b.identifier('get')
 								),
-								ctx.parent.type === 'UpdateExpression'
-									? b.identifier('undefined')
-									: ctx.parent.node.right,
-								b.literal(this.generate_part(code, ctx.parent)),
-							]
-						)
-					);
-				} else {
-					modify.replace(
-						ctx,
-						b.callExpression(
-							b.memberExpression(global_access, b.identifier('get')),
-							[ctx.node, b.literal(ctx.node.name)]
-						)
-					);
+								[ctx.node, b.literal(ctx.node.name)]
+							)
+						);
+					}
 				}
-
-				break;*/
+				break;
 			case 'MemberExpression':
 				{
-					/*lazy.replace(
-					ctx,
-					b.memberExpression(
-						b.identifier('test'),
-						noResult(
-							b.memberExpression(
-								ctx.node.object,
-								ctx.node.property,
-								ctx.node.computed
-							)
-						)
-					)
-				);
-*/
 					switch (ctx.parent?.node.type) {
 						case 'ArrayPattern':
 						case 'ObjectPattern':
 							break typeLoop;
 						case 'UnaryExpression':
-							if (ctx.parent.node.operator === 'delete') break typeLoop;
+							if (ctx.parent?.node.operator === 'delete') break typeLoop;
 							break;
 					}
 
@@ -288,14 +286,14 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 					// if not computed (object.property), make property a string
 					// computed is object[property]
 
-					let property_argument;
+					let propertyArgument;
 
 					// TODO: run property_argument through rewriter
 					// object[location[location]]
 					if (ctx.node.computed) {
-						property_argument = ctx.node.property;
+						propertyArgument = result(ctx.node.property);
 					} else if (ctx.node.property.type === 'Identifier') {
-						property_argument = b.literal(ctx.node.property.name);
+						propertyArgument = b.literal(ctx.node.property.name);
 					}
 
 					if (
@@ -303,17 +301,17 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						ctx.parentKey === 'callee'
 					) {
 						lazy.replace(
-							ctx.parent,
+							ctx.parent!,
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
 									b.identifier('new2')
 								),
 								[
-									ctx.node.object,
-									property_argument,
-									b.arrayExpression(ctx.parent.node.arguments),
-									b.literal(generatePartial(script, ctx.parent)),
+									result(ctx.node.object),
+									propertyArgument,
+									result(b.arrayExpression(ctx.parent!.node.arguments)),
+									b.literal(generatePartial(script, ctx.parent!)),
 								]
 							)
 						);
@@ -322,17 +320,17 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						ctx.parentKey === 'callee'
 					) {
 						lazy.replace(
-							ctx.parent,
+							ctx.parent!,
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
 									b.identifier('call2')
 								),
 								[
-									ctx.node.object,
-									property_argument,
-									b.arrayExpression(ctx.parent.node.arguments),
-									b.literal(generatePartial(script, ctx.parent)),
+									result(ctx.node.object),
+									propertyArgument,
+									result(b.arrayExpression(ctx.parent!.node.arguments)),
+									b.literal(generatePartial(script, ctx.parent!)),
 								]
 							)
 						);
@@ -342,7 +340,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 							ctx.parentKey === 'left')
 					) {
 						lazy.replace(
-							ctx.parent,
+							ctx.parent!,
 							b.callExpression(
 								b.memberExpression(
 									b.identifier(ACCESS_KEY),
@@ -350,7 +348,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 								),
 								[
 									ctx.node.object,
-									property_argument,
+									propertyArgument,
 									b.arrowFunctionExpression(
 										[
 											b.identifier(cTarget),
@@ -359,16 +357,16 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 										],
 										ctx.parent?.node.type === 'UpdateExpression'
 											? b.updateExpression(
-													ctx.parent.node.operator,
+													ctx.parent!.node.operator,
 													b.memberExpression(
 														b.identifier(cTarget),
 														b.identifier(cProp),
 														true
 													),
-													ctx.parent.node.prefix
+													ctx.parent!.node.prefix
 											  )
 											: b.assignmentExpression(
-													ctx.parent.node.operator,
+													ctx.parent!.node.operator,
 													b.memberExpression(
 														b.identifier(cTarget),
 														b.identifier(cProp),
@@ -379,8 +377,8 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 									),
 									ctx.parent?.node.type === 'UpdateExpression'
 										? b.identifier('undefined')
-										: ctx.parent.node.right,
-									b.literal(generatePartial(script, ctx.parent)),
+										: ctx.parent!.node.right,
+									b.literal(generatePartial(script, ctx.parent!)),
 								]
 							)
 						);
@@ -393,8 +391,8 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 									b.identifier('get2')
 								),
 								[
-									ctx.node.object,
-									property_argument,
+									result(ctx.node.object),
+									propertyArgument,
 									b.literal(generatePartial(script, ctx)),
 								]
 							)

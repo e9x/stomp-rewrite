@@ -60,7 +60,7 @@ export default class Server {
 
 		return false;
 	}
-	getConfig(): Config {
+	get config(): Config {
 		return {
 			directory: this.directory,
 			codec: codecType(this.codec),
@@ -82,7 +82,7 @@ export default class Server {
 				this.directory
 			);
 
-			return new Response(routeHTML(surl, surl, this.getConfig()), {
+			return new Response(routeHTML(surl, surl, this.config), {
 				headers: {
 					'content-type': 'text/plain',
 				},
@@ -94,12 +94,12 @@ export default class Server {
 				const callback = rewrites[rewrite];
 
 				const parsed = parseRoutedURL(
-					url.href,
+					url.toString(),
 					this.codec,
 					`${url.origin}${this.directory}`
 				);
 
-				return await callback(parsed.url, request, this.bare, this.getConfig());
+				return await callback(parsed.url, request, this.bare, this.config);
 			}
 		}
 

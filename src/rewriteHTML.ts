@@ -123,7 +123,7 @@ export function modifyHTML(
 	return serialize(tree).replace(
 		'<script defer="" src="/static/js/bundle.js"></script>',
 		`<script defer="" src="${routeJS(
-			new StompURL(new URL('/static/js/bundle', url.toString()), url),
+			new StompURL(new URL('/static/js/bundle.js', url.toString()), url),
 			url
 		)}"></script>`
 	);

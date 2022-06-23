@@ -1,7 +1,11 @@
 import { generate } from '@javascript-obfuscator/escodegen';
 import { Node as mNode } from 'meriyah/dist/src/estree';
 
+// children of the node to replace a node must explicitly opt into being part of the result with
+// result(node)
+
 export const symbolNoResult = Symbol();
+export const symbolResult = Symbol();
 
 export const ctxReplacement = Symbol();
 
@@ -22,8 +26,9 @@ export declare type Node =
 	| mNode
 	| any;
 
-export function noResult(node: Node): Node {
-	node[symbolNoResult] = true;
+export function result(node: Node): Node {
+	console.trace('make result', generate(node));
+	node[symbolResult] = true;
 	return node;
 }
 
@@ -125,9 +130,19 @@ export class AcornContext {
 		delete this.parent;
 
 		this.removeDescendantsFromStack();
-		noResult(node);
+		node[symbolNoResult] = true;
 		this.stack.push(created);
+
 		created.addEntriesToStack();
+
+		for (const ctx of new AcornIterator(created.node)) {
+			if (ctx.node[symbolResult]) {
+				ctx.removeDescendantsFromStack();
+				break;
+			}
+
+			ctx.node[symbolNoResult] = true;
+		}
 
 		return created;
 	}
@@ -200,6 +215,8 @@ export class AcornIterator {
 				continue;
 			}
 
+			// console.log('ret', generate(context.node));
+
 			return { value: context, done: false };
 		}
 	}
@@ -262,7 +279,7 @@ export class LazyGenerate {
 					srange[1] + offset,
 				];
 				if (inRange(futureRange, testFutureRange)) {
-					console.log('removed overlapping', generate(smod.replace));
+					// console.log('removed overlapping', generate(smod.replace));
 					generated.splice(generated.indexOf(smod), 1);
 				}
 			}
