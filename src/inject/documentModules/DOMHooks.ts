@@ -63,7 +63,7 @@ export class DOMHooksModule extends Module {
 						routeCSS(
 							new StompURL(
 								new URL(
-									element.getAttribute('href')!,
+									element.getAttribute('src')!,
 									this.client.url.toString()
 								),
 								this.client.url

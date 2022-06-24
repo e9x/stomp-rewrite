@@ -1,6 +1,7 @@
 import StompURL from './StompURL';
 import { Config } from './config';
 import Parse5Iterator from './parse5Util';
+import { routeCSS } from './rewriteCSS';
 import { routeJS } from './rewriteJS';
 import {
 	createDataURI,
@@ -120,14 +121,23 @@ export function modifyHTML(
 	}
 
 	// just enough to start developing
-	return serialize(tree).replace(
-		/<script defer="(.*?)" src="\/(.*?)"><\/script>/g,
-		(match, defer, src) =>
-			`<script defer="${defer}" src="${routeJS(
-				new StompURL(new URL(src, url.toString()), url),
-				url
-			)}"></script>`
-	);
+	return serialize(tree)
+		.replace(
+			/<script defer="(.*?)" src="(\/[^"]+)"><\/script>/g,
+			(match, defer, src) =>
+				`<script defer="${defer}" src="${routeJS(
+					new StompURL(new URL(src, url.toString()), url),
+					url
+				)}"></script>`
+		)
+		.replace(
+			/<link href="(\/[^"]+)" rel="stylesheet">/g,
+			(match, href) =>
+				`<link href="${routeCSS(
+					new StompURL(new URL(href, url.toString()), url),
+					url
+				)}" rel="stylesheet">`
+		);
 }
 
 export function restoreHTML(

@@ -12,12 +12,26 @@ export function routeURL(resourceType: string, url: StompURL) {
 	return `${url.directory}${resourceType}/${url.encode()}${url.url.hash}`;
 }
 
+/**
+ * Raw binary data
+ */
 export function routeBinary(resource: StompURL) {
 	if (resource.url.protocol === 'data:') {
 		return resource.toString();
 	}
 
 	return routeURL('binary', resource);
+}
+
+/**
+ * navigator.postBeacon request
+ */
+export function routeBeacon(resource: StompURL) {
+	if (resource.url.protocol === 'data:') {
+		return resource.toString();
+	}
+
+	return routeURL('beacon', resource);
 }
 
 export function injectDocumentJS(url: StompURL) {

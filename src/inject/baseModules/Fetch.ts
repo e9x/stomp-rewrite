@@ -1,5 +1,5 @@
 import StompURL, { urlLike } from '../../StompURL';
-import { routeBinary } from '../../routeURL';
+import { routeBinary, ROUTE_PROTOCOLS } from '../../routeURL';
 import Module from '../Module';
 import ProxyModule from './Proxy';
 import { BareFetchInit } from '@tomphttp/bare-client';
@@ -92,11 +92,15 @@ export default class FetchModule extends Module {
 				let url: urlLike;
 
 				if (args[0] instanceof Request) {
-					url = args[0].url;
+					url = new URL(args[0].url);
 					init = <BareFetchInit>args[0];
 				} else {
 					url = new URL(args[0], this.client.url.toString());
 					init = args[1];
+				}
+
+				if (!ROUTE_PROTOCOLS.includes(url.protocol)) {
+					return await fetch(url, <RequestInit>init);
 				}
 
 				// [input, init]
