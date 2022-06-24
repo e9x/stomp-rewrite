@@ -5,9 +5,8 @@ export const ROUTE_PROTOCOLS = ['http:', 'https:'];
 
 export function routeURL(resourceType: string, url: StompURL) {
 	if (!ROUTE_PROTOCOLS.includes(url.url.protocol)) {
-		throw new RangeError(
-			`The following protocols are supported: ${ROUTE_PROTOCOLS}`
-		);
+		// url is out of the scope of Stomp
+		return url.toString();
 	}
 
 	return `${url.directory}${resourceType}/${url.encode()}${url.url.hash}`;

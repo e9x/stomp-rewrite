@@ -5,9 +5,10 @@ import ProxyModule from './Proxy';
 import { BareFetchInit } from '@tomphttp/bare-client';
 
 export default class FetchModule extends Module {
-	eventSourceURLs = new WeakMap<EventSource, string>();
-	responseURLs = new WeakMap<Response, string>();
 	apply() {
+		const eventSourceURLs = new WeakMap<EventSource, string>();
+		const responseURLs = new WeakMap<Response, string>();
+
 		global.EventSource = this.client.getModule(ProxyModule)!.wrapFunction(
 			global.EventSource,
 			(target, that, args) => {
@@ -19,7 +20,7 @@ export default class FetchModule extends Module {
 					that
 				);
 
-				this.eventSourceURLs.set(result, url.toString());
+				eventSourceURLs.set(result, url.toString());
 
 				return result;
 			},
@@ -35,8 +36,8 @@ export default class FetchModule extends Module {
 					Reflect.getOwnPropertyDescriptor(global.EventSource.prototype, 'url')!
 						.get!,
 					(target, that, args) => {
-						if (this.eventSourceURLs.has(that)) {
-							return this.eventSourceURLs.get(that);
+						if (eventSourceURLs.has(that)) {
+							return eventSourceURLs.get(that);
 						} else {
 							// eslint-disable-next-line @typescript-eslint/ban-types
 							return Reflect.apply(<Function>target, that, args);
@@ -54,8 +55,8 @@ export default class FetchModule extends Module {
 					Reflect.getOwnPropertyDescriptor(global.Response.prototype, 'url')!
 						.get!,
 					(target, that, args) => {
-						if (this.responseURLs.has(that)) {
-							return this.responseURLs.get(that);
+						if (responseURLs.has(that)) {
+							return responseURLs.get(that);
 						} else {
 							// eslint-disable-next-line @typescript-eslint/ban-types
 							return Reflect.apply(<Function>target, that, args);
@@ -106,7 +107,7 @@ export default class FetchModule extends Module {
 
 				const newRes = new Response(res.body, res);
 
-				this.responseURLs.set(newRes, res.finalURL);
+				responseURLs.set(newRes, res.finalURL);
 
 				return newRes;
 			});

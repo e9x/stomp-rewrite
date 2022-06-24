@@ -218,7 +218,7 @@ export default class DOMModule extends Module {
 			properties,
 		]);
 	}
-	updateAttributeHooks(element: CustomElement, updated: string) {
+	private updateAttributeHooks(element: CustomElement, updated: string) {
 		for (const hook of this.attributeHooks) {
 			if (!hook[0].includes(element.nodeName)) continue;
 
@@ -229,6 +229,9 @@ export default class DOMModule extends Module {
 	}
 	apply() {
 		// all hooks are in, now apply them
+
+		// MutationObserver will leak a lot of values and is complex.. we cannot support this yet.
+		delete (global as any).MutationObserver;
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
@@ -252,7 +255,7 @@ export default class DOMModule extends Module {
 				// only side effect this getter has is the potential to throw an illegal invocation error
 				Reflect.apply(target, that, args);
 
-				const [attribute] = args;
+				const attribute: string = args[0];
 
 				return prototypeElement(that, element => {
 					if (element.hasAttributeOG(attribute)) {
@@ -299,16 +302,11 @@ export default class DOMModule extends Module {
 				Reflect.defineProperty(ctor.prototype, property, {
 					enumerable: true,
 					configurable: true,
-					get: proxyModule.wrapFunction(
-						descriptor.get!,
-						(target, that, args) => {
-							return prototypeElement(that, element => {
-								// debugger;
-								console.log('get the', propData[0], propData[1](element));
-								return propData[1](element);
-							});
-						}
-					),
+					get: proxyModule.wrapFunction(descriptor.get!, (target, that) => {
+						return prototypeElement(that, element => {
+							return propData[1](element);
+						});
+					}),
 					set: proxyModule.wrapFunction(
 						descriptor.set!,
 						(target, that, args) => {

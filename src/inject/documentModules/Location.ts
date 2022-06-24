@@ -40,8 +40,6 @@ import ProxyModule from '../baseModules/Proxy';
  */
 
 export default class LocationModule extends Module {
-	eventSourceURLs = new WeakMap<EventSource, string>();
-	responseURLs = new WeakMap<Response, string>();
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 

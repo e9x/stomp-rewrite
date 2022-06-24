@@ -12,7 +12,11 @@ export class DOMHooksModule extends Module {
 		domHooksModule.useAttributes(
 			['LINK'],
 			element => {
-				if (element.hasAttribute('href') && element.hasAttribute('rel')) {
+				if (
+					element.hasAttribute('href') &&
+					element.hasAttribute('rel') &&
+					element.getAttribute('href') !== ''
+				) {
 					switch (element.getAttribute('rel')) {
 						case 'stylesheet':
 							element.setAttribute(
@@ -32,13 +36,62 @@ export class DOMHooksModule extends Module {
 					}
 				}
 			},
-			['href', 'rel']
+			['href', 'rel'],
+			[HTMLLinkElement],
+			{
+				href: [
+					'href',
+					element => {
+						return new URL(
+							element.getAttributeOG('href')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			}
+		);
+
+		// todo: mimes...
+		// https://www.w3schools.com/tags/tag_embed.asp
+
+		domHooksModule.useAttributes(
+			['IFRAME', 'EMBED'],
+			element => {
+				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
+					element.setAttribute(
+						'src',
+						routeCSS(
+							new StompURL(
+								new URL(
+									element.getAttribute('href')!,
+									this.client.url.toString()
+								),
+								this.client.url
+							),
+							this.client.url
+						)
+					);
+				}
+			},
+			['src'],
+			[HTMLIFrameElement, HTMLEmbedElement],
+			{
+				src: [
+					'src',
+					element => {
+						return new URL(
+							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			}
 		);
 
 		domHooksModule.useAttributes(
 			['IMG'],
 			element => {
-				if (element.hasAttribute('src')) {
+				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
 						'src',
@@ -70,9 +123,46 @@ export class DOMHooksModule extends Module {
 		);
 
 		domHooksModule.useAttributes(
+			['SCRIPT'],
+			element => {
+				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
+					element.setAttributeOG('src', element.getAttribute('src')!);
+					element.setAttribute(
+						'src',
+						routeBinary(
+							new StompURL(
+								new URL(
+									element.getAttribute('src')!,
+									this.client.url.toString()
+								),
+								this.client.url
+							)
+						)
+					);
+				}
+			},
+			['src'],
+			[HTMLScriptElement],
+			{
+				src: [
+					'src',
+					element => {
+						return new URL(
+							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			}
+		);
+
+		domHooksModule.useAttributes(
 			['A'],
 			element => {
-				if (element.hasAttribute('href')) {
+				if (
+					element.hasAttribute('href') &&
+					element.getAttribute('href') !== ''
+				) {
 					element.setAttributeOG('href', element.getAttribute('href')!);
 					element.setAttribute(
 						'href',

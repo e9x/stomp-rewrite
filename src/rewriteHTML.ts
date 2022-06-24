@@ -119,12 +119,14 @@ export function modifyHTML(
 		// element.sync();
 	}
 
+	// just enough to start developing
 	return serialize(tree).replace(
-		'<script defer="" src="/static/js/bundle.js"></script>',
-		`<script defer="" src="${routeJS(
-			new StompURL(new URL('/static/js/bundle.js', url.toString()), url),
-			url
-		)}"></script>`
+		/<script defer="(.*?)" src="\/(.*?)"><\/script>/g,
+		(match, defer, src) =>
+			`<script defer="${defer}" src="${routeJS(
+				new StompURL(new URL(src, url.toString()), url),
+				url
+			)}"></script>`
 	);
 }
 
