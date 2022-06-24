@@ -10,8 +10,8 @@ class DocumentClient extends Client {
 		super(init);
 		baseModules(this);
 		this.addModule(LocationModule);
-		this.addModule(DOMModule);
 		this.addModule(DOMHooksModule);
+		this.addModule(DOMModule);
 	}
 }
 

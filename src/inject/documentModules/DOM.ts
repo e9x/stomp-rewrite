@@ -7,18 +7,67 @@ import ProxyModule, {
 
 const ORIGINAL_ATTRIBUTE = `sO:`;
 
+const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
+
 class CustomElement extends Element {
-	getOriginalAttribute(this: Element, attribute: string): string | undefined {
+	get attributeTab() {
+		if (!attributeTab.has(this)) {
+			attributeTab.set(this, new Map());
+		}
+
+		return attributeTab.get(this)!;
+	}
+	getAttribute(attribute: string): string | null {
+		if (this.attributeTab.has(attribute)) {
+			return this.attributeTab.get(attribute)!;
+		} else {
+			return nativeElement.getAttribute.call(this, attribute);
+		}
+	}
+	setAttribute(attribute: string, value: string) {
+		this.attributeTab.set(attribute, value);
+	}
+	removeAttribute(attribute: string) {
+		this.attributeTab.set(attribute, null);
+	}
+	hasAttribute(attribute: string) {
+		if (this.attributeTab.has(attribute)) {
+			return this.attributeTab.get(attribute) !== null;
+		}
+
+		return nativeElement.hasAttribute.call(this, attribute);
+	}
+	applyAttributes() {
+		for (const [attribute, value] of this.attributeTab) {
+			this.attributeTab.delete(attribute);
+
+			if (value === null) {
+				nativeElement.removeAttribute.call(this, attribute);
+			} else {
+				nativeElement.setAttribute.call(this, attribute, value);
+			}
+		}
+
+		attributeTab.delete(this);
+	}
+	getAttributeOG(attribute: string): string | null {
 		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
 
 		if (this.hasAttribute(og)) {
 			return this.getAttribute(og)!;
+		} else {
+			return null;
 		}
 	}
-	setOriginalAttribute(this: Element, attribute: string, value: string) {
+	setAttributeOG(attribute: string, value: string) {
 		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
 
 		this.setAttribute(og, value);
+	}
+	hasAttributeOG(attribute: string): boolean {
+		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
+
+		return this.hasAttribute(og);
 	}
 }
 
@@ -56,7 +105,7 @@ type PropData = [attribute: string, get: (element: CustomElement) => string];
 
 /*
  * Sets the prototype of an element while this script is working with it. This is to ensure we are only accessing the native functions and not any traps/shims.
- * The node is in a detached state while being worked with, to avoid making many requests as attributes are set.
+ * The node is in a simulated detached state while being worked with, to avoid making many requests as attributes are set.
  */
 function prototypeElement<T>(
 	element: Element,
@@ -66,23 +115,18 @@ function prototypeElement<T>(
 	const prototype = Reflect.getPrototypeOf(element);
 	Reflect.setPrototypeOf(element, CustomElement.prototype);
 
-	const parent = element.parentElement;
-	const sibling = element.nextSibling;
-	element.remove();
+	// recast
+	const customElement = element as CustomElement;
 
 	let result: any[] = [];
 
 	try {
-		result = [callback(<CustomElement>element)];
+		result = [callback(customElement)];
 	} catch (error) {
 		result = [undefined, error];
 	}
 
-	if (sibling) {
-		parent?.insertBefore(element, sibling);
-	} else {
-		parent?.append(element);
-	}
+	customElement.applyAttributes();
 
 	Reflect.setPrototypeOf(element, prototype);
 
@@ -97,7 +141,7 @@ function prototypeElement<T>(
  * Provides a framework for hooking elements
  */
 export default class DOMModule extends Module {
-	attributeHooks: [
+	private attributeHooks: [
 		type: string[],
 		callback: (element: CustomElement) => void,
 		attributes: string[],
@@ -109,15 +153,16 @@ export default class DOMModule extends Module {
 			];
 		}
 	][];
-	previousAttributes: WeakMap<Element, Map<string, string>>;
-	trackAttributes: Map<string, Set<string>>;
-
+	private previousAttributes: WeakMap<Element, Map<string, string>>;
+	private trackAttributes: Map<string, Set<string>>;
+	private trackProperties: Map<ElementCtor, Map<string, PropData>>;
 	constructor(client: Client) {
 		super(client);
 
 		this.attributeHooks = [];
 		this.previousAttributes = new WeakMap();
 		this.trackAttributes = new Map();
+		this.trackProperties = new Map();
 	}
 	private testHooks(element: CustomElement, attribute: string) {
 		const value = element.getAttribute(attribute);
@@ -151,51 +196,17 @@ export default class DOMModule extends Module {
 			}
 		}
 
-		const proxyModule = this.client.getModule(ProxyModule)!;
-
 		for (const ctor of ctors) {
+			if (!this.trackProperties.has(ctor)) {
+				this.trackProperties.set(ctor, new Map());
+			}
+
 			for (const property in properties) {
-				const propData = properties[property];
-
-				const descriptor = Reflect.getOwnPropertyDescriptor(
-					ctor.prototype,
-					property
-				);
-
-				if (!descriptor) {
-					throw new Error(`Ctor ${ctor} did not have ${property}`);
+				if (this.trackProperties.get(ctor)!.has(property)) {
+					throw new Error(`Property hooks cannot overlap.`);
 				}
 
-				Reflect.defineProperty(ctor.prototype, property, {
-					enumerable: true,
-					configurable: true,
-					get: proxyModule.wrapFunction(
-						descriptor.get!,
-						(target, that, args) => {
-							// only side effect this getter has is the potential to throw an illegal invocation error
-							Reflect.apply(target, that, args);
-
-							return prototypeElement(that, element => {
-								return propData[1](element);
-							});
-						}
-					),
-					set: proxyModule.wrapFunction(
-						descriptor.set!,
-						(target, that, args) => {
-							Reflect.apply(target, that, args);
-
-							prototypeElement(that, () => {
-								if (
-									!this.trackAttributes.get(that.nodeName)?.has(propData[0])
-								) {
-									return;
-								}
-								this.testHooks(that, propData[0]);
-							});
-						}
-					),
-				});
+				this.trackProperties.get(ctor)!.set(property, properties[property]);
 			}
 		}
 
@@ -217,6 +228,8 @@ export default class DOMModule extends Module {
 		}
 	}
 	apply() {
+		// all hooks are in, now apply them
+
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
 		Reflect.defineProperty(Document.prototype, 'URL', {
@@ -233,16 +246,20 @@ export default class DOMModule extends Module {
 			),
 		});
 
-		// this.applyHooks(useAttributes);
-
 		Element.prototype.getAttribute = proxyModule.wrapFunction(
 			Element.prototype.getAttribute,
 			(target, that: Element, args) => {
 				// only side effect this getter has is the potential to throw an illegal invocation error
 				Reflect.apply(target, that, args);
 
+				const [attribute] = args;
+
 				return prototypeElement(that, element => {
-					return element.getOriginalAttribute(args[0]);
+					if (element.hasAttributeOG(attribute)) {
+						return element.getAttributeOG(attribute);
+					} else {
+						return element.getAttribute(attribute);
+					}
 				});
 			}
 		);
@@ -250,11 +267,15 @@ export default class DOMModule extends Module {
 		Element.prototype.setAttribute = proxyModule.wrapFunction(
 			Element.prototype.setAttribute,
 			(target, that: Element, args) => {
-				Reflect.apply(target, that, args);
+				// too many side effects
+				// illegal invocation error will throw by nature
+				// Reflect.apply(target, that, args);
 
-				const [attribute] = args;
+				const [attribute, value] = args;
 
 				prototypeElement(that, element => {
+					element.setAttribute(attribute, value);
+
 					if (!this.trackAttributes.get(element.nodeName)?.has(attribute)) {
 						return;
 					}
@@ -263,5 +284,51 @@ export default class DOMModule extends Module {
 				});
 			}
 		);
+
+		for (const [ctor, properties] of this.trackProperties) {
+			for (const [property, propData] of properties) {
+				const descriptor = Reflect.getOwnPropertyDescriptor(
+					ctor.prototype,
+					property
+				);
+
+				if (!descriptor) {
+					throw new Error(`Ctor ${ctor} did not have ${property}`);
+				}
+
+				Reflect.defineProperty(ctor.prototype, property, {
+					enumerable: true,
+					configurable: true,
+					get: proxyModule.wrapFunction(
+						descriptor.get!,
+						(target, that, args) => {
+							return prototypeElement(that, element => {
+								// debugger;
+								console.log('get the', propData[0], propData[1](element));
+								return propData[1](element);
+							});
+						}
+					),
+					set: proxyModule.wrapFunction(
+						descriptor.set!,
+						(target, that, args) => {
+							const [value] = args;
+
+							prototypeElement(that, element => {
+								element.setAttribute(propData[0], value);
+
+								if (
+									!this.trackAttributes.get(element.nodeName)?.has(propData[0])
+								) {
+									return;
+								}
+
+								this.testHooks(element, propData[0]);
+							});
+						}
+					),
+				});
+			}
+		}
 	}
 }

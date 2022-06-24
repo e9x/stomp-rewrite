@@ -5,5 +5,8 @@ export default class Module {
 	constructor(client: Client) {
 		this.client = client;
 	}
+	/**
+	 * Make changes to global objects/prototypes
+	 */
 	apply?(): void;
 }
