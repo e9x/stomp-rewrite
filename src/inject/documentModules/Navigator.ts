@@ -6,10 +6,10 @@ import ProxyModule from '../baseModules/Proxy';
 
 export default class NavigatorModule extends Module {
 	apply() {
-		delete (global.navigator as any).serviceWorker;
-		delete (global.navigator as any).ServiceWorker;
-		delete (global.navigator as any).ServiceWorkerContainer;
-		delete (global.navigator as any).ServiceWorkerRegistration;
+		delete (global as any).ServiceWorkerContainer;
+		delete (global as any).ServiceWorkerRegistration;
+
+		delete (Navigator.prototype as any).serviceWorker;
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
