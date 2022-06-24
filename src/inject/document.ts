@@ -2,6 +2,7 @@ import { ParsedConfig } from '../config';
 import Client, { createClientFactory } from './Client';
 import baseModules from './baseModules';
 import DOMModule from './documentModules/DOM';
+import { DOMHooksModule } from './documentModules/DOMHooks';
 import LocationModule from './documentModules/Location';
 
 class DocumentClient extends Client {
@@ -10,6 +11,7 @@ class DocumentClient extends Client {
 		baseModules(this);
 		this.addModule(LocationModule);
 		this.addModule(DOMModule);
+		this.addModule(DOMHooksModule);
 	}
 }
 

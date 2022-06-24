@@ -3,6 +3,16 @@ import { restoreJS } from '../../rewriteJS';
 import Module from '../Module';
 import { isNative } from '../nativeUtil';
 
+export function applyDescriptors(target: any, from: any): any {
+	Object.defineProperties(target, Object.getOwnPropertyDescriptors(from));
+}
+
+export function invokeGlobal(that: any, check: any) {
+	if (that !== check) {
+		throw new TypeError('Illegal invocation');
+	}
+}
+
 export default class ProxyModule extends Module {
 	functionStrings = new WeakMap();
 	apply() {
