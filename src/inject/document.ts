@@ -17,6 +17,9 @@ class DocumentClient extends Client {
 		this.addModule(DOMHooksModule);
 		this.addModule(DOMModule);
 	}
+	loadHTML(html: string) {
+		console.log('got html', html);
+	}
 }
 
 export default createClientFactory(DocumentClient);

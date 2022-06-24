@@ -113,6 +113,7 @@ export default [
 						'AsyncFunction',
 					].map(name => [name, [resolve('./src/inject/snapshot.ts'), name]])
 				),
+				'Error.captureStackTrace': 'capture-stack-trace',
 			}),
 		],
 		entry: {

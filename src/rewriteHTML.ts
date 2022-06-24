@@ -2,7 +2,7 @@ import StompURL from './StompURL';
 import { Config } from './config';
 import Parse5Iterator from './parse5Util';
 import { routeCSS } from './rewriteCSS';
-import { routeJS } from './rewriteJS';
+import { CLIENT_KEY, routeJS } from './rewriteJS';
 import {
 	createDataURI,
 	injectDocumentJS,
@@ -40,104 +40,15 @@ export function modifyHTML(
 	config: Config,
 	fragment = false
 ): string {
-	const tree: Element = fragment
-		? <Element>parseFragment(script)
-		: <Element>(<unknown>parse(script));
-
-	const head: Element[] = [
-		{
-			nodeName: 'script',
-			tagName: 'script',
-			parentNode: null,
-			childNodes: [],
-			// @ts-ignore
-			namespaceURI: 'http://www.w3.org/1999/xhtml',
-			attrs: [
-				{
-					name: 'src',
-					value: injectDocumentJS(url),
-				},
-				{
-					name: 'data-is-tomp',
-					value: 'true',
-				},
-			],
-		},
-		{
-			nodeName: 'script',
-			tagName: 'script',
-			parentNode: null,
-			// @ts-ignore
-			namespaceURI: 'http://www.w3.org/1999/xhtml',
-			childNodes: [
-				<TextNode>{
-					nodeName: '#text',
-					value: `if(typeof createClient!=='function')document.write("Stomp client failed to inject.");createClient(${JSON.stringify(
-						config
-					)}, ${JSON.stringify(url.codec.key)})`,
-				},
-			],
-			attrs: [
-				{
-					name: 'data-is-tomp',
-					value: 'true',
-				},
-			],
-		},
-	];
-
-	let insertedScript = false;
-
-	for (const ctx of new Parse5Iterator(tree)) {
-		if (!ctx.node.attrs) {
-			// #text node
-			continue;
-		}
-
-		/*const element = new TOMPElementParse5(ctx);
-
-		if (wrap) {
-			this.tomp.elements.wrap(element, url, persist);
-		} else {
-			this.tomp.elements.unwrap(element, url, persist);
-		}*/
-
-		// todo: instead of first non essential node, do first live rewritten node (script, if node has on* tag)
-		// on the first non-essential node (not html,head,or body), insert the client script before it
-		if (
-			!fragment &&
-			// wrap &&
-			// !element.detached &&
-			!insertedScript &&
-			!essentialNodes.includes(ctx.node.nodeName)
-		) {
-			insertedScript = true;
-			for (const node of head) {
-				ctx.insertBefore(node);
-			}
-		}
-
-		// element.sync();
-	}
-
-	// just enough to start developing
-	return serialize(tree)
-		.replace(
-			/<script defer="(.*?)" src="(\/[^"]+)"><\/script>/g,
-			(match, defer, src) =>
-				`<script defer="${defer}" src="${routeJS(
-					new StompURL(new URL(src, url.toString()), url),
-					url
-				)}"></script>`
-		)
-		.replace(
-			/<link href="(\/[^"]+)" rel="stylesheet">/g,
-			(match, href) =>
-				`<link href="${routeCSS(
-					new StompURL(new URL(href, url.toString()), url),
-					url
-				)}" rel="stylesheet">`
-		);
+	return `<!DOCTYPE HTML><html><head><meta charset="utf-8" /></head><body><script src="${injectDocumentJS(
+		url
+	)}"></script><script>/*<!--*/if(typeof globalThis.createClient!=='function'){document.write("Stomp client failed to inject.")}else{createClient(${JSON.stringify(
+		config
+	)}, ${JSON.stringify(url.codec.key)});globalThis[${JSON.stringify(
+		CLIENT_KEY
+	)}].loadHTML(${JSON.stringify(script)});globalThis[${JSON.stringify(
+		CLIENT_KEY
+	)}].apply()}/*-->*/</script></body></html>`;
 }
 
 export function restoreHTML(

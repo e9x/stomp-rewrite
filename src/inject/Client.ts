@@ -70,7 +70,5 @@ export function createClientFactory(Client: {
 			configurable: false,
 			enumerable: false,
 		});
-
-		client.apply();
 	};
 }

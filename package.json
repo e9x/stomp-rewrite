@@ -17,6 +17,7 @@
 		"@javascript-obfuscator/escodegen": "^2.3.0",
 		"@tomphttp/bare-client": "^1.0.2-beta-readme3",
 		"ast-types": "^0.14.2",
+		"capture-stack-trace": "^1.0.1",
 		"crypto-js": "^4.1.1",
 		"css-tree": "^2.1.0",
 		"escodegen": "^2.0.0",
