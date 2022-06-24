@@ -1,7 +1,5 @@
 // import createHttpError from 'http-errors';
-
-import BareClient from '@tomphttp/bare-client';
-
+import StompURL from '../StompURL';
 import { Config } from '../config';
 import { capitalizeHeaders } from '../headers';
 import { modifyCSS, routeCSS } from '../rewriteCSS';
@@ -9,13 +7,13 @@ import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
 import { modifyJS, routeJS } from '../rewriteJS';
 import { modifyManifest, routeManifest } from '../rewriteManifest';
 import { routeBinary } from '../routeURL';
-import StompURL from '../StompURL';
 import {
 	AdditionalFilter,
 	RouteTransform,
 	filterNativeRequestHeaders,
 	filterResponseHeaders,
 } from './filterHeaders';
+import BareClient from '@tomphttp/bare-client';
 
 export const statusEmpty = [101, 204, 205, 304];
 

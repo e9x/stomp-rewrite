@@ -1,8 +1,8 @@
-import { BareFetchInit } from '@tomphttp/bare-client';
-import { routeBinary } from '../../routeURL';
 import StompURL, { urlLike } from '../../StompURL';
+import { routeBinary } from '../../routeURL';
 import Module from '../Module';
 import ProxyModule from './Proxy';
+import { BareFetchInit } from '@tomphttp/bare-client';
 
 export default class FetchModule extends Module {
 	eventSourceURLs = new WeakMap<EventSource, string>();

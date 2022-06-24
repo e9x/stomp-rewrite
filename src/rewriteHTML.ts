@@ -1,7 +1,5 @@
-import { parse, parseFragment, serialize } from 'parse5';
-import { Element, TextNode } from 'parse5/dist/tree-adapters/default';
+import StompURL from './StompURL';
 import { Config } from './config';
-
 import Parse5Iterator from './parse5Util';
 import { routeJS } from './rewriteJS';
 import {
@@ -10,7 +8,8 @@ import {
 	parseDataURI,
 	routeURL,
 } from './routeURL';
-import StompURL from './StompURL';
+import { parse, parseFragment, serialize } from 'parse5';
+import { Element, TextNode } from 'parse5/dist/tree-adapters/default';
 
 export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
 	if (resource.url.protocol === 'data:') {

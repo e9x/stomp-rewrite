@@ -1,15 +1,15 @@
-import BareClient from '@tomphttp/bare-client';
 import GenericCodec from '../Codecs';
 import { codecType, Config, parseConfig, ParsedConfig } from '../config';
 import { CLIENT_KEY } from '../rewriteJS';
 import { parseRoutedURL } from '../routeURL';
 import Module from './Module';
+import BareClient from '@tomphttp/bare-client';
 
 export interface ModuleCtor {
 	new (client: Client): Module;
 }
 
-export class Client {
+export default class Client {
 	modules: Map<ModuleCtor, Module>;
 	bare: BareClient;
 	codec: GenericCodec;

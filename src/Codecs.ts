@@ -1,3 +1,6 @@
+import AES from 'crypto-js/aes';
+import Utf8 from 'crypto-js/enc-utf8';
+
 const encodeChar = '$';
 const validChars =
 	'-_~:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -40,9 +43,6 @@ export function decodeCodecURI(uri: string) {
 	}
 	return result;
 }
-
-import AES from 'crypto-js/aes';
-import Utf8 from 'crypto-js/enc-utf8';
 
 export default class GenericCodec {
 	key: string;

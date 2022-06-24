@@ -1,8 +1,8 @@
-import { routeHTML } from '../../rewriteHTML';
 import StompURL from '../../StompURL';
+import { routeHTML } from '../../rewriteHTML';
+import Module from '../Module';
 import { setGlobalProxy } from '../baseModules/Access';
 import ProxyModule from '../baseModules/Proxy';
-import Module from '../Module';
 
 /**
 {
@@ -131,6 +131,6 @@ export default class LocationModule extends Module {
 
 		Reflect.setPrototypeOf(proxy, Location.prototype);
 
-		setGlobalProxy(location, proxy);
+		setGlobalProxy(location, 'location', proxy);
 	}
 }

@@ -1,6 +1,6 @@
 import { ParsedConfig } from '../config';
+import Client, { createClientFactory } from './Client';
 import baseModules from './baseModules';
-import { Client, createClientFactory } from './Client';
 
 class WorkerClient extends Client {
 	constructor(init: ParsedConfig) {

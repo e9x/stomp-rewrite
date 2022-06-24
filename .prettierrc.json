@@ -1,5 +1,6 @@
 {
 	"useTabs": true,
 	"arrowParens": "avoid",
-	"singleQuote": true
+	"singleQuote": true,
+	"importOrderParserPlugins": ["typescript", "decorators-legacy"]
 }

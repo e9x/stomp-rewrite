@@ -1,5 +1,5 @@
-import { resolve } from 'path';
 import { realpath } from 'fs/promises';
+import { resolve } from 'path';
 import { cwd, env } from 'process';
 
 const appDirectory = await realpath(cwd());

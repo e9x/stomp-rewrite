@@ -1,12 +1,6 @@
-import { generate, parse, StringNode, Url, walk } from 'css-tree';
-
-import {
-	createDataURI,
-	parseDataURI,
-	routeBinary,
-	routeURL,
-} from './routeURL';
 import StompURL from './StompURL';
+import { createDataURI, parseDataURI, routeBinary, routeURL } from './routeURL';
+import { generate, parse, StringNode, Url, walk } from 'css-tree';
 
 export function routeCSS(resource: StompURL, url: StompURL) {
 	if (resource.url.protocol === 'data:') {

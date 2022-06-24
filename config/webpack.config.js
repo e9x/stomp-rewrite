@@ -1,10 +1,8 @@
+import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
 import { resolve } from 'path';
-
 import ResolveTypescriptPlugin from 'resolve-typescript-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import webpack from 'webpack';
-
-import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
 
 const emitErrorsAsWarnings = process.env.ESLINT_NO_DEV_ERRORS === 'true';
 

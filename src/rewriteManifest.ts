@@ -1,7 +1,7 @@
+import StompURL from './StompURL';
 import { Config } from './config';
 import { routeHTML } from './rewriteHTML';
 import { createDataURI, parseDataURI, routeBinary, routeURL } from './routeURL';
-import StompURL from './StompURL';
 
 export function routeManifest(
 	resource: StompURL,

@@ -1,8 +1,5 @@
-import BareClient from '@tomphttp/bare-client';
-import createHttpError from 'http-errors';
-import { openDB } from 'idb';
-
 import GenericCodec from '../Codecs';
+import StompURL from '../StompURL';
 import {
 	codecType,
 	Config,
@@ -12,8 +9,10 @@ import {
 } from '../config';
 import { routeHTML } from '../rewriteHTML';
 import { parseRoutedURL } from '../routeURL';
-import StompURL from '../StompURL';
 import rewrites from './rewrites';
+import BareClient from '@tomphttp/bare-client';
+import createHttpError from 'http-errors';
+import { openDB } from 'idb';
 
 export function json(status: number, data: object | number | string): Response {
 	return new Response(JSON.stringify(data, null, '\t'), {

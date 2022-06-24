@@ -1,11 +1,10 @@
-import { generate } from '@javascript-obfuscator/escodegen';
-import { builders as b } from 'ast-types';
-import { parse } from 'meriyah';
-
+import StompURL from './StompURL';
 import { AcornContext, AcornIterator, result } from './acornUtil';
 import { ACCESS_KEY } from './inject/baseModules/Access';
 import { createDataURI, parseDataURI, routeURL } from './routeURL';
-import StompURL from './StompURL';
+import { generate } from '@javascript-obfuscator/escodegen';
+import { builders as b } from 'ast-types';
+import { parse } from 'meriyah-loose';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script
@@ -53,18 +52,19 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		next: true,
 		specDeviation: true,
 		ranges: true,
+		globalReturn: true,
 	});
 
-	let catchLoop = 0;
+	// const catchLoop = 0;
 
 	for (const ctx of new AcornIterator(tree)) {
-		if (catchLoop === 500) {
+		/*if (catchLoop === 5000) {
 			console.log('etc');
 			console.log(generate(ctx.node), 'Over', catchLoop, 'iterations...');
 			break;
 		}
 
-		catchLoop++;
+		catchLoop++;*/
 
 		typeLoop: switch (ctx.node.type) {
 			/*case 'ImportExpression':
@@ -137,12 +137,6 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 				break;*/
 			case 'Identifier':
 				{
-					let broke = true;
-					setTimeout(() => {
-						if (broke) {
-							console.log('broke', generate(ctx.node));
-						}
-					});
 					switch (ctx.parent?.node.type) {
 						case 'ArrayPattern':
 						case 'ObjectPattern':
@@ -174,7 +168,6 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 							break;
 					}
 					if (!UNDEFINABLE.includes(ctx.node.name)) break;
-					broke = false;
 
 					if (
 						ctx.parent?.node.type === 'UpdateExpression' ||

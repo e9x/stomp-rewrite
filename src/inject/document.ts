@@ -1,6 +1,7 @@
 import { ParsedConfig } from '../config';
+import Client, { createClientFactory } from './Client';
 import baseModules from './baseModules';
-import { Client, createClientFactory } from './Client';
+import DOMModule from './documentModules/DOM';
 import LocationModule from './documentModules/Location';
 
 class DocumentClient extends Client {
@@ -8,6 +9,7 @@ class DocumentClient extends Client {
 		super(init);
 		baseModules(this);
 		this.addModule(LocationModule);
+		this.addModule(DOMModule);
 	}
 }
 

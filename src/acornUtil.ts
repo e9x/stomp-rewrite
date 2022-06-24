@@ -1,13 +1,10 @@
-import { generate } from '@javascript-obfuscator/escodegen';
 import { Node as mNode } from 'meriyah/dist/src/estree';
 
 // children of the node to replace a node must explicitly opt into being part of the result with
 // result(node)
 
-export const symbolNoResult = Symbol();
-export const symbolResult = Symbol();
-
-export const ctxReplacement = Symbol();
+export const symbolNoResult = Symbol('symbolNoResult');
+export const symbolResult = Symbol('symbolResult');
 
 declare type NodeRange = [number, number];
 
@@ -27,7 +24,6 @@ export declare type Node =
 	| any;
 
 export function result(node: Node): Node {
-	console.trace('make result', generate(node));
 	node[symbolResult] = true;
 	return node;
 }
@@ -130,18 +126,18 @@ export class AcornContext {
 		delete this.parent;
 
 		this.removeDescendantsFromStack();
-		node[symbolNoResult] = true;
+		created.node[symbolNoResult] = true;
 		this.stack.push(created);
 
 		created.addEntriesToStack();
 
 		for (const ctx of new AcornIterator(created.node)) {
 			if (ctx.node[symbolResult]) {
+				delete ctx.node[symbolResult];
 				ctx.removeDescendantsFromStack();
-				break;
+			} else {
+				ctx.node[symbolNoResult] = true;
 			}
-
-			ctx.node[symbolNoResult] = true;
 		}
 
 		return created;
@@ -215,7 +211,7 @@ export class AcornIterator {
 				continue;
 			}
 
-			// console.log('ret', generate(context.node));
+			// console.log('resulting', generate(context.node));
 
 			return { value: context, done: false };
 		}

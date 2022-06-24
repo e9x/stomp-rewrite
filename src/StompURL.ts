@@ -6,6 +6,9 @@ export default class StompURL {
 	codec: GenericCodec;
 	directory: string;
 	url: URL;
+	constructor(url: urlLike, reference: StompURL);
+	constructor(url: urlLike, codec: GenericCodec, directory: string);
+
 	constructor(
 		url: urlLike,
 		codec: GenericCodec | StompURL,
@@ -34,8 +37,9 @@ export default class StompURL {
 	}
 	encode() {
 		// hash isn't encoded
-		return this.codec.encode(
-			this.url.origin + this.url.pathname + this.url.search
+		return (
+			this.codec.encode(this.url.origin + this.url.pathname + this.url.search) +
+			this.url.hash
 		);
 	}
 	toString() {

@@ -1,6 +1,6 @@
+import StompURL from '../StompURL';
 import { Config } from '../config';
 import { trimNonStandardHeaders } from '../headers';
-import StompURL from '../StompURL';
 
 const cspHeaders: string[] = [
 	'Content-Security-Policy',
