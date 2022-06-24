@@ -1,14 +1,13 @@
 import StompURL from './StompURL';
 import { Config } from './config';
-import Parse5Iterator from './parse5Util';
-import { routeCSS } from './rewriteCSS';
-import { CLIENT_KEY, routeJS } from './rewriteJS';
+import { CLIENT_KEY } from './rewriteJS';
 import {
 	createDataURI,
 	injectDocumentJS,
 	parseDataURI,
 	routeURL,
 } from './routeURL';
+import { escapeText } from 'entities';
 import { parse, parseFragment, serialize } from 'parse5';
 import { Element, TextNode } from 'parse5/dist/tree-adapters/default';
 
@@ -40,15 +39,15 @@ export function modifyHTML(
 	config: Config,
 	fragment = false
 ): string {
-	return `<!DOCTYPE HTML><html><head><meta charset="utf-8" /></head><body><script src="${injectDocumentJS(
-		url
-	)}"></script><script>/*<!--*/if(typeof globalThis.createClient!=='function'){document.write("Stomp client failed to inject.")}else{createClient(${JSON.stringify(
+	const injectInit = `if(typeof globalThis.createClient!=='function'){document.write("Stomp client failed to inject.")}else{createClient(${JSON.stringify(
 		config
 	)}, ${JSON.stringify(url.codec.key)});globalThis[${JSON.stringify(
 		CLIENT_KEY
-	)}].loadHTML(${JSON.stringify(script)});globalThis[${JSON.stringify(
-		CLIENT_KEY
-	)}].apply()}/*-->*/</script></body></html>`;
+	)}].loadHTML(${escapeText(JSON.stringify(script))})}`;
+
+	return `<!DOCTYPE HTML><html><head><meta charset="utf-8" /></head><body><script src="${injectDocumentJS(
+		url
+	)}"></script><script>${injectInit}</script></body></html>`;
 }
 
 export function restoreHTML(

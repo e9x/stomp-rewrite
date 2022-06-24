@@ -26,9 +26,6 @@ export class Parse5Context {
 
 		this.root = root;
 	}
-	get type() {
-		return this.node.nodeName;
-	}
 	insertBefore(node: Element, offset = 0): Parse5Context | false {
 		if (this.root) throw new RangeError('Cannot insert before the root.');
 		else if (!this.attached)

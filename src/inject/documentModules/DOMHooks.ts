@@ -1,6 +1,7 @@
 import StompURL from '../../StompURL';
 import { routeCSS } from '../../rewriteCSS';
 import { routeHTML } from '../../rewriteHTML';
+import { routeJS } from '../../rewriteJS';
 import { routeBinary } from '../../routeURL';
 import Module from '../Module';
 import DOMModule from './DOM';
@@ -33,6 +34,20 @@ export class DOMHooksModule extends Module {
 								)
 							);
 							break;
+						default:
+							element.setAttribute(
+								'href',
+								routeBinary(
+									new StompURL(
+										new URL(
+											element.getAttribute('href')!,
+											this.client.url.toString()
+										),
+										this.client.url
+									)
+								)
+							);
+							break;
 					}
 				}
 			},
@@ -60,7 +75,7 @@ export class DOMHooksModule extends Module {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttribute(
 						'src',
-						routeCSS(
+						routeHTML(
 							new StompURL(
 								new URL(
 									element.getAttribute('src')!,
@@ -68,7 +83,8 @@ export class DOMHooksModule extends Module {
 								),
 								this.client.url
 							),
-							this.client.url
+							this.client.url,
+							this.client.config
 						)
 					);
 				}
@@ -129,14 +145,16 @@ export class DOMHooksModule extends Module {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
 						'src',
-						routeBinary(
+						routeJS(
 							new StompURL(
 								new URL(
 									element.getAttribute('src')!,
 									this.client.url.toString()
 								),
 								this.client.url
-							)
+							),
+							this.client.url,
+							element.getAttribute('type') === 'module'
 						)
 					);
 				}

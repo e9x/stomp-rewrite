@@ -9,7 +9,7 @@ const ORIGINAL_ATTRIBUTE = `sO:`;
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
 
-class CustomElement extends Element {
+export class CustomElement extends Element {
 	get attributeTab() {
 		if (!attributeTab.has(this)) {
 			attributeTab.set(this, new Map());
@@ -107,26 +107,29 @@ type PropData = [attribute: string, get: (element: CustomElement) => string];
  * Sets the prototype of an element while this script is working with it. This is to ensure we are only accessing the native functions and not any traps/shims.
  * The node is in a simulated detached state while being worked with, to avoid making many requests as attributes are set.
  */
-function prototypeElement<T>(
+export function prototypeElement<ElementType extends Element, CallbackResult>(
 	element: Element,
+	usePrototype: ElementType,
 	// recast the element type to reflect changes
-	callback: (element: CustomElement) => T
-): T {
+	callback: (element: ElementType) => CallbackResult
+): CallbackResult {
 	const prototype = Reflect.getPrototypeOf(element);
-	Reflect.setPrototypeOf(element, CustomElement.prototype);
+	Reflect.setPrototypeOf(element, usePrototype);
 
 	// recast
-	const customElement = element as CustomElement;
+	const set = element as ElementType;
 
 	let result: any[] = [];
 
 	try {
-		result = [callback(customElement)];
+		result = [callback(set)];
 	} catch (error) {
 		result = [undefined, error];
 	}
 
-	customElement.applyAttributes();
+	if (set instanceof CustomElement) {
+		set.applyAttributes();
+	}
 
 	Reflect.setPrototypeOf(element, prototype);
 
@@ -203,6 +206,7 @@ export default class DOMModule extends Module {
 
 			for (const property in properties) {
 				if (this.trackProperties.get(ctor)!.has(property)) {
+					console.log(this.trackProperties.get(ctor), property);
 					throw new Error(`Property hooks cannot overlap.`);
 				}
 
@@ -243,8 +247,20 @@ export default class DOMModule extends Module {
 				(target, that, args) => {
 					// only side effect this getter has is the potential to throw an illegal invocation error
 					Reflect.apply(target, that, args);
-					invokeGlobal(that, location);
 					return this.client.url.toString();
+				}
+			),
+		});
+
+		Reflect.defineProperty(Document.prototype, 'domain', {
+			enumerable: true,
+			configurable: true,
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(Document.prototype, 'domain')!.get!,
+				(target, that, args) => {
+					// only side effect this getter has is the potential to throw an illegal invocation error
+					Reflect.apply(target, that, args);
+					return this.client.url.url.hostname;
 				}
 			),
 		});
@@ -257,7 +273,7 @@ export default class DOMModule extends Module {
 
 				const attribute: string = args[0];
 
-				return prototypeElement(that, element => {
+				return prototypeElement(that, CustomElement.prototype, element => {
 					if (element.hasAttributeOG(attribute)) {
 						return element.getAttributeOG(attribute);
 					} else {
@@ -276,7 +292,7 @@ export default class DOMModule extends Module {
 
 				const [attribute, value] = args;
 
-				prototypeElement(that, element => {
+				prototypeElement(that, CustomElement.prototype, element => {
 					element.setAttribute(attribute, value);
 
 					if (!this.trackAttributes.get(element.nodeName)?.has(attribute)) {
@@ -303,7 +319,7 @@ export default class DOMModule extends Module {
 					enumerable: true,
 					configurable: true,
 					get: proxyModule.wrapFunction(descriptor.get!, (target, that) => {
-						return prototypeElement(that, element => {
+						return prototypeElement(that, CustomElement.prototype, element => {
 							return propData[1](element);
 						});
 					}),
@@ -312,7 +328,7 @@ export default class DOMModule extends Module {
 						(target, that, args) => {
 							const [value] = args;
 
-							prototypeElement(that, element => {
+							prototypeElement(that, CustomElement.prototype, element => {
 								element.setAttribute(propData[0], value);
 
 								if (
