@@ -8,8 +8,8 @@ import {
 	routeURL,
 } from './routeURL';
 import { escapeText } from 'entities';
-import { parse, parseFragment, serialize } from 'parse5';
-import { Element, TextNode } from 'parse5/dist/tree-adapters/default';
+
+export const ORIGINAL_ATTRIBUTE = `sO:`;
 
 export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
 	if (resource.url.protocol === 'data:') {
@@ -24,26 +24,22 @@ export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
 	return routeURL('html', resource);
 }
 
-const essentialNodes = [
-	'#documentType',
-	'#document',
-	'#text',
-	'html',
-	'head',
-	'body',
-];
-
 export function modifyHTML(
 	script: string,
 	url: StompURL,
 	config: Config,
 	fragment = false
 ): string {
+	const globalClient = `globalThis[${JSON.stringify(CLIENT_KEY)}]`;
+
+	// if(fragment) return '<script>document.currentScript.replaceWith(globalstomp.cloneIntoNewNode())
 	const injectInit = `if(typeof globalThis.createClient!=='function'){document.write("Stomp client failed to inject.")}else{createClient(${JSON.stringify(
 		config
-	)}, ${JSON.stringify(url.codec.key)});globalThis[${JSON.stringify(
-		CLIENT_KEY
-	)}].loadHTML(${escapeText(JSON.stringify(script))})}`;
+	)}, ${JSON.stringify(
+		url.codec.key
+	)});if(!${globalClient}.applied)${globalClient}.loadHTML(${escapeText(
+		JSON.stringify(script)
+	)})}`;
 
 	return `<!DOCTYPE HTML><html><head><meta charset="utf-8" /></head><body><script src="${injectDocumentJS(
 		url
@@ -55,11 +51,8 @@ export function restoreHTML(
 	url: StompURL,
 	fragment = false
 ): string {
-	const tree: Element = fragment
-		? <Element>parseFragment(script)
-		: <Element>(<unknown>parse(script));
-
-	return serialize(tree);
+	// will likely have to remove the attributes created by stomp and merge the og: attributes
+	return script;
 }
 
 const REFRESH = /([; ]|^)url=(?:(['"])(((?!\2).)*)\2?|(.*);)/i;

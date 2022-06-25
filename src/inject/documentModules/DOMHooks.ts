@@ -2,6 +2,7 @@ import StompURL from '../../StompURL';
 import { routeCSS } from '../../rewriteCSS';
 import { routeHTML } from '../../rewriteHTML';
 import { routeJS } from '../../rewriteJS';
+import { routeManifest } from '../../rewriteManifest';
 import { routeBinary } from '../../routeURL';
 import Module from '../Module';
 import DOMModule from './DOM';
@@ -31,6 +32,22 @@ export class DOMHooksModule extends Module {
 										this.client.url
 									),
 									this.client.url
+								)
+							);
+							break;
+						case 'manifest':
+							element.setAttribute(
+								'href',
+								routeManifest(
+									new StompURL(
+										new URL(
+											element.getAttribute('href')!,
+											this.client.url.toString()
+										),
+										this.client.url
+									),
+									this.client.url,
+									this.client.config
 								)
 							);
 							break;

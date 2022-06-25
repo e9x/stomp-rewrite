@@ -1,7 +1,8 @@
 import GenericCodec from '../Codecs';
+import StompURL from '../StompURL';
 import { codecType, Config, parseConfig, ParsedConfig } from '../config';
 import { CLIENT_KEY } from '../rewriteJS';
-import { parseRoutedURL } from '../routeURL';
+import { parseRoutedURL, ROUTE_PROTOCOLS } from '../routeURL';
 import Module from './Module';
 import BareClient from '@tomphttp/bare-client';
 
@@ -15,14 +16,24 @@ export default class Client {
 	codec: GenericCodec;
 	directory: string;
 	bareServer: string;
-	get url() {
-		return parseRoutedURL(
-			location.toString(),
-			this.codec,
-			`${location.origin}${this.directory}`
-		).url;
+	applied: boolean;
+	get url(): StompURL {
+		if (ROUTE_PROTOCOLS.includes(location.protocol)) {
+			return parseRoutedURL(
+				location.toString(),
+				this.codec,
+				`${location.origin}${this.directory}`
+			).url;
+		} else {
+			return new StompURL(
+				location.href,
+				this.codec,
+				`${location.origin}${this.directory}`
+			);
+		}
 	}
 	constructor(init: ParsedConfig) {
+		this.applied = false;
 		this.modules = new Map();
 		this.codec = init.codec;
 		this.directory = init.directory;
@@ -47,6 +58,8 @@ export default class Client {
 				module.apply();
 			}
 		}
+
+		this.applied = true;
 	}
 	addModule(Module: ModuleCtor) {
 		this.modules.set(Module, new Module(this));
@@ -59,10 +72,20 @@ export default class Client {
 	}
 }
 
+declare global {
+	function createClient(config: Config, codecKey: string): void;
+}
+
 export function createClientFactory(Client: {
 	new (init: ParsedConfig): Client;
 }) {
+	setTimeout(() => {
+		console.log(document.documentElement.outerHTML);
+	});
+
 	return function (config: Config, codecKey: string) {
+		delete (global as any).createClient;
+
 		const client = new Client(parseConfig(config, codecKey));
 
 		Reflect.defineProperty(global, CLIENT_KEY, {

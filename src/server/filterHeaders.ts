@@ -73,13 +73,16 @@ export function filterResponseHeaders(
 	const filteredHeaders = trimNonStandardHeaders(headers);
 
 	if (headers.has('location')) {
-		transformRoute(
-			new StompURL(
-				new URL(filteredHeaders.get('location')!, url.toString()),
-				url
-			),
-			url,
-			config
+		filteredHeaders.set(
+			'location',
+			transformRoute(
+				new StompURL(
+					new URL(filteredHeaders.get('location')!, url.toString()),
+					url
+				),
+				url,
+				config
+			)
 		);
 	}
 

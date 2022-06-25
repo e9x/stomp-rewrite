@@ -1,11 +1,7 @@
+import { ORIGINAL_ATTRIBUTE } from '../../rewriteHTML';
 import Client from '../Client';
 import Module from '../Module';
-import ProxyModule, {
-	applyDescriptors,
-	invokeGlobal,
-} from '../baseModules/Proxy';
-
-const ORIGINAL_ATTRIBUTE = `sO:`;
+import ProxyModule, { applyDescriptors } from '../baseModules/Proxy';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
 

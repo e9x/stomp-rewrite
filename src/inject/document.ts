@@ -5,6 +5,7 @@ import baseModules from './baseModules';
 import DOMModule from './documentModules/DOM';
 import { DOMHooksModule } from './documentModules/DOMHooks';
 import HistoryModule from './documentModules/History';
+import IFrameModule from './documentModules/IFrame';
 import LocationModule from './documentModules/Location';
 import NavigatorModule from './documentModules/Navigator';
 import { decode } from 'entities';
@@ -24,6 +25,7 @@ class DocumentClient extends Client {
 		this.addModule(LocationModule);
 		this.addModule(DOMHooksModule);
 		this.addModule(DOMModule);
+		this.addModule(IFrameModule);
 	}
 
 	loadHTML(script: string) {
@@ -32,26 +34,17 @@ class DocumentClient extends Client {
 
 		this.apply();
 
-		function emptyNode(node: HTMLElement) {
-			for (const child of node.children) {
-				child.remove();
-			}
-		}
-
-		emptyNode(document.head);
-		emptyNode(document.body);
-		document.currentScript?.remove();
-
-		console.log(dom.body);
-
+		/**
+		 *
+		 * @param node Node to clone
+		 * @param target Destination for the cloned node
+		 */
 		function clone(node: HTMLElement, target: HTMLElement) {
-			const stack: [symbol, ...(stackIterateData | stackFinalizeData)][] = [];
+			const tempTarget = document.createElement('div');
 
-			const max = node.childNodes.length;
-			for (let i = 0; i < max; i++) {
-				const child = node.childNodes[max - i - 1];
-				stack.push([STACK_ITERATE, child as HTMLElement, target]);
-			}
+			const stack: [symbol, ...(stackIterateData | stackFinalizeData)][] = [
+				[STACK_ITERATE, node, tempTarget],
+			];
 
 			while (true) {
 				const array = stack.pop();
@@ -91,7 +84,6 @@ class DocumentClient extends Client {
 								replaceAfterParse.set(placeholder, target);
 								stack.push([STACK_FINALIZE, d[1], placeholder]);
 							} else {
-								console.log(target, d[1]);
 								stack.push([STACK_FINALIZE, d[1], target]);
 							}
 						}
@@ -108,13 +100,19 @@ class DocumentClient extends Client {
 
 				// const element = document.createElement(ctx.node.nodeName);
 			}
+
+			for (const child of tempTarget.childNodes) {
+				target.append(child);
+			}
 		}
 
-		clone(dom.head, document.head);
-		clone(dom.body, document.body);
+		document.body.remove();
+		document.head.remove();
+
+		document.documentElement.remove();
+		clone(dom.documentElement, <HTMLElement>(<unknown>document));
 
 		for (const [element, replaceWith] of replaceAfterParse) {
-			console.log('replace ', element, ' with', replaceWith);
 			element.replaceWith(replaceWith);
 		}
 	}

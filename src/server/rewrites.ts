@@ -131,13 +131,21 @@ const css = genericForward(
 		}
 	}
 );
+const htmlMimes = ['image/svg+xml', 'text/html', ''];
+
+export function getMime(contentType: string): string {
+	return contentType.split(';')[0];
+}
+
 const html = genericForward(
 	async (url, response, responseHeaders, config) => {
-		if (responseHeaders.get('content-type') === 'application/pdf') {
-			return response.body!;
+		if (
+			htmlMimes.includes(getMime(responseHeaders.get('content-type') || ''))
+		) {
+			return modifyHTML(await response.text(), url, config);
 		}
 
-		return modifyHTML(await response.text(), url, config);
+		return response.body!;
 	},
 	(resource, url, config) => routeHTML(resource, url, config),
 	(headers, filteredHeaders, url, config) => {
