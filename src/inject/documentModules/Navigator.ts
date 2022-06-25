@@ -1,5 +1,4 @@
 import StompURL from '../../StompURL';
-import { routeHTML } from '../../rewriteHTML';
 import { routeBeacon } from '../../routeURL';
 import Module from '../Module';
 import ProxyModule from '../baseModules/Proxy';
