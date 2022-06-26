@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import StompURL from '../../StompURL';
 import { routeHTML } from '../../rewriteHTML';
-import { CLIENT_KEY, modifyJS, UNDEFINABLE } from '../../rewriteJS';
+import { CLIENT_KEY, modifyJS, routeJS, UNDEFINABLE } from '../../rewriteJS';
 import Client from '../Client';
 import Module from '../Module';
 import ProxyModule from './Proxy';
@@ -143,6 +143,20 @@ export default class AccessModule extends Module {
 					// call as if it were eval(the, args, to, non js eval)
 					return [code, ...args];
 				}
+			},
+			import: (baseURL: string | undefined, url: string): Promise<unknown> => {
+				// @ts-ignore
+				return import(
+					/* webpackIgnore: true */
+					routeJS(
+						new StompURL(
+							new URL(url, baseURL || this.client.url.toString()),
+							this.client.url
+						),
+						this.client.url,
+						true
+					)
+				);
 			},
 		};
 

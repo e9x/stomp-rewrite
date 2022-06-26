@@ -1,6 +1,6 @@
 import StompURL from '../../StompURL';
 import { routeCSS } from '../../rewriteCSS';
-import { routeHTML } from '../../rewriteHTML';
+import { modifyRefresh, routeHTML } from '../../rewriteHTML';
 import { routeJS } from '../../rewriteJS';
 import { routeManifest } from '../../rewriteManifest';
 import { routeBinary } from '../../routeURL';
@@ -22,6 +22,7 @@ export class DOMHooksModule extends Module {
 				) {
 					switch (element.getAttribute('rel')) {
 						case 'stylesheet':
+							element.setAttributeOG('href', element.getAttribute('href')!);
 							element.setAttribute(
 								'href',
 								routeCSS(
@@ -37,6 +38,7 @@ export class DOMHooksModule extends Module {
 							);
 							break;
 						case 'manifest':
+							element.setAttributeOG('href', element.getAttribute('href')!);
 							element.setAttribute(
 								'href',
 								routeManifest(
@@ -53,6 +55,7 @@ export class DOMHooksModule extends Module {
 							);
 							break;
 						default:
+							element.setAttributeOG('href', element.getAttribute('href')!);
 							element.setAttribute(
 								'href',
 								routeBinary(
@@ -85,13 +88,14 @@ export class DOMHooksModule extends Module {
 			}
 		);
 
-		// todo: mimes...
+		// todo: mimes...?
 		// https://www.w3schools.com/tags/tag_embed.asp
 
 		domHooksModule.useAttributes(
 			['IFRAME', 'EMBED'],
 			element => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
+					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
 						'src',
 						routeHTML(
@@ -116,6 +120,40 @@ export class DOMHooksModule extends Module {
 					element => {
 						return new URL(
 							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			}
+		);
+
+		domHooksModule.useAttributes(
+			['META'],
+			element => {
+				if (
+					element.hasAttribute('content') &&
+					element.getAttribute('content') !== '' &&
+					element.getAttribute('http-equiv') === 'refresh'
+				) {
+					element.setAttributeOG('content', element.getAttribute('content')!);
+					element.setAttribute(
+						'content',
+						modifyRefresh(
+							element.getAttribute('content')!,
+							this.client.url,
+							this.client.config
+						)
+					);
+				}
+			},
+			['content', 'http-equiv'],
+			[HTMLMetaElement],
+			{
+				content: [
+					'content',
+					element => {
+						return new URL(
+							element.getAttributeOG('content')!,
 							this.client.url.toString()
 						).toString();
 					},

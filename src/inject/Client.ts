@@ -26,7 +26,7 @@ export default class Client {
 			).url;
 		} else {
 			return new StompURL(
-				location.href,
+				location.toString(),
 				this.codec,
 				`${location.origin}${this.directory}`
 			);

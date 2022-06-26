@@ -43,7 +43,7 @@ export function routeJS(resource: StompURL, url: StompURL, module = false) {
 		});
 	}
 
-	return routeURL('js', resource);
+	return routeURL(module ? 'mjs' : 'js', resource);
 }
 
 export function modifyJS(script: string, url: StompURL, module = false) {
@@ -70,20 +70,23 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 			case 'ImportExpression':
 				// todo: add tompc$.import(meta, url)
 				ctx.replaceWith(
-					b.importExpression(
-						b.callExpression(
-							b.memberExpression(
-								b.memberExpression(
-									b.identifier(ACCESS_KEY),
-									b.identifier('eval')
-								),
-								b.identifier('import')
-							),
-							[
-								b.metaProperty(b.identifier('import'), b.identifier('meta')),
-								ctx.node.source,
-							]
-						)
+					b.callExpression(
+						b.memberExpression(
+							b.identifier(ACCESS_KEY),
+							b.identifier('import')
+						),
+						[
+							module
+								? b.memberExpression(
+										b.metaProperty(
+											b.identifier('import'),
+											b.identifier('meta')
+										),
+										b.identifier('url')
+								  )
+								: b.identifier('undefined'),
+							ctx.node.source,
+						]
 					)
 				);
 
