@@ -218,7 +218,7 @@ export default class DOMModule extends Module {
 		// all hooks are in, now apply them
 
 		// MutationObserver will leak a lot of values and is complex.. we cannot support this yet.
-		delete (global as any).MutationObserver;
+		// delete (global as any).MutationObserver;
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
 

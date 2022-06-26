@@ -67,15 +67,14 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		catchLoop++;*/
 
 		typeLoop: switch (ctx.node.type) {
-			/*case 'ImportExpression':
+			case 'ImportExpression':
 				// todo: add tompc$.import(meta, url)
-				modify.replace(
-					ctx,
+				ctx.replaceWith(
 					b.importExpression(
 						b.callExpression(
 							b.memberExpression(
 								b.memberExpression(
-									b.identifier(global_client),
+									b.identifier(ACCESS_KEY),
 									b.identifier('eval')
 								),
 								b.identifier('import')
@@ -90,51 +89,58 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 
 				break;
 			case 'ImportDeclaration':
-				console.log(ctx.node);
-				modify.replace(
-					ctx,
+				ctx.replaceWith(
 					b.importDeclaration(
 						ctx.node.specifiers,
-						b.literal(this.serve(new URL(ctx.node.source.value, url), url))
+						b.literal(
+							routeJS(
+								new StompURL(
+									new URL(ctx.node.source.value, url.toString()),
+									url
+								),
+								url,
+								true
+							)
+						)
 					)
 				);
-				// TODO : FIX
+				// TODO : FIX..?
 				break;
 			case 'CallExpression':
-				const { callee } = ctx.node;
+				{
+					const { callee } = ctx.node;
 
-				if (
-					callee.type === 'Identifier' &&
-					callee.name === 'eval' &&
-					ctx.node.arguments.length
-				) {
-					/* May be a JS eval function!
+					if (
+						callee.type === 'Identifier' &&
+						callee.name === 'eval' &&
+						ctx.node.arguments.length
+					) {
+						/* May be a JS eval function!
 						eval will only inherit the scope if the following is met:
 						the keyword (not property or function) eval is called
 						the keyword doesnt reference a variable named eval
-						* /
+						*/
 
-					// transform eval(...) into eval(...tompc$.eval.eval_scope(eval, ...['code',{note:"eval is possibly a var"}]))
-					modify.replace(
-						ctx,
-						b.callExpression(b.identifier('eval'), [
-							b.spreadElement(
-								b.callExpression(
-									b.memberExpression(
+						// transform eval(...) into eval(...tompc$.eval.eval_scope(eval, ...['code',{note:"eval is possibly a var"}]))
+						ctx.replaceWith(
+							b.callExpression(b.identifier('eval'), [
+								b.spreadElement(
+									b.callExpression(
 										b.memberExpression(
-											b.identifier(global_client),
-											b.identifier('eval')
+											b.identifier(ACCESS_KEY),
+											b.identifier('evalScope')
 										),
-										b.identifier('eval_scope')
-									),
-									[b.identifier('eval'), ...ctx.node.arguments]
-								)
-							),
-						])
-					);
+										[
+											b.identifier('eval'),
+											...ctx.node.arguments.map((arg: any) => result(arg)),
+										]
+									)
+								),
+							])
+						);
+					}
 				}
-
-				break;*/
+				break;
 			case 'Identifier':
 				{
 					switch (ctx.parent?.node.type) {

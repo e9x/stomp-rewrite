@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import StompURL from '../../StompURL';
 import { routeHTML } from '../../rewriteHTML';
-import { CLIENT_KEY, UNDEFINABLE } from '../../rewriteJS';
+import { CLIENT_KEY, modifyJS, UNDEFINABLE } from '../../rewriteJS';
 import Client from '../Client';
 import Module from '../Module';
+import ProxyModule from './Proxy';
 import { urlLike } from '@tomphttp/bare-client';
 
 export const ACCESS_KEY = '$s$j';
@@ -20,6 +22,8 @@ function normalizeKey(key: unknown): string|unknown {
 	}
 }*/
 
+const evalSnapshot = global.eval;
+
 export function setGlobalProxy(object: any, name: string, proxy: unknown) {
 	object[GLOBAL_PROXY] = proxy;
 	object[GLOBAL_NAME] = name;
@@ -27,6 +31,18 @@ export function setGlobalProxy(object: any, name: string, proxy: unknown) {
 
 export default class AccessModule extends Module {
 	apply() {
+		const proxyModule = this.client.getModule(ProxyModule);
+
+		const globalEval = (x: string) => {
+			x = String(x);
+			return evalSnapshot(modifyJS(x, this.client.url));
+		};
+
+		const globalEvalProxy = proxyModule?.wrapFunction(
+			evalSnapshot,
+			(target, that, [code]) => globalEval(code)
+		);
+
 		const api = {
 			get2: (target: any, key: any): unknown => {
 				// key = normalizeKey(key);
@@ -117,6 +133,16 @@ export default class AccessModule extends Module {
 			call2: (target: any, key: any, args: any): any => {
 				// key = normalizeKey(key);
 				return Reflect.apply(api.get(target[key], key), target, args);
+			},
+			evalScope: (func: Function, code: string | unknown, ...args: any[]) => {
+				code = String(code);
+				console.log(func);
+				if (func === evalSnapshot) {
+					return [modifyJS(<string>code, this.client.url)];
+				} else {
+					// call as if it were eval(the, args, to, non js eval)
+					return [code, ...args];
+				}
 			},
 		};
 
