@@ -350,15 +350,6 @@ export default class DOMModule extends Module {
 							const [value] = args;
 
 							prototypeElement(that, CustomElement.prototype, element => {
-								if (value === '/favicon.ico')
-									console.log(
-										'seddit',
-										value,
-										propData[0],
-										this.trackAttributes.get(element.nodeName),
-										this.trackAttributes.get(element.nodeName)?.has(propData[0])
-									);
-
 								element.setAttribute(propData[0], value);
 
 								if (
