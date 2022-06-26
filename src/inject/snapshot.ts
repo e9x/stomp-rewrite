@@ -23,6 +23,8 @@ export const fetch = global.fetch;
 
 export const XMLHttpRequest = global.XMLHttpRequest;
 
+export const XMLHttpRequestEventTarget = global.XMLHttpRequestEventTarget;
+
 export const EventSource = global.EventSource;
 
 export const WebSocket = global.WebSocket;
@@ -33,7 +35,25 @@ export const AsyncFunction: FunctionConstructor = <FunctionConstructor>(
 	(async () => undefined).constructor
 );
 
-declare global {
-	// eslint-disable-next-line no-var
-	var AsyncFunction: FunctionConstructor;
+export const navigator: Navigator = {} as any;
+
+{
+	const descriptors = Object.getOwnPropertyDescriptors(Navigator.prototype);
+
+	for (const name in descriptors) {
+		const { get, set, value, writable } = descriptors[name];
+		const define: PropertyDescriptor = {};
+
+		if (get) define.get = get.bind(global.navigator);
+
+		if (set) define.set = set.bind(global.navigator);
+
+		if (value)
+			define.value =
+				typeof value === 'function' ? value.bind(global.navigator) : value;
+
+		if (typeof writable === 'boolean') define.writable = writable;
+
+		Reflect.defineProperty(navigator, name, define);
+	}
 }

@@ -26,12 +26,12 @@ export function routeBinary(resource: StompURL) {
 /**
  * navigator.postBeacon request
  */
-export function routeBeacon(resource: StompURL) {
+export function routeXHR(resource: StompURL) {
 	if (resource.url.protocol === 'data:') {
 		return resource.toString();
 	}
 
-	return routeURL('beacon', resource);
+	return routeURL('xhr', resource);
 }
 
 export function injectDocumentJS(url: StompURL) {
@@ -40,6 +40,14 @@ export function injectDocumentJS(url: StompURL) {
 
 export function injectWorkerJS(url: StompURL) {
 	return `${url.directory}injectWorker.js`;
+}
+
+export function geckoXHR(url: StompURL) {
+	return `${url.directory}gxhr`;
+}
+
+export function queueXHR(url: StompURL) {
+	return `${url.directory}xhr`;
 }
 
 /*

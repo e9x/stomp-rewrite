@@ -79,10 +79,6 @@ declare global {
 export function createClientFactory(Client: {
 	new (init: ParsedConfig): Client;
 }) {
-	setTimeout(() => {
-		console.log(document.documentElement.outerHTML);
-	});
-
 	return function (config: Config, codecKey: string) {
 		delete (global as any).createClient;
 

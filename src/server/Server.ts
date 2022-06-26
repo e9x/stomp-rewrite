@@ -9,6 +9,7 @@ import {
 } from '../config';
 import { routeHTML } from '../rewriteHTML';
 import { parseRoutedURL } from '../routeURL';
+import { gxhr, xhr } from './Sync';
 import rewrites from './rewrites';
 import BareClient from '@tomphttp/bare-client';
 import createHttpError from 'http-errors';
@@ -43,12 +44,10 @@ export default class Server {
 	willRoute(url: string): boolean {
 		const { pathname } = new URL(url);
 
-		if (pathname === `${this.directory}process`) {
-			return true;
-		}
-
-		if (pathname === `${this.directory}client`) {
-			return true;
+		for (const sub of ['process', 'client', 'xhr', 'gxhr']) {
+			if (pathname === `${this.directory}${sub}`) {
+				return true;
+			}
 		}
 
 		for (const rewrite in rewrites) {
@@ -72,6 +71,14 @@ export default class Server {
 
 		if (url.pathname === `${this.directory}client`) {
 			return new Response();
+		}
+
+		if (url.pathname === `${this.directory}xhr`) {
+			return xhr(request, this);
+		}
+
+		if (url.pathname === `${this.directory}gxhr`) {
+			return gxhr(request, this);
 		}
 
 		if (url.pathname === `${this.directory}process`) {
@@ -120,8 +127,8 @@ export default class Server {
 				httpError = error;
 			} else {
 				if (error instanceof Error) {
-					httpError = new createHttpError.InternalServerError(error.message);
-					httpError.stack = error.stack;
+					httpError = new createHttpError.InternalServerError(error.toString());
+					console.error(error.stack);
 					id = error.name;
 				} else {
 					httpError = new createHttpError.InternalServerError(String(error));

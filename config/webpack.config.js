@@ -1,3 +1,4 @@
+import ExcludeProvidePlugin from './ExcludeProvidePlugin.js';
 import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
 import { resolve } from 'path';
 import ResolveTypescriptPlugin from 'resolve-typescript-plugin';
@@ -94,44 +95,75 @@ const common = {
 	].filter(Boolean),
 };
 
+const snapshot = new webpack.ProvidePlugin({
+	...Object.fromEntries(
+		[
+			'Reflect',
+			'fetch',
+			'navigator',
+			'XMLHttpRequest',
+			'XMLHttpRequestEventTarget',
+			'EventSource',
+			'Function',
+			'AsyncFunction',
+		].map(name => [name, [resolve('./src/inject/snapshot.ts'), name]])
+	),
+});
+
 /**
  * @type {import('webpack').Configuration[]}
  */
 export default [
 	{
 		...common,
-		plugins: [
-			...common.plugins,
-			new webpack.ProvidePlugin({
-				...Object.fromEntries(
-					[
-						'Reflect',
-						'fetch',
-						'XMLHttpRequest',
-						'EventSource',
-						'Function',
-						'AsyncFunction',
-					].map(name => [name, [resolve('./src/inject/snapshot.ts'), name]])
-				),
-				'Error.captureStackTrace': 'capture-stack-trace',
-			}),
-		],
-		entry: {
-			injectWorker: './src/inject/worker.ts',
-			injectDocument: './src/inject/document.ts',
-		},
+		plugins: [...common.plugins, snapshot],
+		entry: './src/inject/worker.ts',
 		output: {
 			library: {
 				name: 'createClient',
 				type: 'umd',
 			},
 			libraryExport: 'default',
-			filename: '[name].js',
+			filename: 'injectWorker.js',
 			path: appDist,
 		},
 	},
 	{
 		...common,
+		plugins: [
+			...common.plugins,
+			snapshot,
+			new webpack.ProvidePlugin({
+				...Object.fromEntries(
+					['DOMParser'].map(name => [
+						name,
+						[resolve('./src/inject/snapshotDOM.ts'), name],
+					])
+				),
+			}),
+		],
+		entry: './src/inject/document.ts',
+		output: {
+			library: {
+				name: 'createClient',
+				type: 'umd',
+			},
+			libraryExport: 'default',
+			filename: 'injectDocument.js',
+			path: appDist,
+		},
+	},
+	{
+		...common,
+		plugins: [
+			...common.plugins,
+			new ExcludeProvidePlugin({
+				definitions: {
+					'Error.captureStackTrace': 'capture-stack-trace',
+				},
+				exclude: [/capture-stack-trace/],
+			}),
+		],
 		entry: {
 			serviceWorker: './src/server/serviceWorker.ts',
 		},

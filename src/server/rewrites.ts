@@ -1,7 +1,7 @@
 // import createHttpError from 'http-errors';
 import StompURL from '../StompURL';
 import { Config } from '../config';
-import { capitalizeHeaders } from '../headers';
+import { capitalizeHeaders, trimNonStandardHeaders } from '../headers';
 import { modifyCSS, routeCSS } from '../rewriteCSS';
 import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
 import { modifyJS, routeJS } from '../rewriteJS';
@@ -105,7 +105,7 @@ const js = genericForward(
 	async (url, response) => modifyJS(await response.text(), url),
 	(resource, url) => routeJS(resource, url),
 	undefined,
-	(_headers, filteredHeaders) => {
+	(headers, filteredHeaders) => {
 		for (const header of integrityHeaders) {
 			filteredHeaders.delete(header);
 		}
@@ -115,7 +115,9 @@ const mjs = genericForward(
 	async (url, response) => modifyJS(await response.text(), url, true),
 	(resource, url) => routeJS(resource, url, true),
 	undefined,
-	(_headers, filteredHeaders) => {
+	(headers, filteredHeaders) => {
+		trimNonStandardHeaders(filteredHeaders);
+
 		for (const header of integrityHeaders) {
 			filteredHeaders.delete(header);
 		}
@@ -125,7 +127,9 @@ const css = genericForward(
 	async (url, response) => modifyCSS(await response.text(), url),
 	(resource, url) => routeCSS(resource, url),
 	undefined,
-	(_headers, filteredHeaders) => {
+	(headers, filteredHeaders) => {
+		trimNonStandardHeaders(filteredHeaders);
+
 		for (const header of integrityHeaders) {
 			filteredHeaders.delete(header);
 		}
@@ -149,6 +153,8 @@ const html = genericForward(
 	},
 	(resource, url, config) => routeHTML(resource, url, config),
 	(headers, filteredHeaders, url, config) => {
+		trimNonStandardHeaders(filteredHeaders);
+
 		if (headers.has('refresh')) {
 			filteredHeaders.set(
 				'refresh',
@@ -166,13 +172,24 @@ const manifest = genericForward(
 		modifyManifest(await response.text(), url, config),
 	(resource, url, config) => routeManifest(resource, url, config),
 	undefined,
-	(_headers, filteredHeaders) => {
+	(headers, filteredHeaders) => {
+		trimNonStandardHeaders(filteredHeaders);
+
 		for (const header of integrityHeaders) {
 			filteredHeaders.delete(header);
 		}
 	}
 );
 const binary = genericForward(
+	async (_url, response) => response.body!,
+	resource => routeBinary(resource),
+	undefined,
+	(headers, filteredHeaders) => {
+		trimNonStandardHeaders(filteredHeaders);
+	}
+);
+// todo: parse more request headers
+const xhr = genericForward(
 	async (_url, response) => response.body!,
 	resource => routeBinary(resource)
 );
@@ -191,6 +208,7 @@ const rewrites: {
 	html,
 	manifest,
 	binary,
+	xhr,
 };
 
 export default rewrites;

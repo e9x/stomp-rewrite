@@ -1,15 +1,22 @@
 import StompURL, { urlLike } from '../../StompURL';
-import { routeBinary, ROUTE_PROTOCOLS } from '../../routeURL';
+import {
+	parseRoutedURL,
+	routeXHR,
+	routeBinary,
+	ROUTE_PROTOCOLS,
+} from '../../routeURL';
 import Module from '../Module';
 import ProxyModule from './Proxy';
 import { BareFetchInit } from '@tomphttp/bare-client';
 
 export default class FetchModule extends Module {
 	apply() {
+		const proxyModule = this.client.getModule(ProxyModule)!;
+
 		const eventSourceURLs = new WeakMap<EventSource, string>();
 		const responseURLs = new WeakMap<Response, string>();
 
-		global.EventSource = this.client.getModule(ProxyModule)!.wrapFunction(
+		global.EventSource = proxyModule.wrapFunction(
 			global.EventSource,
 			(target, that, args) => {
 				const url = new URL(args[0], this.client.url.toString());
@@ -39,8 +46,7 @@ export default class FetchModule extends Module {
 						if (eventSourceURLs.has(that)) {
 							return eventSourceURLs.get(that);
 						} else {
-							// eslint-disable-next-line @typescript-eslint/ban-types
-							return Reflect.apply(<Function>target, that, args);
+							return Reflect.apply(target, that, args);
 						}
 					}
 				),
@@ -49,23 +55,21 @@ export default class FetchModule extends Module {
 		Reflect.defineProperty(global.Response.prototype, 'url', {
 			configurable: true,
 			enumerable: true,
-			get: this.client
-				.getModule(ProxyModule)!
-				.wrapFunction(
-					Reflect.getOwnPropertyDescriptor(global.Response.prototype, 'url')!
-						.get!,
-					(target, that, args) => {
-						if (responseURLs.has(that)) {
-							return responseURLs.get(that);
-						} else {
-							// eslint-disable-next-line @typescript-eslint/ban-types
-							return Reflect.apply(<Function>target, that, args);
-						}
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(global.Response.prototype, 'url')!
+					.get!,
+				(target, that, args) => {
+					if (responseURLs.has(that)) {
+						return responseURLs.get(that);
+					} else {
+						// eslint-disable-next-line @typescript-eslint/ban-types
+						return Reflect.apply(<Function>target, that, args);
 					}
-				),
+				}
+			),
 		});
 
-		global.Request = this.client.getModule(ProxyModule)!.wrapFunction(
+		global.Request = proxyModule.wrapFunction(
 			global.Request,
 			(target, _that, args, newTarget) => {
 				if (args.length === 0) {
@@ -83,37 +87,42 @@ export default class FetchModule extends Module {
 			true
 		);
 
-		//SUYNCHRONOUSLY REQUEST THE BARE SERVER in XMLHTTPrequest
-
-		global.fetch = this.client
-			.getModule(ProxyModule)!
-			.wrapFunction(global.fetch, async (_target, _that, args) => {
-				let init: BareFetchInit;
+		global.fetch = proxyModule.wrapFunction(
+			global.fetch,
+			async (_target, _that, args) => {
+				let init: RequestInit;
 				let url: urlLike;
 
 				if (args[0] instanceof Request) {
 					url = new URL(args[0].url);
-					init = <BareFetchInit>args[0];
+					init = args[0];
 				} else {
 					url = new URL(args[0], this.client.url.toString());
 					init = args[1];
 				}
 
 				if (!ROUTE_PROTOCOLS.includes(url.protocol)) {
-					return await fetch(url, <RequestInit>init);
+					return await fetch(url, init);
 				}
 
 				// [input, init]
 				//TODO: COOKIES
-				const res = await this.client.bare.fetch(url, init);
+				const res = await fetch(
+					routeXHR(new StompURL(url, this.client.url)),
+					init
+				);
 
-				// res.url is bad
+				responseURLs.set(
+					res,
+					parseRoutedURL(
+						res.url,
+						this.client.codec,
+						`${location.origin}${this.client.directory}`
+					).url.toString()
+				);
 
-				const newRes = new Response(res.body, res);
-
-				responseURLs.set(newRes, res.finalURL);
-
-				return newRes;
-			});
+				return res;
+			}
+		);
 	}
 }

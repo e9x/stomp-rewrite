@@ -2,6 +2,7 @@ import { ORIGINAL_ATTRIBUTE } from '../../rewriteHTML';
 import Client from '../Client';
 import Module from '../Module';
 import ProxyModule, { applyDescriptors } from '../baseModules/Proxy';
+import cloneRawNode, { parseHTML, parseHTMLFragment } from '../cloneNode';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
 
@@ -37,10 +38,14 @@ export class CustomElement extends Element {
 		for (const [attribute, value] of this.attributeTab) {
 			this.attributeTab.delete(attribute);
 
-			if (value === null) {
-				nativeElement.removeAttribute.call(this, attribute);
-			} else {
-				nativeElement.setAttribute.call(this, attribute, value);
+			try {
+				if (value === null) {
+					nativeElement.removeAttribute.call(this, attribute);
+				} else {
+					nativeElement.setAttribute.call(this, attribute, value);
+				}
+			} catch (error) {
+				console.warn('bad attribute', attribute, value, error);
 			}
 		}
 
@@ -97,7 +102,7 @@ determining element.src:
 
 type ElementCtor = { new (): HTMLElement };
 
-type PropData = [attribute: string, get: (element: CustomElement) => string];
+type PropData = [attribute: string, get?: (element: CustomElement) => string];
 
 /*
  * Sets the prototype of an element while this script is working with it. This is to ensure we are only accessing the native functions and not any traps/shims.
@@ -146,10 +151,7 @@ export default class DOMModule extends Module {
 		attributes: string[],
 		ctors: ElementCtor[],
 		properties: {
-			[property: string]: [
-				attribute: string,
-				get: (element: CustomElement) => string
-			];
+			[property: string]: PropData;
 		}
 	][];
 	private previousAttributes: WeakMap<Element, Map<string, string>>;
@@ -162,21 +164,6 @@ export default class DOMModule extends Module {
 		this.previousAttributes = new WeakMap();
 		this.trackAttributes = new Map();
 		this.trackProperties = new Map();
-	}
-	private testHooks(element: CustomElement, attribute: string) {
-		const value = element.getAttribute(attribute);
-
-		if (!this.previousAttributes.has(element)) {
-			this.previousAttributes.set(element, new Map());
-		}
-
-		const pA = this.previousAttributes.get(element)!;
-
-		if (pA.get(attribute) !== value) {
-			this.updateAttributeHooks(element, attribute);
-			// value might be undefined?
-			pA.set(attribute, element.getAttribute(attribute)!);
-		}
 	}
 	useAttributes(
 		elements: string[],
@@ -202,7 +189,7 @@ export default class DOMModule extends Module {
 
 			for (const property in properties) {
 				if (this.trackProperties.get(ctor)!.has(property)) {
-					console.log(this.trackProperties.get(ctor), property);
+					console.error(this.trackProperties.get(ctor), property);
 					throw new Error(`Property hooks cannot overlap.`);
 				}
 
@@ -261,6 +248,33 @@ export default class DOMModule extends Module {
 			),
 		});
 
+		const outerHTMLDescriptor = Reflect.getOwnPropertyDescriptor(
+			Element.prototype,
+			'outerHTML'
+		)!;
+
+		Reflect.defineProperty(Element.prototype, 'outerHTML', {
+			enumerable: true,
+			configurable: true,
+			get: proxyModule.wrapFunction(
+				outerHTMLDescriptor.get!,
+				(target, that, args) => {
+					// todo
+					return Reflect.apply(target, that, args);
+				}
+			),
+			set: proxyModule.wrapFunction(
+				outerHTMLDescriptor.set!,
+				(target, that: Element, args) => {
+					const [cloned, appendCallback] = cloneRawNode(
+						parseHTMLFragment(args[0])
+					);
+					that.replaceWith(cloned);
+					appendCallback();
+				}
+			),
+		});
+
 		Element.prototype.getAttribute = proxyModule.wrapFunction(
 			Element.prototype.getAttribute,
 			(target, that: Element, args) => {
@@ -295,7 +309,7 @@ export default class DOMModule extends Module {
 						return;
 					}
 
-					this.testHooks(element, attribute);
+					this.updateAttributeHooks(element, attribute);
 				});
 			}
 		);
@@ -314,26 +328,45 @@ export default class DOMModule extends Module {
 				Reflect.defineProperty(ctor.prototype, property, {
 					enumerable: true,
 					configurable: true,
-					get: proxyModule.wrapFunction(descriptor.get!, (target, that) => {
-						return prototypeElement(that, CustomElement.prototype, element => {
-							return propData[1](element);
-						});
-					}),
+					get: proxyModule.wrapFunction(
+						descriptor.get!,
+						(target, that, args) => {
+							return prototypeElement(
+								that,
+								CustomElement.prototype,
+								element => {
+									if (propData[1]) {
+										return propData[1](element);
+									} else {
+										return Reflect.apply(target, that, args);
+									}
+								}
+							);
+						}
+					),
 					set: proxyModule.wrapFunction(
 						descriptor.set!,
 						(target, that, args) => {
 							const [value] = args;
 
 							prototypeElement(that, CustomElement.prototype, element => {
+								if (value === '/favicon.ico')
+									console.log(
+										'seddit',
+										value,
+										propData[0],
+										this.trackAttributes.get(element.nodeName),
+										this.trackAttributes.get(element.nodeName)?.has(propData[0])
+									);
+
 								element.setAttribute(propData[0], value);
 
 								if (
 									!this.trackAttributes.get(element.nodeName)?.has(propData[0])
-								) {
+								)
 									return;
-								}
 
-								this.testHooks(element, propData[0]);
+								this.updateAttributeHooks(element, propData[0]);
 							});
 						}
 					),

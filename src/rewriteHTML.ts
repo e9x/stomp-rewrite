@@ -37,7 +37,7 @@ export function modifyHTML(
 		config
 	)}, ${JSON.stringify(
 		url.codec.key
-	)});if(!${globalClient}.applied)${globalClient}.loadHTML(${escapeText(
+	)});if(!${globalClient}.applied)${globalClient}.apply();${globalClient}.loadHTML(${escapeText(
 		JSON.stringify(script)
 	)})}`;
 

@@ -1,5 +1,5 @@
 import StompURL from '../../StompURL';
-import { routeBeacon } from '../../routeURL';
+import { routeXHR } from '../../routeURL';
 import Module from '../Module';
 import ProxyModule from '../baseModules/Proxy';
 
@@ -15,7 +15,7 @@ export default class NavigatorModule extends Module {
 		Navigator.prototype.sendBeacon = proxyModule.wrapFunction(
 			Navigator.prototype.sendBeacon,
 			(target, that, args) => {
-				args[0] = routeBeacon(
+				args[0] = routeXHR(
 					new StompURL(
 						new URL(args[0], this.client.url.toString()),
 						this.client.url

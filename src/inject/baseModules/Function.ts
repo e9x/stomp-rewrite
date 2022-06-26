@@ -1,6 +1,6 @@
-import global from '../../global.js';
-import { modifyJS } from '../../rewriteJS.js';
-import Module from '../Module.js';
+import global from '../../global';
+import { modifyJS } from '../../rewriteJS';
+import Module from '../Module';
 import ProxyModule from './Proxy';
 
 /*

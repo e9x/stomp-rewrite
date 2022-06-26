@@ -14,6 +14,7 @@ export class DOMHooksModule extends Module {
 		domHooksModule.useAttributes(
 			['LINK'],
 			element => {
+				console.log('tripped hook', element);
 				if (
 					element.hasAttribute('href') &&
 					element.hasAttribute('rel') &&
@@ -71,6 +72,7 @@ export class DOMHooksModule extends Module {
 			['href', 'rel'],
 			[HTMLLinkElement],
 			{
+				rel: ['rel'],
 				href: [
 					'href',
 					element => {
