@@ -35,13 +35,22 @@ export default class AccessModule extends Module<Client> {
 
 		const globalEval = (x: string) => {
 			x = String(x);
-			return evalSnapshot(modifyJS(x, this.client.url));
+			return evalSnapshot(
+				modifyJS(
+					x,
+					this.client.url,
+					this.client.config,
+					this.client.isWorker ? 'worker' : 'dom'
+				)
+			);
 		};
 
 		const globalEvalProxy = proxyModule?.wrapFunction(
 			evalSnapshot,
 			(target, that, [code]) => globalEval(code)
 		);
+
+		setGlobalProxy(evalSnapshot, 'eval', globalEvalProxy);
 
 		const api = {
 			get2: (target: any, key: any): unknown => {
@@ -138,7 +147,14 @@ export default class AccessModule extends Module<Client> {
 				code = String(code);
 				console.log(func);
 				if (func === evalSnapshot) {
-					return [modifyJS(<string>code, this.client.url)];
+					return [
+						modifyJS(
+							<string>code,
+							this.client.url,
+							this.client.config,
+							this.client.isWorker ? 'worker' : 'dom'
+						),
+					];
 				} else {
 					// call as if it were eval(the, args, to, non js eval)
 					return [code, ...args];
@@ -154,7 +170,8 @@ export default class AccessModule extends Module<Client> {
 							this.client.url
 						),
 						this.client.url,
-						true
+						this.client.config,
+						this.client.isWorker ? 'workerModule' : 'domModule'
 					)
 				);
 			},

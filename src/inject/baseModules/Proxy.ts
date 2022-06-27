@@ -234,7 +234,16 @@ export default class ProxyModule extends Module<Client> {
 
 		if (construct) {
 			wrapped.prototype = fn.prototype;
-			wrapped.prototype.constructor = wrapped;
+
+			const descriptor = Reflect.getOwnPropertyDescriptor(
+				wrapped.prototype,
+				'constructor'
+			)!;
+
+			Reflect.defineProperty(wrapped.prototype, 'constructor', {
+				...descriptor,
+				value: wrapped,
+			});
 		}
 
 		return <T>(<unknown>wrapped);

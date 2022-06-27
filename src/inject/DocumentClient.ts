@@ -1,4 +1,5 @@
 import StompURL from '../StompURL';
+import { ParsedConfig } from '../config';
 import { parseRoutedURL, ROUTE_PROTOCOLS } from '../routeURL';
 import Client from './Client';
 import cloneRawNode, { parseHTML } from './cloneNode';
@@ -10,6 +11,10 @@ const getBaseURI = Reflect.getOwnPropertyDescriptor(Node.prototype, 'baseURI')!
 // runtime document !== document in 0.001 ms!?!?!?
 
 export default class DocumentClient extends Client {
+	constructor(init: ParsedConfig) {
+		super(init);
+		this.isDOM = true;
+	}
 	get url(): StompURL {
 		if (ROUTE_PROTOCOLS.includes(this.baseURI.protocol)) {
 			return parseRoutedURL(

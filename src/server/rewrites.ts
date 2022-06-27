@@ -5,6 +5,7 @@ import { capitalizeHeaders, trimNonStandardHeaders } from '../headers';
 import { modifyCSS, routeCSS } from '../rewriteCSS';
 import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
 import { modifyJS, routeJS } from '../rewriteJS';
+import { jsType } from '../rewriteJS';
 import { modifyManifest, routeManifest } from '../rewriteManifest';
 import { routeBinary } from '../routeURL';
 import {
@@ -101,28 +102,20 @@ function genericForward(
 	};
 }
 
-const js = genericForward(
-	async (url, response) => modifyJS(await response.text(), url),
-	(resource, url) => routeJS(resource, url),
-	undefined,
-	(headers, filteredHeaders) => {
-		for (const header of integrityHeaders) {
-			filteredHeaders.delete(header);
+function jsTypeFactory(type: jsType) {
+	return genericForward(
+		async (url, response, responseHeaders, config) =>
+			modifyJS(await response.text(), url, config, type),
+		(resource, url, config) => routeJS(resource, url, config, type),
+		undefined,
+		(headers, filteredHeaders) => {
+			for (const header of integrityHeaders) {
+				filteredHeaders.delete(header);
+			}
 		}
-	}
-);
-const mjs = genericForward(
-	async (url, response) => modifyJS(await response.text(), url, true),
-	(resource, url) => routeJS(resource, url, true),
-	undefined,
-	(headers, filteredHeaders) => {
-		trimNonStandardHeaders(filteredHeaders);
+	);
+}
 
-		for (const header of integrityHeaders) {
-			filteredHeaders.delete(header);
-		}
-	}
-);
 const css = genericForward(
 	async (url, response) => modifyCSS(await response.text(), url),
 	(resource, url) => routeCSS(resource, url),
@@ -202,8 +195,10 @@ const rewrites: {
 		config: Config
 	) => Promise<Response>;
 } = {
-	js,
-	mjs,
+	'js:dom': jsTypeFactory('dom'),
+	'js:domModule': jsTypeFactory('domModule'),
+	'js:worker': jsTypeFactory('worker'),
+	'js:workerModule': jsTypeFactory('workerModule'),
 	css,
 	html,
 	manifest,

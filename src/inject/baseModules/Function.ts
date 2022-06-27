@@ -71,31 +71,29 @@ export default class FunctionModule extends Module<Client> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 		const clientURL = this.client.url;
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 
-		function FunctionFactory(ctor: FunctionConstructor): FunctionConstructor {
-			return <FunctionConstructor>function (...args: (any | string)[]) {
-				if (args.length !== 0) {
-					let [code] = args.splice(-1, 1);
-					code = String(code);
-					code = modifyJS(code, clientURL, false);
-					args.push(code);
-				}
+		const functionFactory = (
+			ctor: FunctionConstructor
+		): FunctionConstructor => {
+			return proxyModule.wrapFunction(
+				ctor,
+				(target, that, args, newTarget) => {
+					if (args.length !== 0) {
+						let [code] = args.splice(-1, 1);
+						code = String(code);
+						code = modifyJS(code, clientURL, that.client.config, 'dom');
+						args.push(code);
+					}
 
-				return new ctor(...args);
-			};
-		}
+					return Reflect.construct(target, args, newTarget);
+				},
+				true
+			);
+		};
 
-		const proxyAsyncFunction = FunctionFactory(AsyncFunction);
-		const proxyFunction = FunctionFactory(Function);
-
-		proxyModule.mirrorAttributes(Function, proxyFunction);
-		proxyModule.mirrorAttributes(Function, proxyFunction);
-
-		// .prototype is writable...
-		// @ts-ignore
-		proxyFunction.prototype = Function.prototype;
-		// @ts-ignore
-		proxyAsyncFunction.prototype = AsyncFunction.prototype;
+		const proxyAsyncFunction = functionFactory(AsyncFunction);
+		const proxyFunction = functionFactory(Function);
 
 		Reflect.defineProperty(Function.prototype, 'constructor', {
 			configurable: true,
@@ -108,7 +106,7 @@ export default class FunctionModule extends Module<Client> {
 			configurable: true,
 			enumerable: false,
 			writable: true,
-			value: AsyncFunction,
+			value: proxyAsyncFunction,
 		});
 
 		Function.prototype.constructor = proxyFunction;

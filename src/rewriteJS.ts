@@ -1,7 +1,13 @@
 import StompURL from './StompURL';
 import { AcornContext, AcornIterator, result } from './acornUtil';
+import { Config } from './config';
 import { ACCESS_KEY } from './inject/baseModules/Access';
-import { createDataURI, parseDataURI, routeURL } from './routeURL';
+import {
+	createDataURI,
+	injectWorkerJS,
+	parseDataURI,
+	routeURL,
+} from './routeURL';
 import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
 import { parse } from 'meriyah-loose';
@@ -33,22 +39,38 @@ function generatePartial(script: string, ctx: AcornContext) {
 	return result;
 }
 
-export function routeJS(resource: StompURL, url: StompURL, module = false) {
+export type jsType = 'dom' | 'domModule' | 'worker' | 'workerModule';
+
+export function routeJS(
+	resource: StompURL,
+	url: StompURL,
+	config: Config,
+	type: jsType = 'dom'
+) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
 		return createDataURI({
 			mime,
-			data: modifyJS(data, url, module),
+			data: modifyJS(data, url, config, type),
 			attributes,
 		});
 	}
 
-	return routeURL(module ? 'mjs' : 'js', resource);
+	return routeURL('js:' + type, resource);
 }
 
-export function modifyJS(script: string, url: StompURL, module = false) {
+export function modifyJS(
+	script: string,
+	url: StompURL,
+	config: Config,
+	type: jsType = 'dom'
+) {
+	const isModule = type === 'domModule' || type === 'workerModule';
+	const isWorker = type === 'workerModule' || type === 'worker';
+	const isDOM = type === 'domModule' || type === 'dom';
+
 	const tree = parse(script, {
-		module,
+		module: isModule,
 		next: true,
 		specDeviation: true,
 		ranges: true,
@@ -103,7 +125,8 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 									url
 								),
 								url,
-								true
+								config,
+								isDOM ? 'domModule' : 'workerModule'
 							)
 						)
 					)
@@ -400,8 +423,17 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		}
 	}
 
+	const globalClient = JSON.stringify(CLIENT_KEY);
+
 	return (
-		(module ? `import.meta.url = ${JSON.stringify(url.toString())};` : '') +
+		(isWorker
+			? `if(!globalThis.createClient)importScripts(${injectWorkerJS(url)});` +
+			  `if(!(${globalClient} in globalThis))createClient(${JSON.stringify(
+					config
+			  )}, ${JSON.stringify(url.codec.key)});` +
+			  `if(!${globalClient}.applied)${JSON.stringify(CLIENT_KEY)}.apply();`
+			: '') +
+		(isModule ? `import.meta.url = ${JSON.stringify(url.toString())};` : '') +
 		generate(tree)
 	);
 }

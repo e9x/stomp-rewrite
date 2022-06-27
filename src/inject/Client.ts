@@ -17,6 +17,8 @@ export default class Client {
 	directory: string;
 	bareServer: string;
 	applied: boolean;
+	isDOM: boolean;
+	isWorker: boolean;
 	/**
 	 * The location of the context (or page)
 	 * Will always return a URL that can be used to resolve urls
@@ -50,6 +52,8 @@ export default class Client {
 		this.directory = init.directory;
 		this.bareServer = init.bareServer;
 		this.bare = new BareClient(init.bareServer, init.bareClientData);
+		this.isDOM = false;
+		this.isWorker = false;
 	}
 	get config(): Config {
 		return {
