@@ -27,8 +27,7 @@ export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
 export function modifyHTML(
 	script: string,
 	url: StompURL,
-	config: Config,
-	fragment = false
+	config: Config
 ): string {
 	const globalClient = `globalThis[${JSON.stringify(CLIENT_KEY)}]`;
 
@@ -46,16 +45,7 @@ export function modifyHTML(
 	)}"></script><script>${injectInit}</script></body></html>`;
 }
 
-export function restoreHTML(
-	script: string,
-	url: StompURL,
-	fragment = false
-): string {
-	// will likely have to remove the attributes created by stomp and merge the og: attributes
-	return script;
-}
-
-const REFRESH = /([; ]|^)url=(?:(['"])(((?!\2).)*)\2?|(.*);)/i;
+const REFRESH = /(;\s*?|^)url=(?:(['"])(((?!\2).)*)\2?|(.*);?)/i;
 
 // excellent resource
 // https://web.archive.org/web/20210514140514/https://www.otsukare.info/2015/03/26/refresh-http-header

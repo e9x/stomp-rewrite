@@ -1,5 +1,6 @@
 import StompURL from '../../StompURL';
 import { routeHTML } from '../../rewriteHTML';
+import DocumentClient from '../DocumentClient';
 import Module from '../Module';
 import { setGlobalProxy } from '../baseModules/Access';
 import ProxyModule from '../baseModules/Proxy';
@@ -39,7 +40,7 @@ import ProxyModule from '../baseModules/Proxy';
 }
  */
 
-export default class LocationModule extends Module {
+export default class LocationModule extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
@@ -77,7 +78,7 @@ export default class LocationModule extends Module {
 									return Reflect.apply(target, location, args);
 								}
 
-								const temp = new URL(this.client.url.toString());
+								const temp = new URL(this.client.location.toString());
 
 								return Reflect.apply(urlDescriptor.get!, temp, args);
 							}
@@ -91,7 +92,7 @@ export default class LocationModule extends Module {
 									return Reflect.apply(target, location, args);
 								}
 
-								const temp = new URL(this.client.url.toString());
+								const temp = new URL(this.client.location.toString());
 
 								Reflect.apply(urlDescriptor.set!, temp, args);
 

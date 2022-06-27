@@ -1,8 +1,9 @@
-import { ORIGINAL_ATTRIBUTE } from '../../rewriteHTML';
-import Client from '../Client';
+import StompURL, { isUrlLike } from '../../StompURL';
+import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../rewriteHTML';
+import DocumentClient from '../DocumentClient';
 import Module from '../Module';
 import ProxyModule, { applyDescriptors } from '../baseModules/Proxy';
-import cloneRawNode, { parseHTML, parseHTMLFragment } from '../cloneNode';
+import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
 
@@ -69,6 +70,11 @@ export class CustomElement extends Element {
 		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
 
 		return this.hasAttribute(og);
+	}
+	removeAttributeOG(attribute: string) {
+		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
+
+		this.removeAttribute(og);
 	}
 }
 
@@ -144,7 +150,7 @@ export function prototypeElement<ElementType extends Element, CallbackResult>(
 /**
  * Provides a framework for hooking elements
  */
-export default class DOMModule extends Module {
+export default class DOMModule extends Module<DocumentClient> {
 	private attributeHooks: [
 		type: string[],
 		callback: (element: CustomElement) => void,
@@ -157,7 +163,7 @@ export default class DOMModule extends Module {
 	private previousAttributes: WeakMap<Element, Map<string, string>>;
 	private trackAttributes: Map<string, Set<string>>;
 	private trackProperties: Map<ElementCtor, Map<string, PropData>>;
-	constructor(client: Client) {
+	constructor(client: DocumentClient) {
 		super(client);
 
 		this.attributeHooks = [];
@@ -222,6 +228,37 @@ export default class DOMModule extends Module {
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
+		window.open = proxyModule.wrapFunction(
+			window.open,
+			(target, that, args) => {
+				if (isUrlLike(args[0])) {
+					args[0] = routeHTML(
+						new StompURL(
+							new URL(args[0], this.client.url.toString()),
+							this.client.url
+						),
+						this.client.url,
+						this.client.config
+					);
+				}
+
+				return Reflect.apply(target, that, args);
+			}
+		);
+
+		Reflect.defineProperty(Node.prototype, 'baseURI', {
+			enumerable: true,
+			configurable: true,
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(Node.prototype, 'baseURI')!.get!,
+				(target, that, args) => {
+					// only side effect this getter has is the potential to throw an illegal invocation error
+					Reflect.apply(target, that, args);
+					return this.client.url.toString();
+				}
+			),
+		});
+
 		Reflect.defineProperty(Document.prototype, 'URL', {
 			enumerable: true,
 			configurable: true,
@@ -230,7 +267,7 @@ export default class DOMModule extends Module {
 				(target, that, args) => {
 					// only side effect this getter has is the potential to throw an illegal invocation error
 					Reflect.apply(target, that, args);
-					return this.client.url.toString();
+					return this.client.location.toString();
 				}
 			),
 		});

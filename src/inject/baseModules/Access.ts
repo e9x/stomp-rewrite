@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import StompURL from '../../StompURL';
+import { urlLike } from '../../StompURL';
 import { routeHTML } from '../../rewriteHTML';
-import { CLIENT_KEY, modifyJS, routeJS, UNDEFINABLE } from '../../rewriteJS';
+import { modifyJS, routeJS, UNDEFINABLE } from '../../rewriteJS';
 import Client from '../Client';
 import Module from '../Module';
 import ProxyModule from './Proxy';
-import { urlLike } from '@tomphttp/bare-client';
 
 export const ACCESS_KEY = '$s$j';
 
@@ -29,7 +29,7 @@ export function setGlobalProxy(object: any, name: string, proxy: unknown) {
 	object[GLOBAL_NAME] = name;
 }
 
-export default class AccessModule extends Module {
+export default class AccessModule extends Module<Client> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule);
 

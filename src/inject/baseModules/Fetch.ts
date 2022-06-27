@@ -5,11 +5,11 @@ import {
 	routeBinary,
 	ROUTE_PROTOCOLS,
 } from '../../routeURL';
+import Client from '../Client';
 import Module from '../Module';
 import ProxyModule from './Proxy';
-import { BareFetchInit } from '@tomphttp/bare-client';
 
-export default class FetchModule extends Module {
+export default class FetchModule extends Module<Client> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 

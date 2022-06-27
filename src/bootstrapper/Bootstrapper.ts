@@ -1,3 +1,4 @@
+import { isUrlLike, urlLike } from '../StompURL';
 import { Config, ConfigCodec } from '../config';
 
 const currentScript = <HTMLScriptElement>document.currentScript;
@@ -8,23 +9,19 @@ export default class Bootstrapper {
 	registration?: ServiceWorkerRegistration;
 	constructor(config: {
 		codec: ConfigCodec;
-		directory?: string | URL;
-		bareServer: string | URL;
+		directory?: urlLike;
+		bareServer: urlLike;
 	}) {
 		let directory: URL;
 		let bareServer: URL;
 
-		if (config.bareServer instanceof URL) {
-			bareServer = config.bareServer;
-		} else if (typeof config.bareServer === 'string') {
+		if (isUrlLike(config.bareServer)) {
 			bareServer = new URL(config.bareServer, location.toString());
 		} else {
-			throw new TypeError('config.bareServer not specified');
+			throw new TypeError('config.bareServer did not match any overloads');
 		}
 
-		if (config.directory instanceof URL) {
-			directory = config.directory;
-		} else if (typeof config.directory === 'string') {
+		if (isUrlLike(config.directory)) {
 			directory = new URL(config.directory, location.toString());
 		} else {
 			directory = new URL('.', currentScript.src);

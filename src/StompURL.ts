@@ -2,6 +2,13 @@ import GenericCodec from './Codecs';
 
 export declare type urlLike = URL | string;
 
+export function isUrlLike(object: unknown): object is urlLike {
+	return (
+		typeof object === 'string' ||
+		(typeof object === 'object' && object instanceof URL)
+	);
+}
+
 export default class StompURL {
 	codec: GenericCodec;
 	directory: string;
@@ -20,10 +27,8 @@ export default class StompURL {
 			directory = copy.directory;
 		}
 
-		if (typeof url === 'string') {
+		if (isUrlLike(url)) {
 			this.url = new URL(url);
-		} else if (url instanceof URL) {
-			this.url = url;
 		} else {
 			throw new TypeError('Unknown overload');
 		}

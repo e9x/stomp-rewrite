@@ -1,7 +1,10 @@
+import { urlLike } from '../../StompURL';
 import { decodeCookie } from '../../encodeCookie';
 import { geckoXHR, queueXHR } from '../../routeURL';
+import DocumentClient from '../DocumentClient';
 import Module from '../Module';
-import { statusEmpty, urlLike } from '@tomphttp/bare-client';
+
+const statusEmpty: number[] = [101, 204, 205, 304];
 
 // 10 seconds
 const maxCycles = 10 * 200000000;
@@ -46,7 +49,7 @@ function createResponse(init: SyncResponseInit): SyncResponse {
 	return <SyncResponse>response;
 }
 
-export default class SyncModule extends Module {
+export default class SyncModule extends Module<DocumentClient> {
 	fetch(url: urlLike, init: RequestInit = {}, loopback = false): SyncResponse {
 		const processInit: RequestInit = {
 			headers: {},

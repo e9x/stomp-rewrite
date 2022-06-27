@@ -1,5 +1,6 @@
 import StompURL from '../../StompURL';
 import { parseRoutedURL, routeXHR } from '../../routeURL';
+import Client from '../Client';
 import Module from '../Module';
 import SyncModule from '../documentModules/Sync';
 import ProxyModule, {
@@ -8,7 +9,7 @@ import ProxyModule, {
 	onEventTarget,
 } from './Proxy';
 
-export default class XMLHttpRequestModule extends Module {
+export default class XMLHttpRequestModule extends Module<Client> {
 	apply() {
 		const instances = new WeakSet();
 		const real = Symbol();

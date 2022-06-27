@@ -1,10 +1,11 @@
 import { CLIENT_KEY } from '../../rewriteJS';
 import { injectDocumentJS } from '../../routeURL';
 import Client from '../Client';
+import DocumentClient from '../DocumentClient';
 import Module from '../Module';
 import ProxyModule from '../baseModules/Proxy';
 
-export default class IFrameModule extends Module {
+export default class IFrameModule extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 

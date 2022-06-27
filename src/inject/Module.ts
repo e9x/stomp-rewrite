@@ -1,8 +1,6 @@
-import Client from './Client';
-
-export default class Module {
-	protected client: Client;
-	constructor(client: Client) {
+export default class Module<C> {
+	protected client: C;
+	constructor(client: C) {
 		this.client = client;
 	}
 	/**

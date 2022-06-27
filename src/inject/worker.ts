@@ -1,12 +1,7 @@
-import { ParsedConfig } from '../config';
-import Client, { createClientFactory } from './Client';
+import { createClientFactory } from './Client';
+import WorkerClient from './WorkerClient';
 import baseModules from './baseModules';
 
-class WorkerClient extends Client {
-	constructor(init: ParsedConfig) {
-		super(init);
-		baseModules(this);
-	}
-}
-
-export default createClientFactory(WorkerClient);
+export default createClientFactory(WorkerClient, client => {
+	baseModules(client);
+});

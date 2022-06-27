@@ -4,10 +4,11 @@ import { modifyRefresh, routeHTML } from '../../rewriteHTML';
 import { routeJS } from '../../rewriteJS';
 import { routeManifest } from '../../rewriteManifest';
 import { routeBinary } from '../../routeURL';
+import DocumentClient from '../DocumentClient';
 import Module from '../Module';
 import DOMModule from './DOM';
 
-export class DOMHooksModule extends Module {
+export class DOMHooksModule extends Module<DocumentClient> {
 	apply() {
 		const domHooksModule = this.client.getModule(DOMModule)!;
 
@@ -135,6 +136,7 @@ export class DOMHooksModule extends Module {
 					element.getAttribute('content') !== '' &&
 					element.getAttribute('http-equiv') === 'refresh'
 				) {
+					console.log(element);
 					element.setAttributeOG('content', element.getAttribute('content')!);
 					element.setAttribute(
 						'content',
@@ -215,8 +217,12 @@ export class DOMHooksModule extends Module {
 						)
 					);
 				}
+
+				if (element.hasAttribute('integrity')) {
+					element.removeAttribute('integrity');
+				}
 			},
-			['src'],
+			['src', 'integrity'],
 			[HTMLScriptElement],
 			{
 				src: [
@@ -226,6 +232,12 @@ export class DOMHooksModule extends Module {
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
 						).toString();
+					},
+				],
+				integrity: [
+					'integrity',
+					element => {
+						return element.getAttributeOG('integrity')!;
 					},
 				],
 			}
@@ -257,6 +269,45 @@ export class DOMHooksModule extends Module {
 			},
 			['href'],
 			[HTMLAnchorElement],
+			{
+				href: [
+					'href',
+					element => {
+						return new URL(
+							element.getAttributeOG('href')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			}
+		);
+
+		domHooksModule.useAttributes(
+			['BASE'],
+			element => {
+				if (
+					element.hasAttribute('href') &&
+					element.getAttribute('href') !== ''
+				) {
+					element.setAttributeOG('href', element.getAttribute('href')!);
+					element.setAttribute(
+						'href',
+						routeHTML(
+							new StompURL(
+								new URL(
+									element.getAttribute('href')!,
+									this.client.url.toString()
+								),
+								this.client.url
+							),
+							this.client.url,
+							this.client.config
+						)
+					);
+				}
+			},
+			['href'],
+			[HTMLBaseElement],
 			{
 				href: [
 					'href',

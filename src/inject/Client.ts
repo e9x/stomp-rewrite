@@ -7,17 +7,28 @@ import Module from './Module';
 import BareClient from '@tomphttp/bare-client';
 
 export interface ModuleCtor {
-	new (client: Client): Module;
+	new (client: any): Module<any>;
 }
 
 export default class Client {
-	modules: Map<ModuleCtor, Module>;
+	modules: Map<ModuleCtor, Module<any>>;
 	bare: BareClient;
 	codec: GenericCodec;
 	directory: string;
 	bareServer: string;
 	applied: boolean;
+	/**
+	 * The location of the context (or page)
+	 * Will always return a URL that can be used to resolve urls
+	 */
 	get url(): StompURL {
+		return this.location;
+	}
+	/**
+	 * The location of the context
+	 * May not match the context URL
+	 */
+	get location(): StompURL {
 		if (ROUTE_PROTOCOLS.includes(location.protocol)) {
 			return parseRoutedURL(
 				location.toString(),
@@ -76,13 +87,18 @@ declare global {
 	function createClient(config: Config, codecKey: string): void;
 }
 
-export function createClientFactory(Client: {
-	new (init: ParsedConfig): Client;
-}) {
+export function createClientFactory<T>(
+	Client: {
+		new (init: ParsedConfig): T;
+	},
+	initClient: (client: T) => void
+) {
 	return function (config: Config, codecKey: string) {
 		delete (global as any).createClient;
 
 		const client = new Client(parseConfig(config, codecKey));
+
+		initClient(client);
 
 		Reflect.defineProperty(global, CLIENT_KEY, {
 			value: client,

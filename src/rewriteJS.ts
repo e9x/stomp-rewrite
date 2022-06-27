@@ -53,6 +53,7 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		specDeviation: true,
 		ranges: true,
 		globalReturn: true,
+		webcompat: true,
 	});
 
 	// const catchLoop = 0;
@@ -292,6 +293,8 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 						propertyArgument = result(ctx.node.property);
 					} else if (ctx.node.property.type === 'Identifier') {
 						propertyArgument = b.literal(ctx.node.property.name);
+					} else {
+						break;
 					}
 
 					if (
@@ -397,7 +400,10 @@ export function modifyJS(script: string, url: StompURL, module = false) {
 		}
 	}
 
-	return generate(tree);
+	return (
+		(module ? `import.meta.url = ${JSON.stringify(url.toString())};` : '') +
+		generate(tree)
+	);
 }
 
 export function restoreJS(script: string, url: StompURL) {

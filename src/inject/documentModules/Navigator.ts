@@ -1,9 +1,10 @@
 import StompURL from '../../StompURL';
 import { routeXHR } from '../../routeURL';
+import DocumentClient from '../DocumentClient';
 import Module from '../Module';
 import ProxyModule from '../baseModules/Proxy';
 
-export default class NavigatorModule extends Module {
+export default class NavigatorModule extends Module<DocumentClient> {
 	apply() {
 		delete (global as any).ServiceWorkerContainer;
 		delete (global as any).ServiceWorkerRegistration;

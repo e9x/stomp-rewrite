@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { restoreJS } from '../../rewriteJS';
+import Client from '../Client';
 import Module from '../Module';
 import { isNative } from '../nativeUtil';
 
@@ -73,7 +74,7 @@ export function DOMObjectConstructor(original: Function) {
 	return result;
 }
 
-export default class ProxyModule extends Module {
+export default class ProxyModule extends Module<Client> {
 	functionStrings = new WeakMap();
 	apply() {
 		Function.prototype.toString = this.wrapFunction(

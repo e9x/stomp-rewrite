@@ -1,5 +1,6 @@
 import global from '../../global';
 import { modifyJS } from '../../rewriteJS';
+import Client from '../Client';
 import Module from '../Module';
 import ProxyModule from './Proxy';
 
@@ -66,7 +67,7 @@ const is_not_member = /=>|^((async\s+)?(\(|function[( ]))/;
 
  */
 
-export default class FunctionModule extends Module {
+export default class FunctionModule extends Module<Client> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 		const clientURL = this.client.url;
