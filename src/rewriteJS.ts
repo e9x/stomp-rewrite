@@ -102,7 +102,7 @@ export function modifyJS(
 							b.identifier('import')
 						),
 						[
-							module
+							isModule
 								? b.memberExpression(
 										b.metaProperty(
 											b.identifier('import'),
@@ -153,20 +153,29 @@ export function modifyJS(
 
 						// transform eval(...) into eval(...tompc$.eval.eval_scope(eval, ...['code',{note:"eval is possibly a var"}]))
 						ctx.replaceWith(
-							b.callExpression(b.identifier('eval'), [
-								b.spreadElement(
+							b.conditionalExpression(
+								b.binaryExpression(
+									'==',
+									b.identifier('eval'),
+									b.memberExpression(
+										b.identifier(ACCESS_KEY),
+										b.identifier('evalSnapshot')
+									)
+								),
+								b.callExpression(b.identifier('eval'), [
 									b.callExpression(
 										b.memberExpression(
 											b.identifier(ACCESS_KEY),
 											b.identifier('evalScope')
 										),
-										[
-											b.identifier('eval'),
-											...ctx.node.arguments.map((arg: any) => result(arg)),
-										]
-									)
-								),
-							])
+										ctx.node.arguments.map((arg: any) => result(arg))
+									),
+								]),
+								b.callExpression(
+									b.identifier('eval'),
+									ctx.node.arguments.map((arg: any) => result(arg))
+								)
+							)
 						);
 					}
 				}

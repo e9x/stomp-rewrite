@@ -145,22 +145,13 @@ export default class AccessModule extends Module<Client> {
 				// key = normalizeKey(key);
 				return Reflect.apply(api.get(target[key], key), target, args);
 			},
-			evalScope: (func: Function, code: string | unknown, ...args: any[]) => {
-				code = String(code);
-				console.log(func);
-				if (func === evalSnapshot) {
-					return [
-						modifyJS(
-							<string>code,
-							this.client.url,
-							this.client.config,
-							this.client.isWorker ? 'worker' : 'dom'
-						),
-					];
-				} else {
-					// call as if it were eval(the, args, to, non js eval)
-					return [code, ...args];
-				}
+			evalScope: (code: unknown) => {
+				return modifyJS(
+					String(code),
+					this.client.url,
+					this.client.config,
+					this.client.isWorker ? 'worker' : 'dom'
+				);
 			},
 			import: (baseURL: string | undefined, url: string): Promise<unknown> => {
 				// @ts-ignore
@@ -177,6 +168,7 @@ export default class AccessModule extends Module<Client> {
 					)
 				);
 			},
+			evalSnapshot,
 		};
 
 		(global as { [key: string]: unknown })[ACCESS_KEY] = api;
