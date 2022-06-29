@@ -284,6 +284,40 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
+			['AUDIO'],
+			element => {
+				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
+					element.setAttributeOG('src', element.getAttribute('src')!);
+					element.setAttribute(
+						'src',
+						routeBinary(
+							new StompURL(
+								new URL(
+									element.getAttribute('href')!,
+									this.client.url.toString()
+								),
+								this.client.url
+							)
+						)
+					);
+				}
+			},
+			['src'],
+			[HTMLAudioElement],
+			{
+				href: [
+					'src',
+					element => {
+						return new URL(
+							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			}
+		);
+
+		domHooksModule.useAttributes(
 			['BASE'],
 			element => {
 				if (

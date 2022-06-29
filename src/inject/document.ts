@@ -1,6 +1,7 @@
 import { createClientFactory } from './Client';
 import DocumentClient from './DocumentClient';
 import baseModules from './baseModules';
+import AudioModule from './documentModules/Audio';
 import DOMModule from './documentModules/DOM';
 import { DOMHooksModule } from './documentModules/DOMHooks';
 import HistoryModule from './documentModules/History';
@@ -18,4 +19,5 @@ export default createClientFactory(DocumentClient, client => {
 	client.addModule(DOMModule);
 	client.addModule(IFrameModule);
 	client.addModule(SyncModule);
+	client.addModule(AudioModule);
 });
