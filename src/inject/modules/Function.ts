@@ -69,8 +69,6 @@ const is_not_member = /=>|^((async\s+)?(\(|function[( ]))/;
 export default class FunctionModule extends Module<Client> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
-		const clientURL = this.client.url;
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
 
 		const functionFactory = (
 			ctor: FunctionConstructor
@@ -81,7 +79,7 @@ export default class FunctionModule extends Module<Client> {
 					if (args.length !== 0) {
 						let [code] = args.splice(-1, 1);
 						code = String(code);
-						code = modifyJS(code, clientURL, that.client.config, 'dom');
+						code = modifyJS(code, this.client.url, that.client.config, 'dom');
 						args.push(code);
 					}
 

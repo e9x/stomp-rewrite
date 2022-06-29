@@ -284,7 +284,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['AUDIO'],
+			['AUDIO', 'SOURCE'],
 			element => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -303,9 +303,9 @@ export class DOMHooksModule extends Module<DocumentClient> {
 				}
 			},
 			['src'],
-			[HTMLAudioElement],
+			[HTMLMediaElement, HTMLSourceElement],
 			{
-				href: [
+				src: [
 					'src',
 					element => {
 						return new URL(
