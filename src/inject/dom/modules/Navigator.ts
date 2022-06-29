@@ -1,8 +1,8 @@
-import StompURL from '../../StompURL';
-import { routeXHR } from '../../routeURL';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
-import ProxyModule from '../baseModules/Proxy';
+import StompURL from '../../../StompURL';
+import { routeXHR } from '../../../routeURL';
+import Module from '../../Module';
+import ProxyModule from '../../modules/Proxy';
+import DocumentClient from '../Client';
 
 export default class NavigatorModule extends Module<DocumentClient> {
 	apply() {

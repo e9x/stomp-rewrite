@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"outDir": "../build",
+		"rootDir": ".",
+		"target": "ESNext",
+		"module": "ESNext",
+		// I wanted to make each directory (inject/dom/, inject/worker/, inject, worker) have a different set of libs
+		// This defeats some of typescripts purpose
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"sourceMap": true,
+		"strict": true,
+		"stripInternal": true,
+		"moduleResolution": "node",
+		"allowSyntheticDefaultImports": true
+	},
+	"include": ["."]
+}

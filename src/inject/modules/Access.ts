@@ -2,15 +2,17 @@
 import StompURL from '../../StompURL';
 import { urlLike } from '../../StompURL';
 import { routeHTML } from '../../rewriteHTML';
-import { modifyJS, routeJS, UNDEFINABLE } from '../../rewriteJS';
+import {
+	modifyJS,
+	routeJS,
+	UNDEFINABLE,
+	GLOBAL_PROXY,
+	GLOBAL_NAME,
+	ACCESS_KEY,
+} from '../../rewriteJS';
 import Client from '../Client';
 import Module from '../Module';
 import ProxyModule from './Proxy';
-
-export const ACCESS_KEY = '$s$j';
-
-export const GLOBAL_PROXY = '$s$L';
-export const GLOBAL_NAME = '$s$N';
 
 /*
 // why was this necessary?

@@ -117,7 +117,7 @@ export default [
 	{
 		...common,
 		plugins: [...common.plugins, snapshot],
-		entry: './src/inject/worker.ts',
+		entry: './src/inject/worker/worker.ts',
 		output: {
 			library: {
 				name: 'createClient',
@@ -137,12 +137,12 @@ export default [
 				...Object.fromEntries(
 					['DOMParser'].map(name => [
 						name,
-						[resolve('./src/inject/snapshotDOM.ts'), name],
+						[resolve('./src/inject/dom/snapshot.ts'), name],
 					])
 				),
 			}),
 		],
-		entry: './src/inject/document.ts',
+		entry: './src/inject/dom/document.ts',
 		output: {
 			library: {
 				name: 'createClient',

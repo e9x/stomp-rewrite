@@ -1,7 +1,7 @@
-import StompURL from '../StompURL';
-import { ParsedConfig } from '../config';
-import { parseRoutedURL, ROUTE_PROTOCOLS } from '../routeURL';
-import Client from './Client';
+import StompURL from '../../StompURL';
+import { ParsedConfig } from '../../config';
+import { parseRoutedURL, ROUTE_PROTOCOLS } from '../../routeURL';
+import Client from '../Client';
 import cloneRawNode, { parseHTML } from './cloneNode';
 import { decode } from 'entities';
 

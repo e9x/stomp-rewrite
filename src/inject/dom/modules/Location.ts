@@ -1,9 +1,9 @@
-import StompURL from '../../StompURL';
-import { routeHTML } from '../../rewriteHTML';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
-import { setGlobalProxy } from '../baseModules/Access';
-import ProxyModule from '../baseModules/Proxy';
+import StompURL from '../../../StompURL';
+import { routeHTML } from '../../../rewriteHTML';
+import Module from '../../Module';
+import { setGlobalProxy } from '../../modules/Access';
+import ProxyModule from '../../modules/Proxy';
+import DocumentClient from '../Client';
 
 /**
 {

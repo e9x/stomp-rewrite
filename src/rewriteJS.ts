@@ -1,7 +1,6 @@
 import StompURL from './StompURL';
 import { AcornContext, AcornIterator, result } from './acornUtil';
 import { Config } from './config';
-import { ACCESS_KEY } from './inject/baseModules/Access';
 import {
 	createDataURI,
 	injectWorkerJS,
@@ -11,6 +10,10 @@ import {
 import { generate } from '@javascript-obfuscator/escodegen';
 import { builders as b } from 'ast-types';
 import { parse } from 'meriyah-loose';
+
+export const ACCESS_KEY = '$s$j';
+export const GLOBAL_PROXY = '$s$L';
+export const GLOBAL_NAME = '$s$N';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script

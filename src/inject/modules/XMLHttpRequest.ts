@@ -2,7 +2,7 @@ import StompURL from '../../StompURL';
 import { parseRoutedURL, routeXHR } from '../../routeURL';
 import Client from '../Client';
 import Module from '../Module';
-import SyncModule from '../documentModules/Sync';
+import SyncModule from '../dom/modules/Sync';
 import ProxyModule, {
 	classConstant,
 	DOMObjectConstructor,
@@ -63,8 +63,8 @@ export default class XMLHttpRequestModule extends Module<Client> {
 			#responseText = '';
 			#readyState = UNSENT;
 			#responseURL = '';
-			#responseXML: Document | null = null;
-			#response: null | string | Document | ArrayBuffer = null;
+			#responseXML = null;
+			#response: null | string | ArrayBuffer = null;
 			#status = 0;
 			#statusText = '';
 			#abort = new AbortController();
@@ -236,7 +236,6 @@ export default class XMLHttpRequestModule extends Module<Client> {
 					}
 				}
 			}
-			// eslint-disable-next-line @typescript-eslint/no-empty-function
 			overrideMimeType(_mime: string) {}
 			abort() {
 				if (!this.#async) {

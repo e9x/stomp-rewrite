@@ -1,8 +1,8 @@
-import StompURL, { isUrlLike } from '../../StompURL';
-import { routeHTML } from '../../rewriteHTML';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
-import ProxyModule from '../baseModules/Proxy';
+import StompURL, { isUrlLike } from '../../../StompURL';
+import { routeHTML } from '../../../rewriteHTML';
+import Module from '../../Module';
+import ProxyModule from '../../modules/Proxy';
+import DocumentClient from '../Client';
 
 export default class HistoryModule extends Module<DocumentClient> {
 	apply() {

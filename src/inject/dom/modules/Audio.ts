@@ -1,9 +1,8 @@
-import StompURL, { isUrlLike } from '../../StompURL';
-import { routeJS } from '../../rewriteJS';
-import { routeBinary } from '../../routeURL';
+import StompURL, { isUrlLike } from '../../../StompURL';
+import { routeBinary } from '../../../routeURL';
+import Module from '../../Module';
+import ProxyModule from '../../modules/Proxy';
 import Client from '../Client';
-import Module from '../Module';
-import ProxyModule from '../baseModules/Proxy';
 
 export default class AudioModule extends Module<Client> {
 	apply() {

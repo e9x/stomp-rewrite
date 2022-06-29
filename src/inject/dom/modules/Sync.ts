@@ -1,8 +1,8 @@
-import { urlLike } from '../../StompURL';
-import { decodeCookie } from '../../encodeCookie';
-import { geckoXHR, queueXHR } from '../../routeURL';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
+import { urlLike } from '../../../StompURL';
+import { decodeCookie } from '../../../encodeCookie';
+import { geckoXHR, queueXHR } from '../../../routeURL';
+import Module from '../../Module';
+import DocumentClient from '../Client';
 
 const statusEmpty: number[] = [101, 204, 205, 304];
 

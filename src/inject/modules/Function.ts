@@ -1,4 +1,3 @@
-import global from '../../global';
 import { modifyJS } from '../../rewriteJS';
 import Client from '../Client';
 import Module from '../Module';

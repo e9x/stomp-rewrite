@@ -1,8 +1,8 @@
-import StompURL, { isUrlLike } from '../../StompURL';
-import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../rewriteHTML';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
-import ProxyModule, { applyDescriptors } from '../baseModules/Proxy';
+import StompURL, { isUrlLike } from '../../../StompURL';
+import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../../rewriteHTML';
+import Module from '../../Module';
+import ProxyModule, { applyDescriptors } from '../../modules/Proxy';
+import DocumentClient from '../Client';
 import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();

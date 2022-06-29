@@ -1,9 +1,8 @@
-import { CLIENT_KEY } from '../../rewriteJS';
-import { injectDocumentJS } from '../../routeURL';
-import Client from '../Client';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
-import ProxyModule from '../baseModules/Proxy';
+import { CLIENT_KEY } from '../../../rewriteJS';
+import { injectDocumentJS } from '../../../routeURL';
+import Module from '../../Module';
+import ProxyModule from '../../modules/Proxy';
+import DocumentClient from '../Client';
 
 export default class IFrameModule extends Module<DocumentClient> {
 	apply() {
@@ -23,7 +22,7 @@ export default class IFrameModule extends Module<DocumentClient> {
 
 			context.createClient(this.client.config, this.client.codec.key);
 
-			((context as any)[CLIENT_KEY] as Client).apply();
+			((context as any)[CLIENT_KEY] as DocumentClient).apply();
 		}
 
 		const getContentWindow = Reflect.getOwnPropertyDescriptor(

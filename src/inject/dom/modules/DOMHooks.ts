@@ -1,11 +1,11 @@
-import StompURL from '../../StompURL';
-import { routeCSS } from '../../rewriteCSS';
-import { modifyRefresh, routeHTML } from '../../rewriteHTML';
-import { routeJS } from '../../rewriteJS';
-import { routeManifest } from '../../rewriteManifest';
-import { routeBinary } from '../../routeURL';
-import DocumentClient from '../DocumentClient';
-import Module from '../Module';
+import StompURL from '../../../StompURL';
+import { routeCSS } from '../../../rewriteCSS';
+import { modifyRefresh, routeHTML } from '../../../rewriteHTML';
+import { routeJS } from '../../../rewriteJS';
+import { routeManifest } from '../../../rewriteManifest';
+import { routeBinary } from '../../../routeURL';
+import Module from '../../Module';
+import DocumentClient from '../Client';
 import DOMModule from './DOM';
 
 export class DOMHooksModule extends Module<DocumentClient> {
