@@ -1,6 +1,5 @@
 import Router, { jsonAPI } from './Router';
 import { deleteDB, IDBPDatabase, openDB } from 'idb';
-import { parseThisExpression } from 'meriyah/dist/src/parser';
 
 interface ItemEntry {
 	item: string;

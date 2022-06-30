@@ -57,6 +57,8 @@ async function process(
 	}
 }
 
+const split = 4000;
+
 export function registerXhr(router: Router) {
 	router.routes.set(/\/gxhr/, async request => {
 		return new Response(
@@ -69,14 +71,22 @@ export function registerXhr(router: Router) {
 
 		const response = await process(router, data);
 
-		const long = encodeCookie(JSON.stringify(response));
-		let chunks = 0;
-		const split = 4000;
+		let long = encodeCookie(JSON.stringify(response));
+		let mainCookieValue =
+			(long.length < split - 2
+				? '0'
+				: Math.ceil(long.length / split).toString()) + ',';
+
+		if (mainCookieValue.length < split) {
+			const end = long.slice(0, split - mainCookieValue.length);
+			long = long.slice(end.length);
+			mainCookieValue += end;
+		}
 
 		for (let i = 0; i < long.length; i += split) {
 			const part = long.slice(i, i + 4000);
 
-			const chunk = chunks++;
+			const chunk = i / split;
 
 			await cookieStore.set({
 				name: id + chunk,
@@ -90,7 +100,7 @@ export function registerXhr(router: Router) {
 
 		await cookieStore.set({
 			name: id,
-			value: chunks.toString(),
+			value: mainCookieValue,
 			maxAge: 10,
 			path: '/',
 		});

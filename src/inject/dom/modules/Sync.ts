@@ -8,6 +8,7 @@ const statusEmpty: number[] = [101, 204, 205, 304];
 
 // 10 seconds
 const maxCycles = 10 * 200000000;
+const maxLoopbackCycles = 10000;
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -51,13 +52,17 @@ function createResponse(init: SyncResponseInit): SyncResponse {
 
 export default class SyncModule extends Module<DocumentClient> {
 	jsonAPI(url: urlLike, ...args: any[]) {
-		const response = this.fetch(url, {
-			method: 'POST',
-			headers: {
-				'content-type': 'application/json',
+		const response = this.fetch(
+			url,
+			{
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+				},
+				body: JSON.stringify(args),
 			},
-			body: JSON.stringify(args),
-		});
+			true
+		);
 
 		const parsed = JSON.parse(decoder.decode(response.rawArrayBuffer));
 
@@ -67,6 +72,12 @@ export default class SyncModule extends Module<DocumentClient> {
 			throw parsed;
 		}
 	}
+	/**
+	 * Synchronous ServiceWorker fetch API
+	 * @param url
+	 * @param init
+	 * @param loopback goes to serviceworker route that does not fetch external urls
+	 */
 	fetch(
 		url: urlLike,
 		init: Omit<RequestInit, 'signal'> = {},
@@ -111,7 +122,7 @@ export default class SyncModule extends Module<DocumentClient> {
 		}
 
 		const id = 'sync-request-' + Math.random().toString(16).slice(2);
-		const regex = new RegExp(`${id}=(.*?)(;|$)`);
+		const regex = new RegExp(`${id}=(\\d+),(.*?)(;|$)`);
 
 		navigator.sendBeacon(
 			queueXHR(this.client.url),
@@ -121,60 +132,48 @@ export default class SyncModule extends Module<DocumentClient> {
 			})
 		);
 
-		let cookie = '';
-		let cookieCount;
-		let remainder = 0;
+		const sMaxCycles = loopback ? maxLoopbackCycles : maxCycles;
 
-		if (loopback) {
-			// goes to serviceworker route that does not fetch external urls
-			remainder = 10;
-		} else {
-			remainder = 5000;
-		}
-
-		for (let cycles = 0; cycles < maxCycles; cycles++) {
-			if (cycles % remainder !== 0) {
-				continue;
-			}
-
-			cookie = document.cookie;
+		for (let cycles = 0; cycles < sMaxCycles; cycles++) {
+			const cookie = document.cookie;
 			const match = cookie.match(regex);
 
 			if (!match) continue;
 
-			const [, value] = match;
+			const clearCookies: string[] = [id];
 
-			cookieCount = parseInt(value);
+			const chunks = parseInt(match[1]);
 
-			document.cookie = `${id}=; path=/; expires=${new Date(0)}`;
+			let joinedValue = match[2];
 
-			break;
-		}
+			for (let i = 0; i < chunks; i++) {
+				const cookieName = `${id}${i}`;
+				const regex = new RegExp(`${cookieName}=(.*?)(;|$)`);
+				const match = cookie.match(regex);
 
-		if (cookieCount === undefined) {
-			throw new RangeError(
-				`Reached max cycles (${maxCycles}) when requesting ${url}`
-			);
-		}
+				if (!match) {
+					console.warn(`Couldn't find chunk ${i}`);
+					continue;
+				}
 
-		let joinedValue = '';
+				clearCookies.push(cookieName);
 
-		for (let i = 0; i < cookieCount; i++) {
-			const regex = new RegExp(`${id}${i}=(.*?)(;|$)`);
-			const match = cookie.match(regex);
+				const [, value] = match;
 
-			if (!match) {
-				console.warn(`Couldn't find chunk ${i}`);
-				continue;
+				joinedValue += value;
 			}
 
-			document.cookie = `${id}${i}=; path=/; expires=${new Date(0)}`;
+			setTimeout(() => {
+				for (const cookieName of clearCookies) {
+					document.cookie = `${cookieName}=; path=/; expires=${new Date(0)}`;
+				}
+			});
 
-			const [, value] = match;
-
-			joinedValue += value;
+			return createResponse(JSON.parse(decodeCookie(joinedValue)));
 		}
 
-		return createResponse(JSON.parse(decodeCookie(joinedValue)));
+		throw new RangeError(
+			`Reached max cycles (${sMaxCycles}) when requesting ${url}`
+		);
 	}
 }
