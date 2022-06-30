@@ -8,6 +8,7 @@ import HistoryModule from './modules/History';
 import IFrameModule from './modules/IFrame';
 import LocationModule from './modules/Location';
 import NavigatorModule from './modules/Navigator';
+import StorageModule from './modules/Storage';
 import SyncModule from './modules/Sync';
 
 export default createClientFactory(DocumentClient, client => {
@@ -20,4 +21,5 @@ export default createClientFactory(DocumentClient, client => {
 	client.addModule(IFrameModule);
 	client.addModule(SyncModule);
 	client.addModule(AudioModule);
+	client.addModule(StorageModule);
 });

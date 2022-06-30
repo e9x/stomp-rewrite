@@ -1,13 +1,17 @@
 import { encodeCookie } from '../encodeCookie';
 import Router from './Router';
-import { maxRedirects, statusRedirect } from '@tomphttp/bare-client';
+
+const maxRedirects = 20;
+const statusRedirect = [301, 302, 303, 307, 308];
 
 async function process(
 	router: Router,
 	data: ProcessData
 ): Promise<ProcessResult> {
+	const init: RequestInit = <RequestInit>{ ...data.init };
+
 	if (data.body !== undefined) {
-		data.init.body = data.body;
+		init.body = data.body;
 	}
 
 	let redirects = maxRedirects;
@@ -16,7 +20,7 @@ async function process(
 		let url: string = data.url;
 
 		while (redirects--) {
-			const request = new Request(url, data.init);
+			const request = new Request(url, init);
 
 			if (!router.willRoute(url)) {
 				throw new Error('Not found');
@@ -63,11 +67,7 @@ export function registerXhr(router: Router) {
 	router.routes.set(/\/xhr/, async request => {
 		const { id, data } = await request.json();
 
-		console.log('got xhr req', id, data);
-
 		const response = await process(router, data);
-
-		console.log('processed');
 
 		const long = encodeCookie(JSON.stringify(response));
 		let chunks = 0;

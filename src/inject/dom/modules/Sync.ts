@@ -50,10 +50,39 @@ function createResponse(init: SyncResponseInit): SyncResponse {
 }
 
 export default class SyncModule extends Module<DocumentClient> {
-	fetch(url: urlLike, init: RequestInit = {}, loopback = false): SyncResponse {
-		const processInit: RequestInit = {
-			headers: {},
-		};
+	jsonAPI(url: urlLike, ...args: any[]) {
+		const response = this.fetch(url, {
+			method: 'POST',
+			headers: {
+				'content-type': 'application/json',
+			},
+			body: JSON.stringify(args),
+		});
+
+		const parsed = JSON.parse(decoder.decode(response.rawArrayBuffer));
+
+		if (response.ok) {
+			return parsed;
+		} else {
+			throw parsed;
+		}
+	}
+	fetch(
+		url: urlLike,
+		init: Omit<RequestInit, 'signal'> = {},
+		loopback = false
+	): SyncResponse {
+		const processInit: SerializableRequestInit = {};
+
+		processInit.cache = init.cache;
+		processInit.credentials = init.credentials;
+		processInit.integrity = init.integrity;
+		processInit.keepalive = init.keepalive;
+		processInit.method = init.method;
+		processInit.mode = init.mode;
+		processInit.redirect = init.redirect;
+		processInit.referrer = init.referrer;
+		processInit.referrerPolicy = init.referrerPolicy;
 
 		if (init.headers instanceof Headers) {
 			processInit.headers = Object.fromEntries(init.headers.entries());

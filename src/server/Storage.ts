@@ -1,5 +1,6 @@
 import Router, { jsonAPI } from './Router';
 import { deleteDB, IDBPDatabase, openDB } from 'idb';
+import { parseThisExpression } from 'meriyah/dist/src/parser';
 
 interface ItemEntry {
 	item: string;
@@ -30,7 +31,6 @@ export default class Storage {
 		}
 	}
 	async setItem(origin: string, item: string, value: string): Promise<void> {
-		console.log('set', item, value);
 		await this.db.put('storage', {
 			item,
 			value,
@@ -40,9 +40,6 @@ export default class Storage {
 	}
 	async removeItem(origin: string, item: string): Promise<void> {
 		await this.db.delete('storage', this.resolveKey(origin, item));
-	}
-	async hasItem(origin: string, item: string): Promise<boolean> {
-		return (await this.getItem(origin, item)) !== undefined;
 	}
 	async getKeys(origin: string): Promise<string[]> {
 		return (
@@ -91,11 +88,9 @@ export async function registerStorage(router: Router) {
 			'getItem',
 			'setItem',
 			'removeItem',
-			'hasItem',
 			'getKeys',
 			'clear',
 		]) {
-			console.log(`^\\/${name}\\/${api}$`);
 			router.routes.set(
 				new RegExp(`^\\/${name}\\/${api}$`),
 				jsonAPI(host[api as keyof Omit<Storage, 'db'>].bind(host))

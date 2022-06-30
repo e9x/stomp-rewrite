@@ -5,7 +5,7 @@ import Module from '../Module';
 import SyncModule from '../dom/modules/Sync';
 import ProxyModule, {
 	classConstant,
-	DOMObjectConstructor,
+	domObjectConstructor,
 	onEventTarget,
 } from './Proxy';
 
@@ -17,6 +17,7 @@ export default class XMLHttpRequestModule extends Module<Client> {
 		const that = this;
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
+		const syncModule = that.client.getModule(SyncModule);
 
 		class XMLHttpRequestEventTargetProxy extends EventTarget {
 			constructor(key: symbol) {
@@ -226,8 +227,10 @@ export default class XMLHttpRequestModule extends Module<Client> {
 						})
 						.catch(error => this.#onDone(error));
 				} else {
+					if (!syncModule) {
+						throw new Error('Synchronous fetch not supported in this context');
+					}
 					try {
-						const syncModule = that.client.getModule(SyncModule)!;
 						const response = syncModule.fetch(url, init);
 						this.#onHeaders(undefined, response, response.rawUrl);
 						this.#onDone(undefined, response, response.rawArrayBuffer);
@@ -327,8 +330,8 @@ export default class XMLHttpRequestModule extends Module<Client> {
 			}
 		}
 
-		const globalProxy = DOMObjectConstructor(XMLHttpRequestProxy);
-		const globalTargetProxy = DOMObjectConstructor(
+		const globalProxy = domObjectConstructor(XMLHttpRequestProxy);
+		const globalTargetProxy = domObjectConstructor(
 			XMLHttpRequestEventTargetProxy
 		);
 

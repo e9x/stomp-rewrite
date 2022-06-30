@@ -1,6 +1,11 @@
+interface SerializableRequestInit
+	extends Omit<Omit<Omit<RequestInit, 'signal'>, 'headers'>, 'body'> {
+	headers?: { [key: string]: string | string[] };
+}
+
 interface ProcessData {
 	url: string;
-	init: RequestInit;
+	init: SerializableRequestInit;
 	body?: string;
 }
 

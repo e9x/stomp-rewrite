@@ -39,12 +39,6 @@ export default class DocumentClient extends Client {
 		fragment.append(parsed.documentElement);
 		const [cloned, appendCallback] = cloneRawNode(fragment);
 
-		if (parsed.doctype) {
-			document.doctype!.replaceWith(parsed.doctype);
-		} else {
-			document.doctype!.remove();
-		}
-
 		document.documentElement.remove();
 
 		// jump out of the DOM "write stream" so we can start loading our own HTML
@@ -53,13 +47,14 @@ export default class DocumentClient extends Client {
 			node.append(cloned);
 
 			document.open();
+
 			console.log(
 				document.baseURI,
 				this.baseURI.toString(),
 				this.url.toString()
 			);
 			document.write(
-				(document.doctype ? `<!DOCTYPE ${document.doctype.name}>` : '') +
+				(parsed.doctype ? `<!DOCTYPE ${parsed.doctype.name}>` : '') +
 					node.innerHTML
 			);
 			document.close();
