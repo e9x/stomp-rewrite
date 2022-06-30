@@ -75,7 +75,6 @@ export default class Bootstrapper {
 					body: url,
 				})
 			).text();
-			console.log(destination);
 
 			iframe.remove();
 

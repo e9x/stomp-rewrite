@@ -15,7 +15,6 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		domHooksModule.useAttributes(
 			['LINK'],
 			element => {
-				console.log('tripped hook', element);
 				if (
 					element.hasAttribute('href') &&
 					element.hasAttribute('rel') &&
@@ -136,7 +135,6 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					element.getAttribute('content') !== '' &&
 					element.getAttribute('http-equiv') === 'refresh'
 				) {
-					console.log(element);
 					element.setAttributeOG('content', element.getAttribute('content')!);
 					element.setAttribute(
 						'content',

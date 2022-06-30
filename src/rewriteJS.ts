@@ -87,14 +87,6 @@ export function modifyJS(
 	// const catchLoop = 0;
 
 	for (const ctx of new AcornIterator(tree)) {
-		/*if (catchLoop === 5000) {
-			console.log('etc');
-			console.log(generate(ctx.node), 'Over', catchLoop, 'iterations...');
-			break;
-		}
-
-		catchLoop++;*/
-
 		typeLoop: switch (ctx.node.type) {
 			case 'ImportExpression':
 				// todo: add tompc$.import(meta, url)

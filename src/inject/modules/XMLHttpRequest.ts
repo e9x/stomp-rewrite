@@ -359,16 +359,5 @@ export default class XMLHttpRequestModule extends Module<Client> {
 
 		(global as any).XMLHttpRequest = globalProxy;
 		(global as any).XMLHttpRequestEventTarget = globalTargetProxy;
-
-		// const proxyModule = this.client.getModule(ProxyModule)!;
-		/*proxyModule.wrapFunction(
-			XMLHttpRequest,
-			(target, that, args, newTarget) => {
-				console.log(newTarget, that, args);
-
-				return Reflect.construct(target, args, newTarget);
-			},
-			true
-		);*/
 	}
 }

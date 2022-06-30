@@ -112,8 +112,6 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 		bareServer: init.bareServer,
 	};
 
-	console.log(rewriter.config);
-
 	router.routes.set(
 		/^\/binary\//,
 		genericForward(

@@ -48,11 +48,6 @@ export default class DocumentClient extends Client {
 
 			document.open();
 
-			console.log(
-				document.baseURI,
-				this.baseURI.toString(),
-				this.url.toString()
-			);
 			document.write(
 				(parsed.doctype ? `<!DOCTYPE ${parsed.doctype.name}>` : '') +
 					node.innerHTML

@@ -211,8 +211,6 @@ export class AcornIterator {
 				continue;
 			}
 
-			// console.log('resulting', generate(context.node));
-
 			return { value: context, done: false };
 		}
 	}
