@@ -38,12 +38,7 @@ export default class AccessModule extends Module<Client> {
 		const globalEval = (x: string) => {
 			x = String(x);
 			return evalSnapshot(
-				modifyJS(
-					x,
-					this.client.url,
-					this.client.config,
-					this.client.isWorker ? 'worker' : 'dom'
-				)
+				modifyJS(x, this.client.url, this.client.config, 'generic')
 			);
 		};
 
@@ -150,7 +145,7 @@ export default class AccessModule extends Module<Client> {
 					String(code),
 					this.client.url,
 					this.client.config,
-					this.client.isWorker ? 'worker' : 'dom'
+					'generic'
 				);
 			},
 			import: (baseURL: string | undefined, url: string): Promise<unknown> => {
@@ -164,7 +159,7 @@ export default class AccessModule extends Module<Client> {
 						),
 						this.client.url,
 						this.client.config,
-						this.client.isWorker ? 'workerModule' : 'domModule'
+						'genericModule'
 					)
 				);
 			},

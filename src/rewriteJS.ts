@@ -42,13 +42,17 @@ function generatePartial(script: string, ctx: AcornContext) {
 	return result;
 }
 
-export type jsType = 'dom' | 'domModule' | 'worker' | 'workerModule';
+export type scriptType =
+	| 'generic'
+	| 'genericModule'
+	| 'worker'
+	| 'workerModule';
 
 export function routeJS(
 	resource: StompURL,
 	url: StompURL,
 	config: Config,
-	type: jsType = 'dom'
+	type: scriptType = 'generic'
 ) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
@@ -66,11 +70,10 @@ export function modifyJS(
 	script: string,
 	url: StompURL,
 	config: Config,
-	type: jsType = 'dom'
+	type: scriptType = 'generic'
 ) {
-	const isModule = type === 'domModule' || type === 'workerModule';
+	const isModule = type === 'genericModule' || type === 'workerModule';
 	const isWorker = type === 'workerModule' || type === 'worker';
-	const isDOM = type === 'domModule' || type === 'dom';
 
 	const tree = parse(script, {
 		module: isModule,
@@ -129,7 +132,7 @@ export function modifyJS(
 								),
 								url,
 								config,
-								isDOM ? 'domModule' : 'workerModule'
+								'generic'
 							)
 						)
 					)

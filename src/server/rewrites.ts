@@ -6,7 +6,7 @@ import { capitalizeHeaders, trimNonStandardHeaders } from '../headers';
 import { modifyCSS, routeCSS } from '../rewriteCSS';
 import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
 import { modifyJS, routeJS } from '../rewriteJS';
-import { jsType } from '../rewriteJS';
+import { scriptType } from '../rewriteJS';
 import { modifyManifest, routeManifest } from '../rewriteManifest';
 import { parseRoutedURL, routeBinary } from '../routeURL';
 import Router from './Router';
@@ -141,13 +141,15 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 		});
 	});
 
-	const jsTypeFactory = (type: jsType) =>
+	const scriptTypeFactory = (type: scriptType) =>
 		genericForward(
 			rewriter,
 			async (url, response) =>
 				modifyJS(await response.text(), url, rewriter.config, type),
 			(resource, url) => routeJS(resource, url, rewriter.config, type),
-			undefined,
+			(headers, filteredHeaders) => {
+				filteredHeaders.set('sec-fetch-dest', 'worker');
+			},
 			(headers, filteredHeaders) => {
 				for (const header of integrityHeaders) {
 					filteredHeaders.delete(header);
@@ -155,10 +157,13 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 			}
 		);
 
-	router.routes.set(/^\/js:dom\//, jsTypeFactory('dom'));
-	router.routes.set(/^\/js:domModule\//, jsTypeFactory('domModule'));
-	router.routes.set(/^\/js:worker\//, jsTypeFactory('worker'));
-	router.routes.set(/^\/js:workerModule\//, jsTypeFactory('workerModule'));
+	router.routes.set(/^\/js:generic\//, scriptTypeFactory('generic'));
+	router.routes.set(
+		/^\/js:genericModule\//,
+		scriptTypeFactory('genericModule')
+	);
+	router.routes.set(/^\/js:worker\//, scriptTypeFactory('worker'));
+	router.routes.set(/^\/js:workerModule\//, scriptTypeFactory('workerModule'));
 
 	router.routes.set(/^\/client$/, () => new Response());
 

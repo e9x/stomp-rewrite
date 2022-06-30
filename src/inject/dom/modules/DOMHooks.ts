@@ -214,7 +214,9 @@ export class DOMHooksModule extends Module<DocumentClient> {
 							),
 							this.client.url,
 							this.client.config,
-							element.getAttribute('type') === 'module' ? 'domModule' : 'dom'
+							element.getAttribute('type') === 'module'
+								? 'genericModule'
+								: 'generic'
 						)
 					);
 				}

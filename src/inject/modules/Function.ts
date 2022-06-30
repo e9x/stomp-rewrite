@@ -79,7 +79,12 @@ export default class FunctionModule extends Module<Client> {
 					if (args.length !== 0) {
 						let [code] = args.splice(-1, 1);
 						code = String(code);
-						code = modifyJS(code, this.client.url, that.client.config, 'dom');
+						code = modifyJS(
+							code,
+							this.client.url,
+							that.client.config,
+							'generic'
+						);
 						args.push(code);
 					}
 
