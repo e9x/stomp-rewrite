@@ -1,6 +1,6 @@
 import createHttpError from 'http-errors';
 
-export function json(status: number, data: object | number | string): Response {
+export function json(status: number, data: unknown): Response {
 	return new Response(JSON.stringify(data, null, '\t'), {
 		status,
 		headers: {
@@ -118,4 +118,15 @@ console.error(error);
 			}
 		}
 	}
+}
+
+export function jsonAPI(callback: (...args: any[]) => unknown) {
+	return async (request: Request): Promise<Response> => {
+		try {
+			const result = await callback(...(await request.json()));
+			return json(200, result === undefined ? null : result);
+		} catch (error) {
+			return json(500, String(error));
+		}
+	};
 }
