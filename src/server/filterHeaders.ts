@@ -1,5 +1,4 @@
 import StompURL from '../StompURL';
-import { Config } from '../config';
 import { trimNonStandardHeaders } from '../headers';
 
 const cspHeaders: string[] = [
@@ -35,29 +34,25 @@ const removeHeaders: string[] = [
 
 export declare type RouteTransform = (
 	resource: StompURL,
-	url: StompURL,
-	config: Config
+	url: StompURL
 ) => string;
 
 export declare type AdditionalFilter = (
 	headers: Headers,
 	filteredHeaders: Headers,
-	url: StompURL,
-	config: Config
+	url: StompURL
 ) => void;
 
 // native as in the browser requesting an image from /binary/ or document from /html/
 export function filterNativeRequestHeaders(
 	headers: Headers,
 	url: StompURL,
-	config: Config,
-
-	additionalFilter?: AdditionalFilter
+	additionalFilter: AdditionalFilter | void
 ): Headers {
 	const filteredHeaders = new Headers(headers);
 
 	if (additionalFilter) {
-		additionalFilter(headers, filteredHeaders, url, config);
+		additionalFilter(headers, filteredHeaders, url);
 	}
 
 	return filteredHeaders;
@@ -66,9 +61,8 @@ export function filterNativeRequestHeaders(
 export function filterResponseHeaders(
 	headers: Headers,
 	url: StompURL,
-	config: Config,
 	transformRoute: RouteTransform,
-	additionalFilter?: AdditionalFilter
+	additionalFilter: AdditionalFilter | void
 ): Headers {
 	const filteredHeaders = trimNonStandardHeaders(headers);
 
@@ -80,14 +74,13 @@ export function filterResponseHeaders(
 					new URL(filteredHeaders.get('location')!, url.toString()),
 					url
 				),
-				url,
-				config
+				url
 			)
 		);
 	}
 
 	if (additionalFilter) {
-		additionalFilter(headers, filteredHeaders, url, config);
+		additionalFilter(headers, filteredHeaders, url);
 	}
 
 	for (const header of removeHeaders) {

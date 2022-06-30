@@ -1,11 +1,12 @@
 import { Config } from '../config';
-import Server, { createServer } from './Server';
+import Router from './Router';
+import createServer from './createServer';
 
 const config: Config = JSON.parse(
 	new URLSearchParams(location.search).get('config')!
 );
 
-let server: Server | undefined;
+let server: Router | undefined;
 
 createServer(config).then(s => (server = s));
 

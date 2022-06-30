@@ -1,9 +1,9 @@
 import { encodeCookie } from '../encodeCookie';
-import Server from './Server';
+import Router from './Router';
 import { maxRedirects, statusRedirect } from '@tomphttp/bare-client';
 
 async function process(
-	server: Server,
+	router: Router,
 	data: ProcessData
 ): Promise<ProcessResult> {
 	if (data.body !== undefined) {
@@ -18,11 +18,11 @@ async function process(
 		while (redirects--) {
 			const request = new Request(url, data.init);
 
-			if (!server.willRoute(url)) {
+			if (!router.willRoute(url)) {
 				throw new Error('Not found');
 			}
 
-			const response = await server.route(request);
+			const response = await router.route(request);
 
 			if (
 				statusRedirect.includes(response.status) &&
@@ -53,49 +53,48 @@ async function process(
 	}
 }
 
-export async function gxhr(
-	request: Request,
-	server: Server
-): Promise<Response> {
-	return new Response(
-		JSON.stringify(await process(server, await request.json()))
-	);
-}
+export function registerXhr(router: Router) {
+	router.routes.set(/\/gxhr/, async request => {
+		return new Response(
+			JSON.stringify(await process(router, await request.json()))
+		);
+	});
 
-export async function xhr(request: Request, server: Server): Promise<Response> {
-	const { id, data } = await request.json();
+	router.routes.set(/\/xhr/, async request => {
+		const { id, data } = await request.json();
 
-	console.log('got xhr req', id, data);
+		console.log('got xhr req', id, data);
 
-	const response = await process(server, data);
+		const response = await process(router, data);
 
-	console.log('processed');
+		console.log('processed');
 
-	const long = encodeCookie(JSON.stringify(response));
-	let chunks = 0;
-	const split = 4000;
+		const long = encodeCookie(JSON.stringify(response));
+		let chunks = 0;
+		const split = 4000;
 
-	for (let i = 0; i < long.length; i += split) {
-		const part = long.slice(i, i + 4000);
+		for (let i = 0; i < long.length; i += split) {
+			const part = long.slice(i, i + 4000);
 
-		const chunk = chunks++;
+			const chunk = chunks++;
+
+			await cookieStore.set({
+				name: id + chunk,
+				value: part,
+				maxAge: 10,
+				path: '/',
+			});
+		}
+
+		encodeCookie(JSON.stringify(response));
 
 		await cookieStore.set({
-			name: id + chunk,
-			value: part,
+			name: id,
+			value: chunks.toString(),
 			maxAge: 10,
 			path: '/',
 		});
-	}
 
-	encodeCookie(JSON.stringify(response));
-
-	await cookieStore.set({
-		name: id,
-		value: chunks.toString(),
-		maxAge: 10,
-		path: '/',
+		return new Response();
 	});
-
-	return new Response();
 }
