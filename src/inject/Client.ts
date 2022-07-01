@@ -6,12 +6,12 @@ import { parseRoutedURL, ROUTE_PROTOCOLS } from '../routeURL';
 import Module from './Module';
 import BareClient from '@tomphttp/bare-client';
 
-export interface ModuleCtor {
-	new (client: any): Module<any>;
+export interface ModuleCtor<T> {
+	new (client: T): Module<T>;
 }
 
 export default class Client {
-	modules: Map<ModuleCtor, Module<any>>;
+	modules: Map<ModuleCtor<Client>, Module<any>>;
 	bare: BareClient;
 	codec: GenericCodec;
 	directory: string;
@@ -76,14 +76,21 @@ export default class Client {
 
 		this.applied = true;
 	}
-	addModule(Module: ModuleCtor) {
-		this.modules.set(Module, new Module(this));
+	addModule<T>(Module: ModuleCtor<T>) {
+		this.modules.set(
+			<ModuleCtor<Client>>(<unknown>Module),
+			new Module(<T>(<unknown>this))
+		);
 	}
-	getModule<T extends ModuleCtor>(Module: T): InstanceType<T> | undefined {
-		if (!this.modules.has(Module)) {
+	getModule<A extends Client, T extends ModuleCtor<A>>(
+		Module: T
+	): InstanceType<T> | undefined {
+		if (!this.modules.has(<ModuleCtor<Client>>(<unknown>Module))) {
 			return undefined;
 		}
-		return <InstanceType<T>>this.modules.get(Module);
+		return <InstanceType<T>>(
+			this.modules.get(<ModuleCtor<Client>>(<unknown>Module))
+		);
 	}
 }
 
