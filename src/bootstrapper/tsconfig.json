@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
-		"lib": ["ES2022", "DOM", "DOM.Iterable"]
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"types": []
 	},
+	"extends": "../generic-tsconfig.json",
 	"include": [
 		"../*.d.ts"
 	]

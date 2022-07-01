@@ -3,6 +3,6 @@
 		"lib": ["ES2020"],
 		"types": ["serviceworker"]
 	},
-	"include": ["../", "./"],
 	"extends": "../generic-tsconfig.json",
+	"include": ["../*.d.ts", "./*.d.ts"]
 }

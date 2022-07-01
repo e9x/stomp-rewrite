@@ -2,7 +2,10 @@
 	"compilerOptions": {
 		"lib": ["ES2020", "DOM", "DOM.Iterable"]
 	},
+	"extends": "../../generic-tsconfig.json",
 	"include": [
-		"../../"
+		"./*.d.ts",
+		"../*.d.ts",
+		"../../*.d.ts"
 	]
 }

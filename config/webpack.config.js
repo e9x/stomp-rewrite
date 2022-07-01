@@ -1,6 +1,6 @@
 import ExcludeProvidePlugin from './ExcludeProvidePlugin.js';
 import { appDist, appNodeModules, appPath, appSrc } from './paths.js';
-import { dirname, join, resolve } from 'path';
+import { resolve } from 'path';
 import ResolveTypescriptPlugin from 'resolve-typescript-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import webpack from 'webpack';
@@ -73,7 +73,7 @@ const snapshot = new webpack.ProvidePlugin({
 			'EventSource',
 			'Function',
 			'AsyncFunction',
-		].map(name => [name, [resolve('./src/inject/snapshot.ts'), name]])
+		].map((name) => [name, [resolve('./src/inject/snapshot.ts'), name]])
 	),
 });
 
@@ -94,12 +94,13 @@ export default [
 			path: appDist,
 		},
 	}),
+	/*
 	await common('./src/inject/dom/tsconfig.json', {
 		plugins: [
 			snapshot,
 			new webpack.ProvidePlugin({
 				...Object.fromEntries(
-					['DOMParser', 'navigator'].map(name => [
+					['DOMParser', 'navigator'].map((name) => [
 						name,
 						[resolve('./src/inject/dom/snapshot.ts'), name],
 					])
@@ -116,7 +117,7 @@ export default [
 			filename: 'injectDocument.js',
 			path: appDist,
 		},
-	}),
+	}),*/
 	await common('./src/server/tsconfig.json', {
 		plugins: [
 			new ExcludeProvidePlugin({

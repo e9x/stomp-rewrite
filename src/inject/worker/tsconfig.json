@@ -1,9 +1,12 @@
 {
 	"compilerOptions": {
-		"lib": ["ES2020", "WebWorker", "WebWorker.ImportScripts"]
+		"lib": ["ES2020", "WebWorker", "Webworker.Iterable", "WebWorker.ImportScripts"],
+		"types": []
 	},
+	"extends": "../../generic-tsconfig.json",
 	"include": [
-		"../../"
-	],
-	"extends": "../../generic-tsconfig.json"
+		"./*.d.ts",
+		"../*.d.ts",
+		"../../*.d.ts"
+	]
 }

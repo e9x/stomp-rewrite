@@ -8,9 +8,9 @@ const config: Config = JSON.parse(
 
 let server: Router | undefined;
 
-createServer(config).then(s => (server = s));
+createServer(config).then((s) => (server = s));
 
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event: FetchEvent) => {
 	if (!server) return;
 
 	if (server.willRoute(event.request.url)) {

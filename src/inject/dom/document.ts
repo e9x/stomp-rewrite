@@ -10,8 +10,9 @@ import LocationModule from './modules/Location';
 import NavigatorModule from './modules/Navigator';
 import StorageModule from './modules/Storage';
 import SyncModule from './modules/Sync';
+import XMLHttpRequestModule from './modules/XMLHttpRequest';
 
-export default createClientFactory(DocumentClient, client => {
+export default createClientFactory(DocumentClient, (client) => {
 	baseModules(client);
 	client.addModule(HistoryModule);
 	client.addModule(NavigatorModule);
@@ -22,4 +23,5 @@ export default createClientFactory(DocumentClient, client => {
 	client.addModule(SyncModule);
 	client.addModule(AudioModule);
 	client.addModule(StorageModule);
+	client.addModule(XMLHttpRequestModule);
 });

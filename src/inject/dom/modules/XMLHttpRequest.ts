@@ -1,15 +1,15 @@
-import StompURL from '../../StompURL';
-import { parseRoutedURL, routeXHR } from '../../routeURL';
-import Client from '../Client';
-import Module from '../Module';
-import SyncModule from '../dom/modules/Sync';
+import StompURL from '../../../StompURL';
+import { parseRoutedURL, routeXHR } from '../../../routeURL';
+import Module from '../../Module';
 import ProxyModule, {
 	classConstant,
 	domObjectConstructor,
 	onEventTarget,
-} from './Proxy';
+} from '../../modules/Proxy';
+import DocumentClient from '../Client';
+import SyncModule from './Sync';
 
-export default class XMLHttpRequestModule extends Module<Client> {
+export default class XMLHttpRequestModule extends Module<DocumentClient> {
 	apply() {
 		const instances = new WeakSet();
 		const real = Symbol();
@@ -17,7 +17,7 @@ export default class XMLHttpRequestModule extends Module<Client> {
 		const that = this;
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
-		const syncModule = that.client.getModule(SyncModule);
+		const syncModule = that.client.getModule(SyncModule)!;
 
 		class XMLHttpRequestEventTargetProxy extends EventTarget {
 			constructor(key: symbol) {
@@ -220,16 +220,13 @@ export default class XMLHttpRequestModule extends Module<Client> {
 					init.signal = this.#abort.signal;
 
 					fetch(url, init)
-						.then(async response => {
+						.then(async (response) => {
 							this.#onHeaders(undefined, response, response.url);
 							const buffer = await response.arrayBuffer();
 							this.#onDone(undefined, response, buffer);
 						})
-						.catch(error => this.#onDone(error));
+						.catch((error) => this.#onDone(error));
 				} else {
-					if (!syncModule) {
-						throw new Error('Synchronous fetch not supported in this context');
-					}
 					try {
 						const response = syncModule.fetch(url, init);
 						this.#onHeaders(undefined, response, response.rawUrl);
