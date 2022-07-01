@@ -434,11 +434,13 @@ export function modifyJS(
 
 	return (
 		(isWorker
-			? `if(!globalThis.createClient)importScripts(${injectWorkerJS(url)});` +
+			? `if(!globalThis.createClient)importScripts(${JSON.stringify(
+					injectWorkerJS(url)
+			  )});` +
 			  `if(!(${globalClient} in globalThis))createClient(${JSON.stringify(
 					config
 			  )}, ${JSON.stringify(url.codec.key)});` +
-			  `if(!${globalClient}.applied)${JSON.stringify(CLIENT_KEY)}.apply();`
+			  `if(!${globalClient}.applied)globalThis[${globalClient}].apply();`
 			: '') +
 		(isModule ? `import.meta.url = ${JSON.stringify(url.toString())};` : '') +
 		generate(tree)

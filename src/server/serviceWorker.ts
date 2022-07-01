@@ -10,16 +10,6 @@ let server: Router | undefined;
 
 createServer(config).then(s => (server = s));
 
-declare global {
-	type FetchEvent = Event & {
-		request: Request;
-		respondWith: (response: Promise<Response>) => void;
-	};
-	interface WindowEventMap {
-		fetch: FetchEvent;
-	}
-}
-
 self.addEventListener('fetch', event => {
 	if (!server) return;
 

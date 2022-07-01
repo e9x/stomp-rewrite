@@ -35,25 +35,28 @@ export const AsyncFunction: FunctionConstructor = <FunctionConstructor>(
 	(async () => undefined).constructor
 );
 
-export const navigator: Navigator = {} as any;
+export function cloneInstance<Instance extends object>(
+	inst: Instance,
+	prototype: object
+): Instance {
+	const clone: Partial<Instance> = {};
+	const descriptors = Object.getOwnPropertyDescriptors(prototype);
 
-{
-	const descriptors = Object.getOwnPropertyDescriptors(Navigator.prototype);
-
-	for (const name in descriptors) {
-		const { get, set, value, writable } = descriptors[name];
+	for (const key in descriptors) {
+		const { get, set, value, writable } = descriptors[key];
 		const define: PropertyDescriptor = {};
 
-		if (get) define.get = get.bind(global.navigator);
+		if (get) define.get = get.bind(inst);
 
-		if (set) define.set = set.bind(global.navigator);
+		if (set) define.set = set.bind(inst);
 
 		if (value)
-			define.value =
-				typeof value === 'function' ? value.bind(global.navigator) : value;
+			define.value = typeof value === 'function' ? value.bind(inst) : value;
 
 		if (typeof writable === 'boolean') define.writable = writable;
 
-		Reflect.defineProperty(navigator, name, define);
+		Reflect.defineProperty(clone, key, define);
 	}
+
+	return <Instance>clone;
 }
