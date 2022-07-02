@@ -94,7 +94,6 @@ export default [
 			path: appDist,
 		},
 	}),
-	/*
 	await common('./src/inject/dom/tsconfig.json', {
 		plugins: [
 			snapshot,
@@ -117,7 +116,7 @@ export default [
 			filename: 'injectDocument.js',
 			path: appDist,
 		},
-	}),*/
+	}),
 	await common('./src/server/tsconfig.json', {
 		plugins: [
 			new ExcludeProvidePlugin({
@@ -136,19 +135,31 @@ export default [
 			path: appDist,
 		},
 	}),
-	await common('./src/bootstrapper/tsconfig.json', {
-		entry: {
-			SearchBuilder: './src/bootstrapper/SearchBuilder.ts',
-			StompBootstrapper: './src/bootstrapper/Bootstrapper.ts',
-		},
-		output: {
-			library: {
-				name: '[name]',
-				type: 'umd',
-			},
-			libraryExport: 'default',
-			filename: '[name].js',
-			path: appDist,
-		},
-	}),
+	...(await Promise.all(
+		[
+			[
+				'SearchBuilder',
+				'SearchBuilder.js',
+				'./src/bootstrapper/SearchBuilder.ts',
+			],
+			[
+				'StompBootstrapper',
+				'Bootstrapper.js',
+				'./src/bootstrapper/Bootstrapper.ts',
+			],
+		].map(([name, filename, entry]) =>
+			common('./src/bootstrapper/tsconfig.json', {
+				entry,
+				output: {
+					library: {
+						name,
+						type: 'umd',
+					},
+					libraryExport: 'default',
+					filename,
+					path: appDist,
+				},
+			})
+		)
+	)),
 ];

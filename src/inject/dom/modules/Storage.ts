@@ -4,10 +4,10 @@ import ProxyModule, {
 	contextThis,
 	usePrototype,
 } from '../../modules/Proxy';
-import Client from '../Client';
+import DocumentClient from '../Client';
 import SyncModule from './Sync';
 
-export default class StorageModule extends Module<Client> {
+export default class StorageModule extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 		const syncModule = this.client.getModule(SyncModule)!;
@@ -134,7 +134,7 @@ export default class StorageModule extends Module<Client> {
 						return Reflect.get(target, prop, receiver);
 					}
 
-					return usePrototype(storage, StorageProxy.prototype, storage => {
+					return usePrototype(storage, StorageProxy.prototype, (storage) => {
 						const item = storage.getItem(prop);
 
 						return item === null ? undefined : item;
@@ -145,7 +145,7 @@ export default class StorageModule extends Module<Client> {
 						return Reflect.set(target, prop, value);
 					}
 
-					return usePrototype(storage, StorageProxy.prototype, storage => {
+					return usePrototype(storage, StorageProxy.prototype, (storage) => {
 						storage.setItem(prop, value);
 						return true;
 					});
@@ -155,7 +155,7 @@ export default class StorageModule extends Module<Client> {
 						return Reflect.getOwnPropertyDescriptor(target, prop);
 					}
 
-					return usePrototype(storage, StorageProxy.prototype, storage => {
+					return usePrototype(storage, StorageProxy.prototype, (storage) => {
 						const value = storage.getItem(prop);
 
 						if (value === null) return undefined;
@@ -173,7 +173,7 @@ export default class StorageModule extends Module<Client> {
 						return Reflect.deleteProperty(target, prop);
 					}
 
-					return usePrototype(storage, StorageProxy.prototype, storage => {
+					return usePrototype(storage, StorageProxy.prototype, (storage) => {
 						storage.removeItem(prop);
 
 						return true;
@@ -186,7 +186,7 @@ export default class StorageModule extends Module<Client> {
 
 					return storageKeys(directory).includes(prop);
 				},
-				ownKeys: target => {
+				ownKeys: (target) => {
 					const ownKeys = Reflect.ownKeys(target);
 
 					// almost EXACTLY how ownKeys works on Storage instances

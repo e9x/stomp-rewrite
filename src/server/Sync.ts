@@ -60,14 +60,15 @@ async function process(
 const split = 4000;
 
 export function registerXhr(router: Router) {
-	router.routes.set(/\/gxhr/, async request => {
+	router.routes.set(/\/gxhr/, async (request) => {
 		return new Response(
 			JSON.stringify(await process(router, await request.json()))
 		);
 	});
 
-	router.routes.set(/\/xhr/, async request => {
+	router.routes.set(/\/xhr/, async (request) => {
 		const { id, data } = await request.json();
+		const expiration = new Date(Date.now() + 3e3);
 
 		const response = await process(router, data);
 
@@ -91,7 +92,7 @@ export function registerXhr(router: Router) {
 			await cookieStore.set({
 				name: id + chunk,
 				value: part,
-				maxAge: 10,
+				expires: expiration.getTime(),
 				path: '/',
 			});
 		}
@@ -101,7 +102,7 @@ export function registerXhr(router: Router) {
 		await cookieStore.set({
 			name: id,
 			value: mainCookieValue,
-			maxAge: 10,
+			expires: expiration.getTime(),
 			path: '/',
 		});
 

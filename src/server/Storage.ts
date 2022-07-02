@@ -1,5 +1,5 @@
 import Router, { jsonAPI } from './Router';
-import { deleteDB, IDBPDatabase, openDB } from 'idb';
+import { IDBPDatabase, openDB } from 'idb';
 
 interface ItemEntry {
 	item: string;
@@ -9,16 +9,18 @@ interface ItemEntry {
 }
 
 export default class Storage {
-	db: IDBPDatabase;
-	constructor(db: IDBPDatabase) {
+	private db: IDBPDatabase;
+	private store: string;
+	constructor(db: IDBPDatabase, store: string) {
 		this.db = db;
+		this.store = store;
 	}
 	private resolveKey(origin: string, item: string) {
 		return `${origin}/${item}`;
 	}
 	async getItem(origin: string, item: string): Promise<string | undefined> {
 		const data: ItemEntry | undefined = await this.db.getFromIndex(
-			'storage',
+			this.store,
 			'key',
 			this.resolveKey(origin, item)
 		);
@@ -30,7 +32,7 @@ export default class Storage {
 		}
 	}
 	async setItem(origin: string, item: string, value: string): Promise<void> {
-		await this.db.put('storage', {
+		await this.db.put(this.store, {
 			item,
 			value,
 			origin,
@@ -38,12 +40,12 @@ export default class Storage {
 		} as ItemEntry);
 	}
 	async removeItem(origin: string, item: string): Promise<void> {
-		await this.db.delete('storage', this.resolveKey(origin, item));
+		await this.db.delete(this.store, this.resolveKey(origin, item));
 	}
 	async getKeys(origin: string): Promise<string[]> {
 		return (
 			await this.db.getAllFromIndex(
-				'storage',
+				this.store,
 				'origin',
 				IDBKeyRange.only(origin)
 			)
@@ -56,26 +58,24 @@ export default class Storage {
 	}
 }
 
-const commonCallbacks = {
-	upgrade(db: IDBPDatabase) {
-		const storage = db.createObjectStore('storage', {
-			keyPath: 'key',
-		});
-
-		storage.createIndex('origin', 'origin');
-		storage.createIndex('key', 'key');
-	},
-};
-
 export async function registerStorage(router: Router) {
-	deleteDB('sessionStorage');
-	const sessionStorage = new Storage(
-		await openDB('sessionStorage', 1, commonCallbacks)
-	);
+	const db = await openDB('stompStorage', 1, {
+		upgrade: (db: IDBPDatabase) => {
+			for (const name of ['localStorage', 'sessionStorage']) {
+				const storage = db.createObjectStore(name, {
+					keyPath: 'key',
+				});
 
-	const localStorage = new Storage(
-		await openDB('localStorage', 1, commonCallbacks)
-	);
+				storage.createIndex('origin', 'origin');
+				storage.createIndex('key', 'key');
+			}
+		},
+	});
+
+	db.clear('sessionStorage');
+
+	const localStorage = new Storage(db, 'localStorage');
+	const sessionStorage = new Storage(db, 'sessionStorage');
 
 	const register: [name: string, host: Storage][] = [
 		['sessionStorage', sessionStorage],
@@ -92,7 +92,7 @@ export async function registerStorage(router: Router) {
 		]) {
 			router.routes.set(
 				new RegExp(`^\\/${name}\\/${api}$`),
-				jsonAPI(host[api as keyof Omit<Storage, 'db'>].bind(host))
+				jsonAPI(host[api as keyof Storage].bind(host))
 			);
 		}
 	}

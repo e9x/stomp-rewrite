@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"lib": ["ES2020", "DOM", "DOM.Iterable"]
+		"lib": ["ES2020", "DOM", "DOM.Iterable"],
+		"types": []
 	},
 	"extends": "../../generic-tsconfig.json",
 	"include": [

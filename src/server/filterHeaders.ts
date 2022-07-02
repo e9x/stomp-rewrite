@@ -38,14 +38,14 @@ export declare type RouteTransform = (
 ) => string;
 
 export declare type AdditionalFilter = (
-	headers: Headers,
+	headers: Readonly<Headers>,
 	filteredHeaders: Headers,
 	url: StompURL
 ) => void;
 
 // native as in the browser requesting an image from /binary/ or document from /html/
 export function filterNativeRequestHeaders(
-	headers: Headers,
+	headers: Readonly<Headers>,
 	url: StompURL,
 	additionalFilter: AdditionalFilter | void
 ): Headers {
@@ -59,7 +59,7 @@ export function filterNativeRequestHeaders(
 }
 
 export function filterResponseHeaders(
-	headers: Headers,
+	headers: Readonly<Headers>,
 	url: StompURL,
 	transformRoute: RouteTransform,
 	additionalFilter: AdditionalFilter | void

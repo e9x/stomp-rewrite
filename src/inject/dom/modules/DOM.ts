@@ -1,7 +1,11 @@
 import StompURL, { isUrlLike } from '../../../StompURL';
 import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../../rewriteHTML';
 import Module from '../../Module';
-import ProxyModule, { applyDescriptors } from '../../modules/Proxy';
+import ProxyModule, {
+	applyDescriptors,
+	cleanupPrototype,
+	usePrototype,
+} from '../../modules/Proxy';
 import DocumentClient from '../Client';
 import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
 
@@ -51,6 +55,9 @@ export class CustomElement extends Element {
 		}
 
 		attributeTab.delete(this);
+	}
+	[cleanupPrototype]() {
+		this.applyAttributes();
 	}
 	getAttributeOG(attribute: string): string | null {
 		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
@@ -109,43 +116,6 @@ determining element.src:
 type ElementCtor = { new (): HTMLElement };
 
 type PropData = [attribute: string, get?: (element: CustomElement) => string];
-
-/*
- * Sets the prototype of an element while this script is working with it. This is to ensure we are only accessing the native functions and not any traps/shims.
- * The node is in a simulated detached state while being worked with, to avoid making many requests as attributes are set.
- */
-export function prototypeElement<ElementType extends Element, CallbackResult>(
-	element: Element,
-	usePrototype: ElementType,
-	// recast the element type to reflect changes
-	callback: (element: ElementType) => CallbackResult
-): CallbackResult {
-	const prototype = Reflect.getPrototypeOf(element);
-	Reflect.setPrototypeOf(element, usePrototype);
-
-	// recast
-	const set = element as ElementType;
-
-	let result: any[] = [];
-
-	try {
-		result = [callback(set)];
-	} catch (error) {
-		result = [undefined, error];
-	}
-
-	if (set instanceof CustomElement) {
-		set.applyAttributes();
-	}
-
-	Reflect.setPrototypeOf(element, prototype);
-
-	if (result.length === 2) {
-		throw result[1];
-	}
-
-	return result[0];
-}
 
 /**
  * Provides a framework for hooking elements
@@ -320,7 +290,7 @@ export default class DOMModule extends Module<DocumentClient> {
 
 				const attribute: string = args[0];
 
-				return prototypeElement(that, CustomElement.prototype, element => {
+				return usePrototype(that, CustomElement.prototype, (element) => {
 					if (element.hasAttributeOG(attribute)) {
 						return element.getAttributeOG(attribute);
 					} else {
@@ -339,7 +309,7 @@ export default class DOMModule extends Module<DocumentClient> {
 
 				const [attribute, value] = args;
 
-				prototypeElement(that, CustomElement.prototype, element => {
+				usePrototype(that, CustomElement.prototype, (element) => {
 					element.setAttribute(attribute, value);
 
 					if (!this.trackAttributes.get(element.nodeName)?.has(attribute)) {
@@ -368,17 +338,13 @@ export default class DOMModule extends Module<DocumentClient> {
 					get: proxyModule.wrapFunction(
 						descriptor.get!,
 						(target, that, args) => {
-							return prototypeElement(
-								that,
-								CustomElement.prototype,
-								element => {
-									if (propData[1]) {
-										return propData[1](element);
-									} else {
-										return Reflect.apply(target, that, args);
-									}
+							return usePrototype(that, CustomElement.prototype, (element) => {
+								if (propData[1]) {
+									return propData[1](element);
+								} else {
+									return Reflect.apply(target, that, args);
 								}
-							);
+							});
 						}
 					),
 					set: proxyModule.wrapFunction(
@@ -386,7 +352,7 @@ export default class DOMModule extends Module<DocumentClient> {
 						(target, that, args) => {
 							const [value] = args;
 
-							prototypeElement(that, CustomElement.prototype, element => {
+							usePrototype(that, CustomElement.prototype, (element) => {
 								element.setAttribute(propData[0], value);
 
 								if (

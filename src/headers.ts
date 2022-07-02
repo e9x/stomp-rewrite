@@ -128,7 +128,7 @@ export const standardHeaderNames: string[] = [
 	'WWW-Authenticate',
 ];
 
-export const lowercaseStandardHeaderNames = standardHeaderNames.map(header =>
+export const lowercaseStandardHeaderNames = standardHeaderNames.map((header) =>
 	header.toLowerCase()
 );
 
@@ -159,7 +159,7 @@ export function isStandardHeader(header: string) {
 	return lowercaseStandardHeaderNames.includes(header.toLowerCase());
 }
 
-export function trimNonStandardHeaders(headers: Headers): Headers {
+export function trimNonStandardHeaders(headers: Readonly<Headers>): Headers {
 	const result = new Headers(headers);
 
 	for (const [header, value] of headers) {

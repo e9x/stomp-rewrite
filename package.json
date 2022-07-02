@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@javascript-obfuscator/escodegen": "^2.3.0",
 		"@tomphttp/bare-client": "^1.0.2-beta-readme3",
+		"@types/set-cookie-parser": "^2.4.2",
 		"ast-types": "^0.14.2",
 		"capture-stack-trace": "^1.0.1",
 		"crypto-js": "^4.1.1",
@@ -26,7 +27,8 @@
 		"idb": "^7.0.1",
 		"meriyah": "^4.2.1",
 		"meriyah-loose": "github:sysce/meriyah-loose",
-		"parse5": "^7.0.0"
+		"parse5": "^7.0.0",
+		"set-cookie-parser": "^2.5.0"
 	},
 	"devDependencies": {
 		"@ianvs/prettier-plugin-sort-imports": "^3.4.2",

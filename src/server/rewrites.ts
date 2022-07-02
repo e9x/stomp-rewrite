@@ -9,6 +9,7 @@ import { modifyJS, routeJS } from '../rewriteJS';
 import { scriptType } from '../rewriteJS';
 import { modifyManifest, routeManifest } from '../rewriteManifest';
 import { parseRoutedURL, routeBinary } from '../routeURL';
+import Cookies from './Cookies';
 import Router from './Router';
 import {
 	AdditionalFilter,
@@ -36,6 +37,7 @@ interface Rewriter {
 	bare: BareClient;
 	bareServer: string;
 	config: Config;
+	cookies: Cookies;
 }
 
 function genericForward(
@@ -59,6 +61,11 @@ function genericForward(
 			additionalRequestFilter
 		);
 
+		requestHeaders.set(
+			'cookie',
+			(await rewriter.cookies.get(url.url)).toString()
+		);
+
 		const response = await rewriter.bare.fetch(url.toString(), {
 			method: serverRequest.method,
 			cache: serverRequest.cache,
@@ -76,6 +83,12 @@ function genericForward(
 			transformRoute,
 			additionalResponseFilter
 		);
+
+		for (const header in response.rawHeaders) {
+			if (header.toLowerCase() === 'set-cookie') {
+				await rewriter.cookies.set(response.rawHeaders[header], url.url);
+			}
+		}
 
 		return new Response(
 			statusEmpty.includes(+response.status)
@@ -96,7 +109,11 @@ export function getMime(contentType: string): string {
 	return contentType.split(';')[0];
 }
 
-export function registerRewrites(router: Router, init: ParsedConfig) {
+export function registerRewrites(
+	router: Router,
+	init: ParsedConfig,
+	cookies: Cookies
+) {
 	const rewriter: Rewriter = {
 		get config() {
 			return {
@@ -106,6 +123,7 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 				bareClientData: this.bare.data,
 			};
 		},
+		cookies,
 		codec: init.codec,
 		directory: init.directory,
 		bare: new BareClient(init.bareServer),
@@ -117,7 +135,7 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 		genericForward(
 			rewriter,
 			async (_url, response) => response.body!,
-			resource => routeBinary(resource),
+			(resource) => routeBinary(resource),
 			undefined,
 			(headers, filteredHeaders) => {
 				trimNonStandardHeaders(filteredHeaders);
@@ -125,7 +143,7 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 		)
 	);
 
-	router.routes.set(/^\/process$/, async request => {
+	router.routes.set(/^\/process$/, async (request) => {
 		const surl = new StompURL(
 			await request.text(),
 			rewriter.codec,
@@ -219,7 +237,7 @@ export function registerRewrites(router: Router, init: ParsedConfig) {
 		genericForward(
 			rewriter,
 			async (_url, response) => response.body!,
-			resource => routeBinary(resource)
+			(resource) => routeBinary(resource)
 		)
 	);
 

@@ -6,6 +6,8 @@ import { isNative } from '../nativeUtil';
 
 // import { getOwnPropertyDescriptors, mirror_attributes } from './rewriteUtil.js';
 
+export const cleanupPrototype = Symbol();
+
 /*
  * Sets the prototype of an object while this script is working with it. This is to ensure we are only accessing the native functions and not any traps/shims.
  */
@@ -19,10 +21,22 @@ export function usePrototype<Prototype extends object, CallbackResult>(
 
 	let result: any[] = [];
 
-	try {
-		result = [callback(<Prototype>target)];
-	} catch (error) {
-		result = [undefined, error];
+	{
+		const set = <Prototype>target;
+
+		try {
+			result = [callback(set)];
+		} catch (error) {
+			result = [undefined, error];
+		}
+	}
+
+	{
+		const set = <{ [cleanupPrototype]?: () => void }>target;
+
+		if (set[cleanupPrototype]) {
+			set[cleanupPrototype]();
+		}
 	}
 
 	Reflect.setPrototypeOf(target, prototype);

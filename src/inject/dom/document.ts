@@ -2,6 +2,7 @@ import { createClientFactory } from '../Client';
 import baseModules from '../modules';
 import DocumentClient from './Client';
 import AudioModule from './modules/Audio';
+import { CookiesModule } from './modules/Cookies';
 import DOMModule from './modules/DOM';
 import { DOMHooksModule } from './modules/DOMHooks';
 import HistoryModule from './modules/History';
@@ -24,4 +25,5 @@ export default createClientFactory(DocumentClient, (client) => {
 	client.addModule(AudioModule);
 	client.addModule(StorageModule);
 	client.addModule(XMLHttpRequestModule);
+	client.addModule(CookiesModule);
 });

@@ -1,4 +1,5 @@
 import { Config, generateConfigCodecKey, parseConfig } from '../config';
+import { registerCookies } from './Cookies';
 import Router from './Router';
 import { registerStorage } from './Storage';
 import { registerXhr } from './Sync';
@@ -6,8 +7,8 @@ import { registerRewrites } from './rewrites';
 import { openDB } from 'idb';
 
 export default async function createServer(config: Config): Promise<Router> {
-	const db = await openDB('stomp', 1, {
-		upgrade(db) {
+	const db = await openDB('stompConfig', 1, {
+		upgrade: (db) => {
 			db.createObjectStore('consts');
 		},
 	});
@@ -30,8 +31,9 @@ export default async function createServer(config: Config): Promise<Router> {
 
 	const router = new Router(init.directory);
 
-	registerRewrites(router, init);
-	registerStorage(router);
+	const cookies = await registerCookies(router);
+	registerRewrites(router, init, cookies);
+	await registerStorage(router);
 	registerXhr(router);
 
 	return router;

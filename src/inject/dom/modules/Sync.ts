@@ -3,6 +3,7 @@ import { decodeCookie } from '../../../encodeCookie';
 import { geckoXHR, queueXHR } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
+import { getCookie, setCookie } from './Cookies';
 
 const statusEmpty: number[] = [101, 204, 205, 304];
 
@@ -135,7 +136,9 @@ export default class SyncModule extends Module<DocumentClient> {
 		const sMaxCycles = loopback ? maxLoopbackCycles : maxCycles;
 
 		for (let cycles = 0; cycles < sMaxCycles; cycles++) {
-			const cookie = document.cookie;
+			if (cycles % 3 !== 0) continue;
+
+			const cookie = getCookie();
 			const match = cookie.match(regex);
 
 			if (!match) continue;
@@ -163,11 +166,11 @@ export default class SyncModule extends Module<DocumentClient> {
 				joinedValue += value;
 			}
 
-			setTimeout(() => {
-				for (const cookieName of clearCookies) {
-					document.cookie = `${cookieName}=; path=/; expires=${new Date(0)}`;
-				}
-			});
+			// setTimeout(() => {
+			for (const cookieName of clearCookies) {
+				setCookie(`${cookieName}=; path=/; expires=${new Date(0)}`);
+			}
+			// });
 
 			return createResponse(JSON.parse(decodeCookie(joinedValue)));
 		}
