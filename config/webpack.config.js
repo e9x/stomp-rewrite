@@ -139,7 +139,7 @@ export default [
 	await common('./src/bootstrapper/tsconfig.json', {
 		entry: {
 			SearchBuilder: './src/bootstrapper/SearchBuilder.ts',
-			Bootstrapper: './src/bootstrapper/Bootstrapper.ts',
+			StompBootstrapper: './src/bootstrapper/Bootstrapper.ts',
 		},
 		output: {
 			library: {
