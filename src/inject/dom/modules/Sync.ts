@@ -166,11 +166,9 @@ export default class SyncModule extends Module<DocumentClient> {
 				joinedValue += value;
 			}
 
-			// setTimeout(() => {
 			for (const cookieName of clearCookies) {
 				setCookie(`${cookieName}=; path=/; expires=${new Date(0)}`);
 			}
-			// });
 
 			return createResponse(JSON.parse(decodeCookie(joinedValue)));
 		}

@@ -14,7 +14,7 @@ export function getCookie(): string {
 }
 
 export function setCookie(value: string) {
-	cookieDescriptor.get!.call(document, value);
+	cookieDescriptor.set!.call(document, value);
 }
 
 export class CookiesModule extends Module<DocumentClient> {

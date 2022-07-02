@@ -1,4 +1,5 @@
 import AES from 'crypto-js/aes';
+import Base64 from 'crypto-js/enc-base64';
 import Utf8 from 'crypto-js/enc-utf8';
 
 const encodeChar = '$';
@@ -56,7 +57,8 @@ export default class GenericCodec {
 		return encodeCodecURI(input);
 	}
 	decode(input: string): string {
-		return decodeCodecURI(input);
+		input = decodeCodecURI(input);
+		return input;
 	}
 }
 
@@ -115,5 +117,22 @@ export class AESCodec extends GenericCodec {
 	decode(input: string): string {
 		input = decodeCodecURI(input);
 		return AES.decrypt(input, this.key).toString(Utf8);
+	}
+}
+
+export class Base64Codec {
+	key: string;
+	constructor(key: string) {
+		this.key = key;
+	}
+	static generateKey(): string {
+		return '';
+	}
+	encode(input: string): string {
+		return encodeCodecURI(Base64.stringify(Utf8.parse(input)));
+	}
+	decode(input: string): string {
+		input = decodeCodecURI(input);
+		return Utf8.stringify(Base64.parse(input));
 	}
 }

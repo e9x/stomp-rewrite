@@ -75,6 +75,14 @@ export function parseRoutedURL(
 		throw new Error('Outside directory');
 	}
 
+	const hash = routed.indexOf('#');
+
+	// should be done on a call-basis, not in this block,
+	// too many calls to update...
+	if (hash !== -1) {
+		routed = routed.slice(0, hash);
+	}
+
 	const path = routed.slice(directory.length);
 
 	const split = path.indexOf('/');

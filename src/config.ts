@@ -1,7 +1,7 @@
-import GenericCodec, { AESCodec, XORCodec } from './Codecs';
+import GenericCodec, { AESCodec, Base64Codec, XORCodec } from './Codecs';
 import { BareManifest } from '@tomphttp/bare-client';
 
-export declare type ConfigCodec = 'generic' | 'xor' | 'aes';
+export declare type ConfigCodec = 'generic' | 'xor' | 'aes' | 'base64';
 
 export interface Config {
 	codec: ConfigCodec;
@@ -24,6 +24,9 @@ export function parseConfig(config: Config, codecKey: string): ParsedConfig {
 		case 'xor':
 			codec = new XORCodec(codecKey);
 			break;
+		case 'base64':
+			codec = new Base64Codec(codecKey);
+			break;
 		case 'generic':
 		default:
 			codec = new GenericCodec(codecKey);
@@ -42,6 +45,8 @@ export function generateConfigCodecKey(codec: ConfigCodec): string {
 			return AESCodec.generateKey();
 		case 'xor':
 			return XORCodec.generateKey();
+		case 'base64':
+			return Base64Codec.generateKey();
 		case 'generic':
 		default:
 			return GenericCodec.generateKey();
@@ -53,6 +58,8 @@ export function codecType(codec: GenericCodec): ConfigCodec {
 		return 'aes';
 	} else if (codec instanceof XORCodec) {
 		return 'xor';
+	} else if (codec instanceof Base64Codec) {
+		return 'base64';
 	} else {
 		return 'generic';
 	}
