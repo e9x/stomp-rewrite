@@ -27,8 +27,6 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 		const observer = new MutationObserver((mutations) => {
 			for (const mutation of mutations) {
 				for (const node of [...mutation.addedNodes, ...mutation.removedNodes]) {
-					console.log(node);
-
 					usePrototype(node, nativeNode, (node) => {
 						if (node.nodeName !== '#text') return;
 
@@ -187,13 +185,30 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 							usePrototype(script, nativeHTMLScriptElement, (script) =>
 								rewriteScript(script)
 							);
-					// });
 				} catch (error) {
 					// console.log(inserted);
-					// may be an incompatible interface, we don't know;
+					// may be an incompatible interface, we don't know
 				}
 
-				return Reflect.apply(target, that, args);
+				const result = Reflect.apply(target, that, args);
+
+				// catch style being appended
+
+				try {
+					if (inserted.nodeName === 'STYLE') {
+						usePrototype(inserted, nativeHTMLStyleElement, (style) =>
+							rewriteStyle(style)
+						);
+					} else
+						for (const style of inserted.querySelectorAll('style'))
+							usePrototype(style, nativeHTMLStyleElement, (style) =>
+								rewriteStyle(style)
+							);
+				} catch (error) {
+					// may be an incompatible interface, we don't know
+				}
+
+				return result;
 			});
 
 		Node.prototype.appendChild = willInsertNode(Node.prototype.appendChild);
