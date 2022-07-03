@@ -1,6 +1,4 @@
-import AES from 'crypto-js/aes';
-import Base64 from 'crypto-js/enc-base64';
-import Utf8 from 'crypto-js/enc-utf8';
+import CryptoJS from 'crypto-js';
 
 const encodeChar = '$';
 const validChars =
@@ -106,17 +104,18 @@ export class XORCodec extends GenericCodec {
 		return result;
 	}
 }
+
 export class AESCodec extends GenericCodec {
 	static generateKey(): string {
 		return Math.random().toString(36).slice(2);
 	}
 	encode(input: string): string {
-		const result = AES.encrypt(input, this.key).toString();
+		const result = CryptoJS.AES.encrypt(input, this.key).toString();
 		return encodeCodecURI(result);
 	}
 	decode(input: string): string {
 		input = decodeCodecURI(input);
-		return AES.decrypt(input, this.key).toString(Utf8);
+		return CryptoJS.AES.decrypt(input, this.key).toString(CryptoJS.enc.Utf8);
 	}
 }
 
@@ -129,10 +128,12 @@ export class Base64Codec {
 		return '';
 	}
 	encode(input: string): string {
-		return encodeCodecURI(Base64.stringify(Utf8.parse(input)));
+		return encodeCodecURI(
+			CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(input))
+		);
 	}
 	decode(input: string): string {
 		input = decodeCodecURI(input);
-		return Utf8.stringify(Base64.parse(input));
+		return CryptoJS.enc.Utf8.stringify(CryptoJS.enc.Base64.parse(input));
 	}
 }

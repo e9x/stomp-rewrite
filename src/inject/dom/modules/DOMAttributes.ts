@@ -1,20 +1,32 @@
 import StompURL from '../../../StompURL';
 import { routeCSS } from '../../../rewriteCSS';
 import { modifyRefresh, routeHTML } from '../../../rewriteHTML';
-import { routeJS } from '../../../rewriteJS';
+import { modifyJS, routeJS } from '../../../rewriteJS';
 import { routeManifest } from '../../../rewriteManifest';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
 import DOMModule from './DOM';
 
-export class DOMHooksModule extends Module<DocumentClient> {
+export default class DOMHooksModule extends Module<DocumentClient> {
 	apply() {
 		const domHooksModule = this.client.getModule(DOMModule)!;
 
+		/*domHooksModule.useContent(
+			(element) => {
+				console.log(element);
+				element.textContent = modifyJS(
+					element.textContent!,
+					this.client.url,
+					this.client.config,
+					'generic'
+				);
+			},
+			['SCRIPT']
+		);*/
+
 		domHooksModule.useAttributes(
-			['LINK'],
-			element => {
+			(element) => {
 				if (
 					element.hasAttribute('href') &&
 					element.hasAttribute('rel') &&
@@ -72,13 +84,14 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					}
 				}
 			},
+			['LINK'],
 			['href', 'rel'],
 			[HTMLLinkElement],
 			{
 				rel: ['rel'],
 				href: [
 					'href',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
@@ -92,8 +105,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		// https://www.w3schools.com/tags/tag_embed.asp
 
 		domHooksModule.useAttributes(
-			['IFRAME', 'EMBED'],
-			element => {
+			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -112,12 +124,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			['IFRAME', 'EMBED'],
 			['src'],
 			[HTMLIFrameElement, HTMLEmbedElement],
 			{
 				src: [
 					'src',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -128,8 +141,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['META'],
-			element => {
+			(element) => {
 				if (
 					element.hasAttribute('content') &&
 					element.getAttribute('content') !== '' &&
@@ -146,12 +158,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			['META'],
 			['content', 'http-equiv'],
 			[HTMLMetaElement],
 			{
 				content: [
 					'content',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('content')!,
 							this.client.url.toString()
@@ -162,8 +175,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['IMG'],
-			element => {
+			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -180,12 +192,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			['IMG'],
 			['src'],
 			[HTMLImageElement],
 			{
 				src: [
 					'src',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -196,8 +209,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['SCRIPT'],
-			element => {
+			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -223,12 +235,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					element.removeAttribute('integrity');
 				}
 			},
+			['SCRIPT'],
 			['src', 'integrity'],
 			[HTMLScriptElement],
 			{
 				src: [
 					'src',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -237,7 +250,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 				],
 				integrity: [
 					'integrity',
-					element => {
+					(element) => {
 						return element.getAttributeOG('integrity')!;
 					},
 				],
@@ -245,8 +258,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['A'],
-			element => {
+			(element) => {
 				if (
 					element.hasAttribute('href') &&
 					element.getAttribute('href') !== ''
@@ -268,12 +280,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			['A'],
 			['href'],
 			[HTMLAnchorElement],
 			{
 				href: [
 					'href',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
@@ -284,8 +297,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['AUDIO', 'SOURCE'],
-			element => {
+			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -302,12 +314,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			['AUDIO', 'SOURCE'],
 			['src'],
 			[HTMLMediaElement, HTMLSourceElement],
 			{
 				src: [
 					'src',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -318,8 +331,7 @@ export class DOMHooksModule extends Module<DocumentClient> {
 		);
 
 		domHooksModule.useAttributes(
-			['BASE'],
-			element => {
+			(element) => {
 				if (
 					element.hasAttribute('href') &&
 					element.getAttribute('href') !== ''
@@ -341,12 +353,13 @@ export class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			['BASE'],
 			['href'],
 			[HTMLBaseElement],
 			{
 				href: [
 					'href',
-					element => {
+					(element) => {
 						return new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()

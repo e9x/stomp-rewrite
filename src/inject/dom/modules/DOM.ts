@@ -85,10 +85,12 @@ export class CustomElement extends Element {
 	}
 }
 
-const nativeNode = {};
-const nativeElement = Object.create(nativeNode);
+export const nativeEventTarget: any = {};
+export const nativeNode = Object.create(nativeEventTarget);
+export const nativeElement = Object.create(nativeNode);
 
 applyDescriptors(nativeNode, Node.prototype);
+applyDescriptors(nativeEventTarget, EventTarget.prototype);
 applyDescriptors(nativeElement, Element.prototype);
 
 Reflect.setPrototypeOf(CustomElement.prototype, nativeElement);
@@ -117,33 +119,34 @@ type ElementCtor = { new (): HTMLElement };
 
 type PropData = [attribute: string, get?: (element: CustomElement) => string];
 
+type HookCallback = (element: CustomElement) => void;
+
 /**
  * Provides a framework for hooking elements
  */
 export default class DOMModule extends Module<DocumentClient> {
 	private attributeHooks: [
 		type: string[],
-		callback: (element: CustomElement) => void,
+		callback: HookCallback,
 		attributes: string[],
 		ctors: ElementCtor[],
 		properties: {
 			[property: string]: PropData;
 		}
 	][];
-	private previousAttributes: WeakMap<Element, Map<string, string>>;
+
 	private trackAttributes: Map<string, Set<string>>;
 	private trackProperties: Map<ElementCtor, Map<string, PropData>>;
 	constructor(client: DocumentClient) {
 		super(client);
 
 		this.attributeHooks = [];
-		this.previousAttributes = new WeakMap();
 		this.trackAttributes = new Map();
 		this.trackProperties = new Map();
 	}
 	useAttributes(
-		elements: string[],
 		callback: (element: CustomElement) => void,
+		elements: string[],
 		attributes: string[],
 		ctors: ElementCtor[] = [],
 		properties: { [property: string]: PropData } = {}
@@ -277,6 +280,35 @@ export default class DOMModule extends Module<DocumentClient> {
 						parseHTMLFragment(args[0])
 					);
 					that.replaceWith(cloned);
+					appendCallback();
+				}
+			),
+		});
+
+		// Element.prototype.getInnerHTML
+
+		const innerHTMLDescriptor = Reflect.getOwnPropertyDescriptor(
+			Element.prototype,
+			'innerHTML'
+		)!;
+
+		Reflect.defineProperty(Element.prototype, 'innerHTML', {
+			enumerable: true,
+			configurable: true,
+			get: proxyModule.wrapFunction(
+				innerHTMLDescriptor.get!,
+				(target, that, args) => {
+					// todo
+					return Reflect.apply(target, that, args);
+				}
+			),
+			set: proxyModule.wrapFunction(
+				innerHTMLDescriptor.set!,
+				(target, that: Element, args) => {
+					const [cloned, appendCallback] = cloneRawNode(
+						parseHTMLFragment(args[0])
+					);
+					that.append(cloned);
 					appendCallback();
 				}
 			),

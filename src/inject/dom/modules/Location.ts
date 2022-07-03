@@ -61,12 +61,19 @@ export default class LocationModule extends Module<DocumentClient> {
 			const urlDescriptor = Reflect.getOwnPropertyDescriptor(
 				URL.prototype,
 				common
-			)!;
+			);
 
 			const locationDescriptor = Reflect.getOwnPropertyDescriptor(
 				location,
 				common
-			)!;
+			);
+
+			if (!urlDescriptor || !locationDescriptor) {
+				console.error(
+					`Common property ${common} was missing on either url or location`
+				);
+				continue;
+			}
 
 			Reflect.defineProperty(proxy, common, {
 				...locationDescriptor,
@@ -93,6 +100,10 @@ export default class LocationModule extends Module<DocumentClient> {
 								}
 
 								const temp = new URL(this.client.location.toString());
+
+								if (common === 'href') {
+									args[0] = new URL(args[0], this.client.url.toString());
+								}
 
 								Reflect.apply(urlDescriptor.set!, temp, args);
 

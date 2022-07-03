@@ -46,6 +46,8 @@ export default class DocumentClient extends Client {
 			const node = document.createElement('div');
 			node.append(cloned);
 
+			console.log(node.innerHTML);
+
 			document.open();
 
 			document.write(

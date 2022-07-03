@@ -82,7 +82,7 @@ export default class FunctionModule extends Module<Client> {
 						code = modifyJS(
 							code,
 							this.client.url,
-							that.client.config,
+							this.client.config,
 							'generic'
 						);
 						args.push(code);
