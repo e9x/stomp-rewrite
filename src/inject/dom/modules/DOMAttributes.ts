@@ -113,19 +113,6 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		/*domHooksModule.useContent(
-			(element) => {
-				console.log(element);
-				element.textContent = modifyJS(
-					element.textContent!,
-					this.client.url,
-					this.client.config,
-					'generic'
-				);
-			},
-			['SCRIPT']
-		);*/
-
 		domHooksModule.useAttributes(
 			(element) => {
 				if (

@@ -5,7 +5,7 @@ import AudioModule from './modules/Audio';
 import { CookiesModule } from './modules/Cookies';
 import DOMModule from './modules/DOM';
 import DOMAttributesModule from './modules/DOMAttributes';
-import DOMContentModule from './modules/DOMContent';
+import DOMStyleModule from './modules/DOMStyle';
 import HistoryModule from './modules/History';
 import IFrameModule from './modules/IFrame';
 import LocationModule from './modules/Location';
@@ -20,7 +20,7 @@ export default createClientFactory(DocumentClient, (client) => {
 	client.addModule(NavigatorModule);
 	client.addModule(LocationModule);
 	client.addModule(DOMAttributesModule);
-	client.addModule(DOMContentModule);
+	client.addModule(DOMStyleModule);
 	client.addModule(DOMModule);
 	client.addModule(IFrameModule);
 	client.addModule(SyncModule);

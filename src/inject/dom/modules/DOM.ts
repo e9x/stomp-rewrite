@@ -8,7 +8,6 @@ import ProxyModule, {
 } from '../../modules/Proxy';
 import DocumentClient from '../Client';
 import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
-import { Property } from 'css-tree';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
 
@@ -86,9 +85,9 @@ export class CustomElement extends Element {
 	}
 }
 
-export const nativeEventTarget: any = {};
-export const nativeNode = Object.create(nativeEventTarget);
-export const nativeElement = Object.create(nativeNode);
+export const nativeEventTarget: EventTarget = <any>{};
+export const nativeNode: Node = Object.create(nativeEventTarget);
+export const nativeElement: HTMLElement = Object.create(nativeNode);
 
 applyDescriptors(nativeNode, Node.prototype);
 applyDescriptors(nativeEventTarget, EventTarget.prototype);
@@ -123,10 +122,16 @@ type PropData = [attribute: string, get?: (element: CustomElement) => string];
 type HookCallback = (element: CustomElement) => void;
 
 type AttributeHook = [nodeName: Element['nodeName'], attribute: string];
+
+/**
+ * This function is called when the property is accessed on the specified element ctor. If false, the next property hook getter will be called until the result is a string.
+ */
+type PropertyHookGetter = (element: CustomElement) => string | false;
+
 type PropertyHook = [
 	ctor: ElementCtor,
 	Property: string,
-	getter: (element: CustomElement) => string | false
+	getter: PropertyHookGetter
 ];
 
 function isAttributeHook(
@@ -249,6 +254,10 @@ export default class DOMModule extends Module<DocumentClient> {
 
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
+		/**
+		 * Etc hooks are here
+		 */
+
 		window.open = proxyModule.wrapFunction(
 			window.open,
 			(target, that, args) => {
@@ -306,34 +315,116 @@ export default class DOMModule extends Module<DocumentClient> {
 			),
 		});
 
-		const outerHTMLDescriptor = Reflect.getOwnPropertyDescriptor(
-			Element.prototype,
-			'outerHTML'
+		/**
+		 * Make sure hooks are triggered instead of unhooked elements being generated.
+		 * Generation being:
+		 * .innerHTML (generates any element)
+		 * .outerHTML
+		 * .innerText (generates Text)
+		 * .outerText
+		 * .textContent
+		 */
+
+		/**
+		 * Text getters can safely be ignored
+		 * Scripts and style text should appear to be unhooked
+		 */
+
+		const scriptTextDescriptor = Reflect.getOwnPropertyDescriptor(
+			HTMLScriptElement.prototype,
+			'text'
 		)!;
 
-		Reflect.defineProperty(Element.prototype, 'outerHTML', {
+		Reflect.defineProperty(HTMLScriptElement.prototype, 'text', {
 			enumerable: true,
 			configurable: true,
-			get: proxyModule.wrapFunction(
-				outerHTMLDescriptor.get!,
-				(target, that, args) => {
-					// todo
-					return Reflect.apply(target, that, args);
-				}
-			),
+			get: scriptTextDescriptor.get,
 			set: proxyModule.wrapFunction(
-				outerHTMLDescriptor.set!,
-				(target, that: Element, args) => {
-					const [cloned, appendCallback] = cloneRawNode(
-						parseHTMLFragment(args[0])
-					);
-					that.replaceWith(cloned);
-					appendCallback();
+				scriptTextDescriptor.set!,
+				(target, that: HTMLScriptElement, args) => {
+					for (const node of that.childNodes) {
+						node.remove();
+					}
+
+					that.append(new Text(args[0]));
 				}
 			),
 		});
 
-		// Element.prototype.getInnerHTML
+		const textContentDescriptor = Reflect.getOwnPropertyDescriptor(
+			Node.prototype,
+			'textContent'
+		)!;
+
+		Reflect.defineProperty(Node.prototype, 'textContent', {
+			enumerable: true,
+			configurable: true,
+			get: textContentDescriptor.get,
+			set: proxyModule.wrapFunction(
+				textContentDescriptor.set!,
+				(target, that: Element, args) => {
+					for (const node of that.childNodes) {
+						node.remove();
+					}
+
+					that.append(new Text(args[0]));
+				}
+			),
+		});
+
+		const innerTextDescriptor = Reflect.getOwnPropertyDescriptor(
+			HTMLElement.prototype,
+			'innerText'
+		)!;
+
+		Reflect.defineProperty(HTMLElement.prototype, 'innerText', {
+			enumerable: true,
+			configurable: true,
+			get: innerTextDescriptor.get,
+			set: proxyModule.wrapFunction(
+				innerTextDescriptor.set!,
+				(target, that: Element, args) => {
+					for (const node of that.childNodes) {
+						node.remove();
+					}
+
+					that.append(new Text(args[0]));
+				}
+			),
+		});
+
+		const outerTextDescriptor = Reflect.getOwnPropertyDescriptor(
+			HTMLElement.prototype,
+			'outerText'
+		)!;
+
+		Reflect.defineProperty(HTMLElement.prototype, 'outerText', {
+			enumerable: true,
+			configurable: true,
+			get: outerTextDescriptor.get,
+			set: proxyModule.wrapFunction(
+				outerTextDescriptor.set!,
+				(target, that: Element, args) => {
+					that.replaceWith(new Text(args[0]));
+				}
+			),
+		});
+
+		/**
+		 * inner and outer HTML need to have their getters hooked
+		 * this will reveal hooked attributes etc
+		 *
+		 * Element.prototype.getInnerHTML
+		 */
+
+		if ('getInnerHTML' in Element.prototype) {
+			(Element.prototype as any).getInnerHTML = proxyModule.wrapFunction(
+				(Element.prototype as any).getInnerHTML as () => string,
+				(target, that) => {
+					return that.innerHTML;
+				}
+			);
+		}
 
 		const innerHTMLDescriptor = Reflect.getOwnPropertyDescriptor(
 			Element.prototype,
@@ -357,6 +448,33 @@ export default class DOMModule extends Module<DocumentClient> {
 						parseHTMLFragment(args[0])
 					);
 					that.append(cloned);
+					appendCallback();
+				}
+			),
+		});
+
+		const outerHTMLDescriptor = Reflect.getOwnPropertyDescriptor(
+			Element.prototype,
+			'outerHTML'
+		)!;
+
+		Reflect.defineProperty(Element.prototype, 'outerHTML', {
+			enumerable: true,
+			configurable: true,
+			get: proxyModule.wrapFunction(
+				outerHTMLDescriptor.get!,
+				(target, that, args) => {
+					// todo
+					return Reflect.apply(target, that, args);
+				}
+			),
+			set: proxyModule.wrapFunction(
+				outerHTMLDescriptor.set!,
+				(target, that: Element, args) => {
+					const [cloned, appendCallback] = cloneRawNode(
+						parseHTMLFragment(args[0])
+					);
+					that.replaceWith(cloned);
 					appendCallback();
 				}
 			),

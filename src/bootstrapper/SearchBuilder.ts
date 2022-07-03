@@ -10,7 +10,7 @@ export default class SearchBuilder {
 		if (HTTP.test(input)) {
 			return input;
 		} else if (HOST.test(input)) {
-			return `https://${input}`;
+			return `http://${input}`;
 		} else {
 			return this.template.replace('%s', encodeURIComponent(input));
 		}

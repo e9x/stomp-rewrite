@@ -2,7 +2,7 @@ import StompURL from '../../../StompURL';
 import { routeHTML } from '../../../rewriteHTML';
 import Module from '../../Module';
 import { setGlobalProxy } from '../../modules/Access';
-import ProxyModule from '../../modules/Proxy';
+import ProxyModule, { invokeGlobal } from '../../modules/Proxy';
 import DocumentClient from '../Client';
 
 /**
@@ -12,7 +12,7 @@ import DocumentClient from '../Client';
 		writable: false,
 		enumerable: true,
 		configurable: false,
-	},
+	},	
 	replace: {
 		value: 'function replace() {\n    [native code]\n}',
 		writable: false,
@@ -136,6 +136,26 @@ export default class LocationModule extends Module<DocumentClient> {
 			),
 			writable: false,
 			enumerable: true,
+			configurable: false,
+		});
+
+		Reflect.defineProperty(proxy, 'toString', {
+			value: proxyModule.wrapFunction(location.assign, (target, that) => {
+				invokeGlobal(that, proxy);
+				return this.client.url.toString();
+			}),
+			writable: false,
+			enumerable: true,
+			configurable: false,
+		});
+
+		Reflect.defineProperty(proxy, 'valueOf', {
+			value: proxyModule.wrapFunction(location.assign, (target, that) => {
+				invokeGlobal(that, proxy);
+				return proxy;
+			}),
+			writable: false,
+			enumerable: false,
 			configurable: false,
 		});
 

@@ -69,7 +69,8 @@ function genericForward(
 		const response = await rewriter.bare.fetch(url.toString(), {
 			method: serverRequest.method,
 			cache: serverRequest.cache,
-			redirect: serverRequest.redirect,
+			redirect: 'manual',
+			// redirect: serverRequest.redirect,
 			body:
 				(!BODY_ILLEGAL.includes(serverRequest.method) &&
 					(await serverRequest.blob())) ||
