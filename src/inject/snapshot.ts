@@ -35,28 +35,30 @@ export const AsyncFunction: FunctionConstructor = <FunctionConstructor>(
 	(async () => undefined).constructor
 );
 
-export function cloneInstance<Instance extends object>(
-	inst: Instance,
-	prototype: object
-): Instance {
-	const clone: Partial<Instance> = {};
-	const descriptors = Object.getOwnPropertyDescriptors(prototype);
+export function bindDescriptors<T extends object>(
+	to: object,
+	bind: T,
+	...inherit: object[]
+): T {
+	for (const object of inherit) {
+		const descriptors = Object.getOwnPropertyDescriptors(object);
 
-	for (const key in descriptors) {
-		const { get, set, value, writable } = descriptors[key];
-		const define: PropertyDescriptor = {};
+		for (const key in descriptors) {
+			const { get, set, value, writable } = descriptors[key];
+			const define: PropertyDescriptor = {};
 
-		if (get) define.get = get.bind(inst);
+			if (get) define.get = get.bind(bind);
 
-		if (set) define.set = set.bind(inst);
+			if (set) define.set = set.bind(bind);
 
-		if (value)
-			define.value = typeof value === 'function' ? value.bind(inst) : value;
+			if (value)
+				define.value = typeof value === 'function' ? value.bind(bind) : value;
 
-		if (typeof writable === 'boolean') define.writable = writable;
+			if (typeof writable === 'boolean') define.writable = writable;
 
-		Reflect.defineProperty(clone, key, define);
+			Reflect.defineProperty(to, key, define);
+		}
 	}
 
-	return <Instance>clone;
+	return <T>to;
 }

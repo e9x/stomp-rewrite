@@ -5,6 +5,12 @@ import Client from '../Client';
 import cloneRawNode, { parseHTML } from './cloneNode';
 import { decode } from 'entities';
 
+const write = document.write;
+
+function documentWrite(script: string) {
+	write.call(document, script);
+}
+
 const getBaseURI = Reflect.getOwnPropertyDescriptor(Node.prototype, 'baseURI')!
 	.get!;
 
@@ -50,7 +56,7 @@ export default class DocumentClient extends Client {
 
 			document.open();
 
-			document.write(
+			documentWrite(
 				(parsed.doctype ? `<!DOCTYPE ${parsed.doctype.name}>` : '') +
 					node.innerHTML
 			);

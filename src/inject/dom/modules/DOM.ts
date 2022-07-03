@@ -8,6 +8,7 @@ import ProxyModule, {
 } from '../../modules/Proxy';
 import DocumentClient from '../Client';
 import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
+import { Property } from 'css-tree';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
 
@@ -121,6 +122,19 @@ type PropData = [attribute: string, get?: (element: CustomElement) => string];
 
 type HookCallback = (element: CustomElement) => void;
 
+type AttributeHook = [nodeName: Element['nodeName'], attribute: string];
+type PropertyHook = [
+	ctor: ElementCtor,
+	Property: string,
+	getter: (element: CustomElement) => string | false
+];
+
+function isAttributeHook(
+	hook: AttributeHook | PropertyHook
+): hook is AttributeHook {
+	return typeof hook[0] === 'string';
+}
+
 /**
  * Provides a framework for hooking elements
  */
@@ -134,17 +148,17 @@ export default class DOMModule extends Module<DocumentClient> {
 			[property: string]: PropData;
 		}
 	][];
-
-	private trackAttributes: Map<string, Set<string>>;
-	private trackProperties: Map<ElementCtor, Map<string, PropData>>;
+	private hooks: {
+		hook: AttributeHook | PropertyHook;
+		callback: HookCallback;
+	}[];
 	constructor(client: DocumentClient) {
 		super(client);
 
 		this.attributeHooks = [];
-		this.trackAttributes = new Map();
-		this.trackProperties = new Map();
+		this.hooks = [];
 	}
-	useAttributes(
+	/*useAttributes(
 		callback: (element: CustomElement) => void,
 		elements: string[],
 		attributes: string[],
@@ -167,12 +181,16 @@ export default class DOMModule extends Module<DocumentClient> {
 			}
 
 			for (const property in properties) {
-				if (this.trackProperties.get(ctor)!.has(property)) {
+				if (!this.trackProperties.get(ctor)!.has(property)) {
+					this.trackProperties.get(ctor)!.set(property, []);
 					console.error(this.trackProperties.get(ctor), property);
 					throw new Error(`Property hooks cannot overlap.`);
 				}
 
-				this.trackProperties.get(ctor)!.set(property, properties[property]);
+				this.trackProperties
+					.get(ctor)!
+					.get(property)!
+					.push(properties[property]);
 			}
 		}
 
@@ -183,14 +201,44 @@ export default class DOMModule extends Module<DocumentClient> {
 			ctors,
 			properties,
 		]);
+	}*/
+	useAttributes(
+		callback: HookCallback,
+		hooks: (AttributeHook | PropertyHook)[]
+	) {
+		for (const hook of hooks) {
+			this.hooks.push({
+				callback,
+				hook,
+			});
+		}
 	}
-	private updateAttributeHooks(element: CustomElement, updated: string) {
-		for (const hook of this.attributeHooks) {
-			if (!hook[0].includes(element.nodeName)) continue;
+	private updateAttributeHooks(element: CustomElement, attribute: string) {
+		for (const entry of this.hooks) {
+			if (
+				!isAttributeHook(entry.hook) ||
+				entry.hook[0] !== element.nodeName ||
+				entry.hook[1] !== attribute
+			)
+				continue;
 
-			if (hook[2].includes(updated)) {
-				hook[1](element);
-			}
+			entry.callback(element);
+		}
+	}
+	private updatePropertyHooks(
+		element: CustomElement,
+		ctor: ElementCtor,
+		property: string
+	) {
+		for (const entry of this.hooks) {
+			if (
+				isAttributeHook(entry.hook) ||
+				entry.hook[0] !== ctor ||
+				entry.hook[1] !== property
+			)
+				continue;
+
+			entry.callback(element);
 		}
 	}
 	apply() {
@@ -344,17 +392,25 @@ export default class DOMModule extends Module<DocumentClient> {
 				usePrototype(that, CustomElement.prototype, (element) => {
 					element.setAttribute(attribute, value);
 
-					if (!this.trackAttributes.get(element.nodeName)?.has(attribute)) {
-						return;
-					}
-
 					this.updateAttributeHooks(element, attribute);
 				});
 			}
 		);
 
-		for (const [ctor, properties] of this.trackProperties) {
-			for (const [property, propData] of properties) {
+		const trackProperties = new Map<ElementCtor, Set<string>>();
+
+		for (const entry of this.hooks) {
+			if (isAttributeHook(entry.hook)) continue;
+
+			if (!trackProperties.has(entry.hook[0])) {
+				trackProperties.set(entry.hook[0], new Set());
+			}
+
+			trackProperties.get(entry.hook[0])!.add(entry.hook[1]);
+		}
+
+		for (const [ctor, properties] of trackProperties) {
+			for (const property of properties) {
 				const descriptor = Reflect.getOwnPropertyDescriptor(
 					ctor.prototype,
 					property
@@ -371,29 +427,39 @@ export default class DOMModule extends Module<DocumentClient> {
 						descriptor.get!,
 						(target, that, args) => {
 							return usePrototype(that, CustomElement.prototype, (element) => {
-								if (propData[1]) {
-									return propData[1](element);
-								} else {
-									return Reflect.apply(target, that, args);
+								for (const entry of this.hooks) {
+									if (isAttributeHook(entry.hook)) continue;
+
+									const result = entry.hook[2](element);
+
+									if (result === false) continue;
+
+									return result;
 								}
+
+								return Reflect.apply(target, that, args);
 							});
 						}
 					),
 					set: proxyModule.wrapFunction(
 						descriptor.set!,
 						(target, that, args) => {
-							const [value] = args;
+							// properties are only set at the end of the stack
+							// attributes differ because they will immediately have an effect and will overrule properties set in the same stack
+
+							Reflect.apply(target, that, args);
 
 							usePrototype(that, CustomElement.prototype, (element) => {
-								element.setAttribute(propData[0], value);
-
-								if (
-									!this.trackAttributes.get(element.nodeName)?.has(propData[0])
-								)
-									return;
-
-								this.updateAttributeHooks(element, propData[0]);
+								this.updatePropertyHooks(element, ctor, property);
 							});
+
+							// getter isn't stack based and we can use this to make the attribute immediately take effect
+
+							// equivalent to
+							// i.src = i.src
+							Reflect.apply(target, that, [
+								Reflect.apply(descriptor.get!, that, []),
+							]);
 						}
 					),
 				});

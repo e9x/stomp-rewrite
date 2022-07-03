@@ -1,7 +1,7 @@
 import StompURL from '../../../StompURL';
 import { routeCSS } from '../../../rewriteCSS';
 import { modifyRefresh, routeHTML } from '../../../rewriteHTML';
-import { modifyJS, routeJS } from '../../../rewriteJS';
+import { routeJS } from '../../../rewriteJS';
 import { routeManifest } from '../../../rewriteManifest';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
@@ -11,6 +11,107 @@ import DOMModule from './DOM';
 export default class DOMHooksModule extends Module<DocumentClient> {
 	apply() {
 		const domHooksModule = this.client.getModule(DOMModule)!;
+
+		domHooksModule.useAttributes(
+			(element) => {
+				if (
+					element.hasAttribute('href') &&
+					element.getAttribute('href') !== ''
+				) {
+					element.setAttributeOG('href', element.getAttribute('href')!);
+					element.setAttribute(
+						'href',
+						routeHTML(
+							new StompURL(
+								new URL(
+									element.getAttribute('href')!,
+									this.client.url.toString()
+								),
+								this.client.url
+							),
+							this.client.url,
+							this.client.config
+						)
+					);
+				}
+			},
+			[
+				['A', 'href'],
+				[
+					HTMLAnchorElement,
+					'href',
+					(element) => {
+						return new URL(
+							element.getAttributeOG('href')!,
+							this.client.url.toString()
+						).toString();
+					},
+				],
+			]
+		);
+
+		domHooksModule.useAttributes(
+			(element) => {
+				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
+					element.setAttributeOG('src', element.getAttribute('src')!);
+					element.setAttribute(
+						'src',
+						routeJS(
+							new StompURL(
+								new URL(
+									element.getAttribute('src')!,
+									this.client.url.toString()
+								),
+								this.client.url
+							),
+							this.client.url,
+							this.client.config,
+							element.getAttribute('type') === 'module'
+								? 'genericModule'
+								: 'generic'
+						)
+					);
+				}
+			},
+			[
+				['SCRIPT', 'src'],
+				[
+					HTMLScriptElement,
+					'src',
+					(element) =>
+						new URL(
+							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString(),
+				],
+			]
+		);
+
+		domHooksModule.useAttributes(
+			(element) => {
+				if (element.hasAttribute('integrity')) {
+					element.setAttributeOG(
+						'integrity',
+						element.getAttribute('integrity')!
+					);
+					element.removeAttribute('integrity');
+				}
+			},
+			[
+				['LINK', 'integrity'],
+				['SCRIPT', 'integrity'],
+				[
+					HTMLLinkElement,
+					'integrity',
+					(element) => element.getAttributeOG('integrity')!,
+				],
+				[
+					HTMLScriptElement,
+					'integrity',
+					(element) => element.getAttributeOG('integrity')!,
+				],
+			]
+		);
 
 		/*domHooksModule.useContent(
 			(element) => {
@@ -84,21 +185,28 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					}
 				}
 			},
-			['LINK'],
-			['href', 'rel'],
-			[HTMLLinkElement],
-			{
-				rel: ['rel'],
-				href: [
+			[
+				['LINK', 'href'],
+				['LINK', 'rel'],
+				[
+					HTMLLinkElement,
 					'href',
-					(element) => {
-						return new URL(
+					(element) =>
+						new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
-			}
+				[
+					HTMLLinkElement,
+					'rel',
+					(element) =>
+						new URL(
+							element.getAttributeOG('href')!,
+							this.client.url.toString()
+						).toString(),
+				],
+			]
 		);
 
 		// todo: mimes...?
@@ -124,20 +232,29 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
-			['IFRAME', 'EMBED'],
-			['src'],
-			[HTMLIFrameElement, HTMLEmbedElement],
-			{
-				src: [
+			[
+				['IFRAME', 'src'],
+				['EMBED', 'src'],
+				[
+					HTMLIFrameElement,
 					'src',
-					(element) => {
-						return new URL(
+					(element) =>
+						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
-			}
+
+				[
+					HTMLEmbedElement,
+					'src',
+					(element) =>
+						new URL(
+							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString(),
+				],
+			]
 		);
 
 		domHooksModule.useAttributes(
@@ -158,20 +275,19 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
-			['META'],
-			['content', 'http-equiv'],
-			[HTMLMetaElement],
-			{
-				content: [
+			[
+				['META', 'content'],
+				['META', 'http-equiv'],
+				[
+					HTMLMetaElement,
 					'content',
-					(element) => {
-						return new URL(
+					(element) =>
+						new URL(
 							element.getAttributeOG('content')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
-			}
+			]
 		);
 
 		domHooksModule.useAttributes(
@@ -192,20 +308,18 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
-			['IMG'],
-			['src'],
-			[HTMLImageElement],
-			{
-				src: [
+			[
+				['IMG', 'src'],
+				[
+					HTMLImageElement,
 					'src',
-					(element) => {
-						return new URL(
+					(element) =>
+						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
-			}
+			]
 		);
 
 		domHooksModule.useAttributes(
@@ -214,47 +328,40 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
 						'src',
-						routeJS(
+						routeBinary(
 							new StompURL(
 								new URL(
-									element.getAttribute('src')!,
+									element.getAttribute('href')!,
 									this.client.url.toString()
 								),
 								this.client.url
-							),
-							this.client.url,
-							this.client.config,
-							element.getAttribute('type') === 'module'
-								? 'genericModule'
-								: 'generic'
+							)
 						)
 					);
 				}
-
-				if (element.hasAttribute('integrity')) {
-					element.removeAttribute('integrity');
-				}
 			},
-			['SCRIPT'],
-			['src', 'integrity'],
-			[HTMLScriptElement],
-			{
-				src: [
+			[
+				['AUDIO', 'src'],
+				['SOURCE', 'src'],
+				[
+					HTMLMediaElement,
 					'src',
-					(element) => {
-						return new URL(
+					(element) =>
+						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
-				integrity: [
-					'integrity',
-					(element) => {
-						return element.getAttributeOG('integrity')!;
-					},
+				[
+					HTMLSourceElement,
+					'src',
+					(element) =>
+						new URL(
+							element.getAttributeOG('src')!,
+							this.client.url.toString()
+						).toString(),
 				],
-			}
+			]
 		);
 
 		domHooksModule.useAttributes(
@@ -280,93 +387,18 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					);
 				}
 			},
-			['A'],
-			['href'],
-			[HTMLAnchorElement],
-			{
-				href: [
+			[
+				['BASE', 'href'],
+				[
+					HTMLBaseElement,
 					'href',
-					(element) => {
-						return new URL(
+					(element) =>
+						new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
-			}
-		);
-
-		domHooksModule.useAttributes(
-			(element) => {
-				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
-					element.setAttributeOG('src', element.getAttribute('src')!);
-					element.setAttribute(
-						'src',
-						routeBinary(
-							new StompURL(
-								new URL(
-									element.getAttribute('href')!,
-									this.client.url.toString()
-								),
-								this.client.url
-							)
-						)
-					);
-				}
-			},
-			['AUDIO', 'SOURCE'],
-			['src'],
-			[HTMLMediaElement, HTMLSourceElement],
-			{
-				src: [
-					'src',
-					(element) => {
-						return new URL(
-							element.getAttributeOG('src')!,
-							this.client.url.toString()
-						).toString();
-					},
-				],
-			}
-		);
-
-		domHooksModule.useAttributes(
-			(element) => {
-				if (
-					element.hasAttribute('href') &&
-					element.getAttribute('href') !== ''
-				) {
-					element.setAttributeOG('href', element.getAttribute('href')!);
-					element.setAttribute(
-						'href',
-						routeHTML(
-							new StompURL(
-								new URL(
-									element.getAttribute('href')!,
-									this.client.url.toString()
-								),
-								this.client.url
-							),
-							this.client.url,
-							this.client.config
-						)
-					);
-				}
-			},
-			['BASE'],
-			['href'],
-			[HTMLBaseElement],
-			{
-				href: [
-					'href',
-					(element) => {
-						return new URL(
-							element.getAttributeOG('href')!,
-							this.client.url.toString()
-						).toString();
-					},
-				],
-			}
+			]
 		);
 	}
 }

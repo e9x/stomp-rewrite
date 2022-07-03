@@ -39,7 +39,7 @@ export default class DOMContentModule extends Module<DocumentClient> {
 					if (!(node instanceof HTMLStyleElement)) continue;
 
 					if (node.dataset[pendingRenderRewrite]) {
-						delete node.dataset.pendingRenderRewrite;
+						delete node.dataset[pendingRenderRewrite];
 
 						usePrototype(node, nativeHTMLStyleElement, (style) => {
 							rewriteSheet(style.sheet!);
