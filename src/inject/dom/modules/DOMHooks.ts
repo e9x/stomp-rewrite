@@ -144,15 +144,6 @@ function isAttributeHook(
  * Provides a framework for hooking elements
  */
 export default class DOMHooksModule extends Module<DocumentClient> {
-	private attributeHooks: [
-		type: string[],
-		callback: HookCallback,
-		attributes: string[],
-		ctors: ElementCtor[],
-		properties: {
-			[property: string]: PropData;
-		}
-	][];
 	private hooks: {
 		hook: AttributeHook | PropertyHook;
 		callback: HookCallback;
@@ -160,7 +151,6 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 	constructor(client: DocumentClient) {
 		super(client);
 
-		this.attributeHooks = [];
 		this.hooks = [];
 	}
 	/*useAttributes(
