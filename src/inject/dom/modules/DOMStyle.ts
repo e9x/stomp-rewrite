@@ -61,28 +61,18 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 			});
 			element.setAttribute((element as any)[Symbol.toStringTag], 'TEST');
 			compositeElements.set(element, createComposite);
-
-			console.trace(
-				'composite',
-				element,
-				element.isConnected,
-				Object.fromEntries(compositeElements)
-			);
 		}
 
 		const rewriteStyle = (style: HTMLStyleElement) => {
 			if (getGlobalParsingState() === 'parsingBeforeWrite') {
 				// once everything is finalized and off the alternative parse stack
 
-				console.log(style.textContent);
-
 				if (style.textContent) {
 					compositeElement(style, () => {
-						console.trace('composite gets called...');
 						const script = document.createElement('script');
 
 						usePrototype(script, nativeHTMLScriptElement, (script) => {
-							script.textContent = `console.log('setting outerhtml...'); document.currentScript.outerHTML=${JSON.stringify(
+							script.textContent = `document.currentScript.outerHTML=${JSON.stringify(
 								style.outerHTML
 							)}`;
 						});
@@ -96,12 +86,6 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 
 			// not in document
 			if (!style.sheet) {
-				console.trace(
-					style,
-					style.textContent,
-					'not connected',
-					getGlobalParsingState()
-				);
 				// eventually we'll catch a connected style
 				return;
 			}
@@ -128,12 +112,10 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 				!script.isConnected &&
 				getGlobalParsingState() !== 'parsingBeforeWrite'
 			) {
-				console.log(script, getGlobalParsingState());
 				// eventually we'll catch a connected script
 				return;
 			}
 
-			// console.log(script.textContent);
 			/*document.currentScript.textContent = ${JSON.stringify(
 				script.textContent
 			)};*/
@@ -236,7 +218,7 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 						!(error instanceof Error) ||
 						!error.message.includes('.querySelectorAll')
 					) {
-						console.log(error, inserted);
+						console.error(error, inserted);
 					}
 				}
 
@@ -253,7 +235,7 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 						!(error instanceof Error) ||
 						!error.message.includes('.querySelectorAll')
 					) {
-						console.log(error, inserted);
+						console.error(error, inserted);
 					}
 				}
 
