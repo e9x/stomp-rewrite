@@ -28,7 +28,8 @@
 		"meriyah": "^4.2.1",
 		"meriyah-loose": "github:sysce/meriyah-loose",
 		"parse5": "^7.0.0",
-		"set-cookie-parser": "^2.5.0"
+		"set-cookie-parser": "^2.5.0",
+		"srcset": "^5.0.0"
 	},
 	"devDependencies": {
 		"@ianvs/prettier-plugin-sort-imports": "^3.4.2",

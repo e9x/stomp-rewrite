@@ -7,6 +7,7 @@ import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
 import DOMModule, { CustomElement } from './DOM';
+import { parseSrcset, stringifySrcset } from 'srcset';
 
 export default class DOMAttributesModule extends Module<DocumentClient> {
 	formHook?: (element: CustomElement, appendHook?: boolean) => void;
@@ -300,6 +301,48 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 							this.client.url.toString()
 						).toString(),
 				],
+			]
+		);
+
+		domModule.useAttributes(
+			(element) => {
+				if (
+					element.hasAttribute('srcset') &&
+					element.getAttribute('srcset') !== ''
+				) {
+					element.setAttributeOG('srcset', element.getAttribute('srcset')!);
+
+					const parsed = parseSrcset(element.getAttribute('srcset')!);
+					const updated: { url: string; width?: number; density?: number }[] =
+						[];
+
+					for (const src of parsed) {
+						updated.push({
+							...src,
+							url: routeBinary(
+								new StompURL(
+									new URL(src.url, this.client.url.toString()),
+									this.client.url
+								)
+							),
+						});
+					}
+
+					element.setAttribute('srcset', stringifySrcset(updated));
+				}
+			},
+			[
+				['IMG', 'srcset'],
+				['SOURCE', 'srcset'],
+				[
+					HTMLImageElement,
+					'srcset',
+					(element) =>
+						element.hasAttribute('srcset') &&
+						element.getAttribute('srcset') !== '' &&
+						element.getAttributeOG('srcset')!,
+				],
+				// HTMLSourceElement
 			]
 		);
 
