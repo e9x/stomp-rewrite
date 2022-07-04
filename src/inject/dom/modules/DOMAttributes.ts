@@ -42,12 +42,13 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 				[
 					HTMLAnchorElement,
 					'href',
-					(element) => {
-						return new URL(
+					(element) =>
+						element.hasAttribute('href') &&
+						element.getAttribute('href') !== '' &&
+						new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
-						).toString();
-					},
+						).toString(),
 				],
 			]
 		);
@@ -81,6 +82,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLScriptElement,
 					'src',
 					(element) =>
+						element.hasAttribute('src') &&
+						element.getAttribute('src') !== '' &&
 						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -105,12 +108,18 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 				[
 					HTMLLinkElement,
 					'integrity',
-					(element) => element.getAttributeOG('integrity')!,
+					(element) =>
+						element.hasAttribute('integrity') &&
+						element.getAttribute('integrity') !== '' &&
+						element.getAttributeOG('integrity')!,
 				],
 				[
 					HTMLScriptElement,
 					'integrity',
-					(element) => element.getAttributeOG('integrity')!,
+					(element) =>
+						element.hasAttribute('integrity') &&
+						element.getAttribute('integrity') !== '' &&
+						element.getAttributeOG('integrity')!,
 				],
 			]
 		);
@@ -181,6 +190,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLLinkElement,
 					'href',
 					(element) =>
+						element.hasAttribute('href') &&
+						element.getAttribute('href') !== '' &&
 						new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
@@ -220,6 +231,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLIFrameElement,
 					'src',
 					(element) =>
+						element.hasAttribute('src') &&
+						element.getAttribute('src') !== '' &&
 						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -230,6 +243,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLEmbedElement,
 					'src',
 					(element) =>
+						element.hasAttribute('src') &&
+						element.getAttribute('src') !== '' &&
 						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -263,6 +278,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLMetaElement,
 					'content',
 					(element) =>
+						element.hasAttribute('content') &&
+						element.getAttribute('content') !== '' &&
 						new URL(
 							element.getAttributeOG('content')!,
 							this.client.url.toString()
@@ -296,6 +313,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLImageElement,
 					'src',
 					(element) =>
+						element.hasAttribute('src') &&
+						element.getAttribute('src') !== '' &&
 						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -373,11 +392,14 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			},
 			[
 				['AUDIO', 'src'],
+				['VIDEO', 'src'],
 				['SOURCE', 'src'],
 				[
 					HTMLMediaElement,
 					'src',
 					(element) =>
+						element.hasAttribute('src') &&
+						element.getAttribute('src') !== '' &&
 						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -387,6 +409,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLSourceElement,
 					'src',
 					(element) =>
+						element.hasAttribute('src') &&
+						element.getAttribute('src') !== '' &&
 						new URL(
 							element.getAttributeOG('src')!,
 							this.client.url.toString()
@@ -516,6 +540,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					HTMLBaseElement,
 					'href',
 					(element) =>
+						element.hasAttribute('href') &&
+						element.getAttribute('href') !== '' &&
 						new URL(
 							element.getAttributeOG('href')!,
 							this.client.url.toString()
