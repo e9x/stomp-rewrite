@@ -8,6 +8,7 @@ import DOMAttributesModule from './modules/DOMAttributes';
 import DOMStyleModule from './modules/DOMStyle';
 import HistoryModule from './modules/History';
 import IFrameModule from './modules/IFrame';
+import ImageModule from './modules/Image';
 import LocationModule from './modules/Location';
 import NavigatorModule from './modules/Navigator';
 import StorageModule from './modules/Storage';
@@ -24,6 +25,7 @@ export default createClientFactory(DocumentClient, (client) => {
 	client.addModule(DOMModule);
 	client.addModule(IFrameModule);
 	client.addModule(SyncModule);
+	client.addModule(ImageModule);
 	client.addModule(AudioModule);
 	client.addModule(StorageModule);
 	client.addModule(XMLHttpRequestModule);

@@ -4,12 +4,12 @@ import Module from '../../Module';
 import ProxyModule from '../../modules/Proxy';
 import DocumentClient from '../Client';
 
-export default class AudioModule extends Module<DocumentClient> {
+export default class ImageModule extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
-		global.Audio = proxyModule.wrapFunction(
-			global.Audio,
+		global.Image = proxyModule.wrapFunction(
+			global.Image,
 			(target, that, args, newTarget) => {
 				if (isUrlLike(args[0])) {
 					args[0] = routeBinary(

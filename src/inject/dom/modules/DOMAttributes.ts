@@ -1,5 +1,5 @@
 import StompURL from '../../../StompURL';
-import { routeCSS } from '../../../rewriteCSS';
+import { modifyCSS, routeCSS } from '../../../rewriteCSS';
 import { modifyRefresh, routeHTML } from '../../../rewriteHTML';
 import { routeJS } from '../../../rewriteJS';
 import { routeManifest } from '../../../rewriteManifest';
@@ -342,7 +342,14 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 						element.getAttribute('srcset') !== '' &&
 						element.getAttributeOG('srcset')!,
 				],
-				// HTMLSourceElement
+				[
+					HTMLSourceElement,
+					'srcset',
+					(element) =>
+						element.hasAttribute('srcset') &&
+						element.getAttribute('srcset') !== '' &&
+						element.getAttributeOG('srcset')!,
+				],
 			]
 		);
 
@@ -386,6 +393,26 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 						).toString(),
 				],
 			]
+		);
+
+		domModule.useAttributes(
+			(element) => {
+				if (
+					element.hasAttribute('style') &&
+					element.getAttribute('style') !== ''
+				) {
+					element.setAttributeOG('style', element.getAttribute('style')!);
+					element.setAttribute(
+						'style',
+						modifyCSS(
+							element.getAttributeOG('style')!,
+							this.client.url,
+							'declarationList'
+						)
+					);
+				}
+			},
+			[[HTMLElement, 'style', () => false]]
 		);
 
 		const validMethods = ['GET', 'POST'];
