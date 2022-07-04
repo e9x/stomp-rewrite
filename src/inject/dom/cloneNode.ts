@@ -23,25 +23,12 @@ const STACK_FINALIZE = Symbol();
 type stackIterateData = [child: Node, target: ParentNode];
 type stackFinalizeData = [parent: ParentNode, node: Node];
 
-type AfterAppendCallback = () => void;
-
-function afterAppendCallback(this: Map<HTMLElement, HTMLElement>) {
-	// when working with the DOM, scripts may be deferred and only ran once the document has been parsed
-	for (const [element, replaceWith] of this) {
-		element.replaceWith(replaceWith);
-	}
-}
-
 /**
  * Clones or re-creates the node using the hooked DOM apis
  * @param node Node to clone
  * @param target Destination for the cloned node
  */
-export default function cloneRawNode(
-	fragment: ParentNode
-): [cloned: DocumentFragment, appendCallback: AfterAppendCallback] {
-	const replaceAfterParse = new Map<HTMLElement, HTMLElement>();
-
+export default function cloneRawNode(fragment: ParentNode): DocumentFragment {
 	const tempTarget = document.createDocumentFragment();
 
 	const stack: [symbol, ...(stackIterateData | stackFinalizeData)][] = [];
@@ -64,8 +51,11 @@ export default function cloneRawNode(
 				{
 					const d = data as stackIterateData;
 
-					if (d[0] instanceof Text || d[0] instanceof Comment) {
-						d[1].append(d[0]);
+					if (d[0] instanceof Text) {
+						d[1].append(new Text(d[0].nodeValue!));
+						continue;
+					} else if (d[0] instanceof Comment) {
+						d[1].append(new Comment(d[0].nodeValue!));
 						continue;
 					}
 
@@ -84,16 +74,7 @@ export default function cloneRawNode(
 						stack.push([STACK_ITERATE, child, target]);
 					}
 
-					if (
-						target instanceof HTMLScriptElement &&
-						target.hasAttribute('defer')
-					) {
-						const placeholder = document.createElement('div');
-						replaceAfterParse.set(placeholder, target);
-						stack.push([STACK_FINALIZE, d[1], placeholder]);
-					} else {
-						stack.push([STACK_FINALIZE, d[1], target]);
-					}
+					stack.push([STACK_FINALIZE, d[1], target]);
 				}
 				break;
 			case STACK_FINALIZE:
@@ -105,5 +86,5 @@ export default function cloneRawNode(
 		}
 	}
 
-	return [tempTarget, afterAppendCallback.bind(replaceAfterParse)];
+	return tempTarget;
 }

@@ -56,12 +56,13 @@ export default class DocumentClient extends Client {
 		const parsed = parseHTML(decode(script));
 		const fragment = document.createDocumentFragment();
 		fragment.append(parsed.documentElement);
-		const [cloned, appendCallback] = cloneRawNode(fragment);
 
 		document.documentElement.remove();
 
 		const node = document.createElement('div');
-		node.append(cloned);
+		node.append(cloneRawNode(fragment));
+
+		setGlobalParsingState();
 
 		for (const script of node.querySelectorAll('script')) {
 			if (script.text) {
@@ -85,8 +86,5 @@ export default class DocumentClient extends Client {
 
 			document.close();
 		});
-		setGlobalParsingState();
-
-		appendCallback();
 	}
 }

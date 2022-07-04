@@ -444,11 +444,11 @@ export default class DOMModule extends Module<DocumentClient> {
 			set: proxyModule.wrapFunction(
 				innerHTMLDescriptor.set!,
 				(target, that: Element, args) => {
-					const [cloned, appendCallback] = cloneRawNode(
-						parseHTMLFragment(args[0])
-					);
-					that.append(cloned);
-					appendCallback();
+					for (const node of that.childNodes) {
+						node.remove();
+					}
+
+					that.append(cloneRawNode(parseHTMLFragment(args[0])));
 				}
 			),
 		});
@@ -471,11 +471,7 @@ export default class DOMModule extends Module<DocumentClient> {
 			set: proxyModule.wrapFunction(
 				outerHTMLDescriptor.set!,
 				(target, that: Element, args) => {
-					const [cloned, appendCallback] = cloneRawNode(
-						parseHTMLFragment(args[0])
-					);
-					that.replaceWith(cloned);
-					appendCallback();
+					that.replaceWith(cloneRawNode(parseHTMLFragment(args[0])));
 				}
 			),
 		});

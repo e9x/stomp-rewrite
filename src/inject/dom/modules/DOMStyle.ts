@@ -6,16 +6,16 @@ import ProxyModule, {
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient, { getGlobalParsingState } from '../Client';
-import { CustomElement, nativeElement, nativeNode } from './DOM';
+import { nativeElement, nativeNode } from './DOM';
 
 export const nativeHTMLElement: HTMLElement = Object.create(nativeElement);
 export const nativeHTMLStyleElement: HTMLStyleElement =
 	Object.create(nativeHTMLElement);
 export const nativeHTMLScriptElement: HTMLScriptElement =
 	Object.create(nativeHTMLElement);
-export const nativeText: Text = Object.create(nativeNode);
+export const nativeCharacterData: CharacterData = Object.create(nativeNode);
 
-applyDescriptors(nativeText, Text.prototype);
+applyDescriptors(nativeCharacterData, Text.prototype);
 applyDescriptors(nativeHTMLElement, HTMLElement.prototype);
 applyDescriptors(nativeHTMLStyleElement, HTMLStyleElement.prototype);
 applyDescriptors(nativeHTMLScriptElement, HTMLScriptElement.prototype);
@@ -24,7 +24,9 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
-		const observer = new MutationObserver((mutations) => {
+		const compositeElements = new Map<Element, () => Element>(); // new WeakMap<Element, () => Element>();
+
+		/*const observer = new MutationObserver((mutations) => {
 			for (const mutation of mutations) {
 				for (const node of [...mutation.addedNodes, ...mutation.removedNodes]) {
 					usePrototype(node, nativeNode, (node) => {
@@ -43,15 +45,57 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 		});
 
 		observer.observe(document, {
-			childList: true,
 			subtree: true,
-			characterData: true,
-		});
+			childList: true,
+		});*/
 
 		const rewrittenRule = Symbol();
 
+		function compositeElement(
+			element: Element,
+			createComposite: () => Element
+		) {
+			element.replaceWith(createComposite());
+			Reflect.defineProperty(element, Symbol.toStringTag, {
+				value: 'abc' + Math.random().toString(36).slice(2),
+			});
+			element.setAttribute((element as any)[Symbol.toStringTag], 'TEST');
+			compositeElements.set(element, createComposite);
+
+			console.trace(
+				'composite',
+				element,
+				element.isConnected,
+				Object.fromEntries(compositeElements)
+			);
+		}
+
 		const rewriteStyle = (style: HTMLStyleElement) => {
-			if (!style.isConnected) {
+			if (getGlobalParsingState() === 'parsingBeforeWrite') {
+				// once everything is finalized and off the alternative parse stack
+
+				console.log(style.textContent);
+
+				if (style.textContent) {
+					compositeElement(style, () => {
+						console.trace('composite gets called...');
+						const script = document.createElement('script');
+
+						usePrototype(script, nativeHTMLScriptElement, (script) => {
+							script.textContent = `console.log('setting outerhtml...'); document.currentScript.outerHTML=${JSON.stringify(
+								style.outerHTML
+							)}`;
+						});
+
+						return script;
+					});
+				}
+
+				return;
+			}
+
+			// not in document
+			if (!style.sheet) {
 				console.trace(
 					style,
 					style.textContent,
@@ -101,31 +145,33 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 			)}`;
 		};
 
-		function textUpdated(element: Text) {
-			usePrototype(element, nativeText, (text) => {
-				if (!text.parentNode) {
-					return;
-				}
+		function cdUpdated(element: CharacterData, parent?: Element | null) {
+			if (!parent) return;
 
-				usePrototype(text.parentNode, CustomElement.prototype, (parent) => {
-					if (parent.nodeName !== 'STYLE') return;
+			usePrototype(parent, nativeElement, (element) => {
+				if (element.nodeName !== 'STYLE') return;
 
-					usePrototype(parent, nativeHTMLStyleElement, (style) =>
-						rewriteStyle(style)
-					);
-				});
+				usePrototype(element, nativeHTMLStyleElement, (style) =>
+					rewriteStyle(style)
+				);
 			});
 		}
 
-		// 'remove' is a bad hook, can't figure out what the style owner is
-		for (const triggersRender of ['replaceWith', 'replaceData']) {
+		for (const triggersRender of ['replaceWith', 'replaceData', 'remove']) {
 			(CharacterData.prototype as any)[triggersRender] =
 				proxyModule.wrapFunction(
 					(CharacterData.prototype as any)[triggersRender],
-					(target, that, args) => {
+					(target, that: CharacterData, args) => {
+						// will be null after remove()
+						const parent = usePrototype(
+							that,
+							nativeCharacterData,
+							(cd) => cd.parentElement
+						);
+
 						const result = Reflect.apply(target, that, args);
 
-						textUpdated(that);
+						cdUpdated(that, parent);
 
 						return result;
 					}
@@ -143,10 +189,10 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 			get: dataDescriptor.get,
 			set: proxyModule.wrapFunction(
 				dataDescriptor.set!,
-				(target, that, args) => {
+				(target, that: CharacterData, args) => {
 					Reflect.apply(target, that, args);
 
-					textUpdated(that);
+					cdUpdated(that);
 				}
 			),
 		});
@@ -163,12 +209,11 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 				set: proxyModule.wrapFunction(descriptor.set!, (target, that, args) => {
 					Reflect.apply(target, that, args);
 
-					textUpdated(that);
+					cdUpdated(that);
 				}),
 			});
 		}
 
-		// eslint-disable-next-line @typescript-eslint/ban-types
 		const willInsertNode = (x: (inserted: Node, ...args: any[]) => any) =>
 			proxyModule.wrapFunction(x, (target, that, args) => {
 				const inserted: Element = args[0];
@@ -185,27 +230,65 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 							usePrototype(script, nativeHTMLScriptElement, (script) =>
 								rewriteScript(script)
 							);
+					// });
 				} catch (error) {
-					// console.log(inserted);
-					// may be an incompatible interface, we don't know
+					if (
+						!(error instanceof Error) ||
+						!error.message.includes('.querySelectorAll')
+					) {
+						console.log(error, inserted);
+					}
+				}
+
+				const styles: HTMLStyleElement[] = [];
+
+				// if inserted is a DocumentFragment, its childNodes will be cleared upon insertion
+				// we need to snapshot the childNodes or run a query before its childNodes are cleared
+				try {
+					for (const style of inserted.querySelectorAll('style')) {
+						styles.push(style);
+					}
+				} catch (error) {
+					if (
+						!(error instanceof Error) ||
+						!error.message.includes('.querySelectorAll')
+					) {
+						console.log(error, inserted);
+					}
 				}
 
 				const result = Reflect.apply(target, that, args);
 
-				// catch style being appended
-
-				try {
-					if (inserted.nodeName === 'STYLE') {
-						usePrototype(inserted, nativeHTMLStyleElement, (style) =>
+				if (inserted.nodeName === 'STYLE')
+					usePrototype(inserted, nativeHTMLStyleElement, (style) =>
+						rewriteStyle(style)
+					);
+				else {
+					for (const style of styles) {
+						usePrototype(style, nativeHTMLStyleElement, (style) =>
 							rewriteStyle(style)
 						);
-					} else
-						for (const style of inserted.querySelectorAll('style'))
-							usePrototype(style, nativeHTMLStyleElement, (style) =>
-								rewriteStyle(style)
-							);
+					}
+				}
+
+				// element such as text was inserted
+				try {
+					// only applies to .replaceWith where a #text is being replaced with a different text
+					if (that.parentElement?.nodeName === 'STYLE') {
+						usePrototype(that.parentElement, nativeHTMLStyleElement, (style) =>
+							rewriteStyle(style)
+						);
+					}
+
+					// general inserting things into style
+					if (that.nodeName === 'STYLE') {
+						// usePrototype(inserted, nativeHTMLElement, (element: HTMLElement) => {
+						usePrototype(that, nativeHTMLStyleElement, (style) =>
+							rewriteStyle(style)
+						);
+					}
 				} catch (error) {
-					// may be an incompatible interface, we don't know
+					//
 				}
 
 				return result;
@@ -217,6 +300,18 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 		Node.prototype.replaceChild = willInsertNode(Node.prototype.replaceChild);
 		Element.prototype.replaceWith = willInsertNode(
 			Element.prototype.replaceWith
+		);
+
+		// does not insert element
+		Node.prototype.removeChild = proxyModule.wrapFunction(
+			Node.prototype.removeChild,
+			(target, that, args) => {
+				const result = Reflect.apply(target, that, args);
+
+				// checkUpdateStyle(that);
+
+				return result;
+			}
 		);
 	}
 }
