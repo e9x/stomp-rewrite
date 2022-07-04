@@ -117,8 +117,6 @@ determining element.src:
 
 type ElementCtor = { new (): HTMLElement };
 
-type PropData = [attribute: string, get?: (element: CustomElement) => string];
-
 type HookCallback = (element: CustomElement) => void;
 
 type AttributeHook = [nodeName: Element['nodeName'], attribute: string];
