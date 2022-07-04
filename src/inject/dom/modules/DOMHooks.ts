@@ -143,7 +143,7 @@ function isAttributeHook(
 /**
  * Provides a framework for hooking elements
  */
-export default class DOMModule extends Module<DocumentClient> {
+export default class DOMHooksModule extends Module<DocumentClient> {
 	private attributeHooks: [
 		type: string[],
 		callback: HookCallback,

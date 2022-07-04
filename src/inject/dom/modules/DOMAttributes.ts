@@ -6,15 +6,15 @@ import { routeManifest } from '../../../rewriteManifest';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
-import DOMModule, { CustomElement } from './DOM';
+import DOMHooksModule, { CustomElement } from './DOMHooks';
 import { parseSrcset, stringifySrcset } from 'srcset';
 
 export default class DOMAttributesModule extends Module<DocumentClient> {
 	formHook?: (element: CustomElement, appendHook?: boolean) => void;
 	apply() {
-		const domModule = this.client.getModule(DOMModule)!;
+		const domHooksModule = this.client.getModule(DOMHooksModule)!;
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('href') &&
@@ -52,7 +52,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -89,7 +89,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('integrity')) {
 					element.setAttributeOG(
@@ -115,7 +115,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('href') &&
@@ -193,7 +193,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 		// todo: mimes...?
 		// https://www.w3schools.com/tags/tag_embed.asp
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -238,7 +238,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('content') &&
@@ -272,7 +272,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -304,7 +304,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('srcset') &&
@@ -353,7 +353,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -395,7 +395,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			]
 		);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('style') &&
@@ -412,6 +412,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 					);
 				}
 			},
+			// CSSStyleDeclaration: CSSStyleRule.prototype.style, HTMLElement.prototype.style( in hooks, getter)
+			// TODO: hook CSSStyleDeclaration
 			[[HTMLElement, 'style', () => false]]
 		);
 
@@ -468,7 +470,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			}
 		};
 
-		domModule.useAttributes(this.formHook, [
+		domHooksModule.useAttributes(this.formHook, [
 			['FORM', 'action'],
 			['FORM', 'method'],
 			[
@@ -485,7 +487,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 			[HTMLFormElement, 'method', () => false],
 		]);
 
-		domModule.useAttributes(
+		domHooksModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('href') &&

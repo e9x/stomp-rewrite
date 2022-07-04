@@ -6,8 +6,8 @@ import ProxyModule, {
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient, { getGlobalParsingState } from '../Client';
-import { CustomElement, nativeElement, nativeNode } from './DOM';
 import DOMAttributesModule from './DOMAttributes';
+import { CustomElement, nativeElement, nativeNode } from './DOMHooks';
 
 export const nativeHTMLElement: HTMLElement = Object.create(nativeElement);
 export const nativeHTMLStyleElement: HTMLStyleElement =
@@ -24,7 +24,7 @@ applyDescriptors(nativeHTMLStyleElement, HTMLStyleElement.prototype);
 applyDescriptors(nativeHTMLScriptElement, HTMLScriptElement.prototype);
 applyDescriptors(nativeHTMLFormElement, HTMLFormElement.prototype);
 
-export default class DOMStyleModule extends Module<DocumentClient> {
+export default class DOMContentHooks extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;
 
