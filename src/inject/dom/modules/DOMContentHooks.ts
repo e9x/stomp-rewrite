@@ -200,95 +200,117 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			});
 		}
 
-		const domAttributesModule = this.client.getModule(DOMAttributesModule)!;
-
-		const willInsertNode = (x: (inserted: Node, ...args: any[]) => any) =>
-			proxyModule.wrapFunction(x, (target, that, args) => {
-				const inserted: Element = args[0];
-
-				try {
-					// we're about to render
-					// usePrototype(inserted, nativeHTMLElement, (element: HTMLElement) => {
-					if (inserted.nodeName === 'SCRIPT') {
-						usePrototype(inserted, nativeHTMLScriptElement, (script) =>
-							rewriteScript(script)
-						);
-					} else
-						for (const script of inserted.querySelectorAll('script'))
-							usePrototype(script, nativeHTMLScriptElement, (script) =>
-								rewriteScript(script)
-							);
-					// });
-				} catch (error) {
-					if (
-						!(error instanceof Error) ||
-						!error.message.includes('.querySelectorAll')
-					) {
-						console.error(error, inserted);
-					}
-				}
-
-				const styles: HTMLStyleElement[] = [];
-
-				// if inserted is a DocumentFragment, its childNodes will be cleared upon insertion
-				// we need to snapshot the childNodes or run a query before its childNodes are cleared
-				try {
-					for (const style of inserted.querySelectorAll('style')) {
-						styles.push(style);
-					}
-				} catch (error) {
-					if (
-						!(error instanceof Error) ||
-						!error.message.includes('.querySelectorAll')
-					) {
-						console.error(error, inserted);
-					}
-				}
-
-				const result = Reflect.apply(target, that, args);
-
-				usePrototype(inserted, nativeNode, (node) => {
-					switch (node.nodeName) {
-						case 'FORM':
-							usePrototype(inserted, CustomElement.prototype, (form) => {
-								domAttributesModule.formHook!(form);
-							});
-							break;
-						case 'STYLE':
-							usePrototype(inserted, nativeHTMLStyleElement, (style) =>
-								rewriteStyle(style)
-							);
-					}
-				});
-
-				for (const style of styles) {
-					usePrototype(style, nativeHTMLStyleElement, (style) =>
-						rewriteStyle(style)
-					);
-				}
-
-				// element such as text was inserted
-				try {
+		/**
+		 * Called after a function with side-effects that may trigger a style to re-render.
+		 * @param target Text. Possibly a child of a Style.
+		 */
+		function textUpdatesStyle(target: CharacterData) {
+			try {
+				usePrototype(target, nativeHTMLElement, (element) => {
 					// only applies to .replaceWith where a #text is being replaced with a different text
-					if (that.parentElement?.nodeName === 'STYLE') {
-						usePrototype(that.parentElement, nativeHTMLStyleElement, (style) =>
-							rewriteStyle(style)
+					if (element.parentElement?.nodeName === 'STYLE') {
+						usePrototype(
+							target.parentElement!,
+							nativeHTMLStyleElement,
+							(style) => rewriteStyle(style)
 						);
 					}
 
 					// general inserting things into style
-					if (that.nodeName === 'STYLE') {
+					if (element.nodeName === 'STYLE') {
 						// usePrototype(inserted, nativeHTMLElement, (element: HTMLElement) => {
-						usePrototype(that, nativeHTMLStyleElement, (style) =>
+						usePrototype(element, nativeHTMLStyleElement, (style) =>
 							rewriteStyle(style)
 						);
 					}
-				} catch (error) {
-					//
+				});
+			} catch (error) {
+				if (
+					!(error instanceof Error) ||
+					!error.message.includes('.querySelectorAll')
+				) {
+					console.error(error, target);
 				}
+			}
+		}
 
-				return result;
+		const domAttributesModule = this.client.getModule(DOMAttributesModule)!;
+
+		const insert = <T>(
+			insert: Node,
+			that: Node | null,
+			insertElement: () => T
+		): T => {
+			try {
+				// we're about to render
+				// usePrototype(inserted, nativeHTMLElement, (element: HTMLElement) => {
+				if (insert.nodeName === 'SCRIPT') {
+					usePrototype(insert, nativeHTMLScriptElement, (script) =>
+						rewriteScript(script)
+					);
+				} else
+					for (const script of (insert as Element).querySelectorAll('script'))
+						usePrototype(script, nativeHTMLScriptElement, (script) =>
+							rewriteScript(script)
+						);
+				// });
+			} catch (error) {
+				if (
+					!(error instanceof Error) ||
+					!error.message.includes('.querySelectorAll')
+				) {
+					console.error(error, insert);
+				}
+			}
+
+			const styles: HTMLStyleElement[] = [];
+
+			// if insert is a DocumentFragment, its childNodes will be cleared upon insertion
+			// we need to snapshot the childNodes or run a query before its childNodes are cleared
+			try {
+				for (const style of (insert as Element).querySelectorAll('style')) {
+					styles.push(style);
+				}
+			} catch (error) {
+				if (
+					!(error instanceof Error) ||
+					!error.message.includes('.querySelectorAll')
+				) {
+					console.error(error, insert);
+				}
+			}
+
+			const result = insertElement();
+
+			usePrototype(insert, nativeNode, (node) => {
+				switch (node.nodeName) {
+					case 'FORM':
+						usePrototype(insert, CustomElement.prototype, (form) => {
+							domAttributesModule.formHook!(form);
+						});
+						break;
+					case 'STYLE':
+						usePrototype(insert, nativeHTMLStyleElement, (style) =>
+							rewriteStyle(style)
+						);
+				}
 			});
+
+			for (const style of styles) {
+				usePrototype(style, nativeHTMLStyleElement, (style) =>
+					rewriteStyle(style)
+				);
+			}
+
+			textUpdatesStyle(that as CharacterData);
+
+			return result;
+		};
+
+		const willInsertNode = (x: (inserted: Node, ...args: any[]) => any) =>
+			proxyModule.wrapFunction(x, (target, that, args) =>
+				insert(args[0], that, () => Reflect.apply(target, that, args))
+			);
 
 		Node.prototype.appendChild = willInsertNode(Node.prototype.appendChild);
 		Element.prototype.append = willInsertNode(Element.prototype.append);
@@ -298,13 +320,85 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			Element.prototype.replaceWith
 		);
 
+		function insertAdjacentTarget(
+			position: string,
+			relative: Element
+		): Element | null {
+			switch (position) {
+				case 'afterbegin':
+				case 'beforeend':
+					return relative;
+				case 'beforebegin':
+				case 'afterend':
+				default:
+					return relative.parentElement;
+			}
+		}
+
+		function insertAdjacent(position: string, relative: Element, node: Node) {
+			const target = insertAdjacentTarget(position, relative);
+
+			if (!target) {
+				return;
+			}
+
+			switch (position) {
+				case 'afterbegin':
+					if (target.childNodes.length) {
+						target.insertBefore(node, target.childNodes[0]);
+					} else {
+						target.append(node, target.childNodes[0]);
+					}
+					break;
+				case 'beforebegin':
+					target.insertBefore(node, relative);
+					break;
+				case 'beforeend':
+					target.append(node);
+					break;
+				case 'afterend':
+					{
+						if (target.childNodes.length) {
+							const childNodes = [...target.childNodes];
+							const afterRelative =
+								childNodes[childNodes.indexOf(relative) + 1];
+
+							if (afterRelative) {
+								console.log(afterRelative);
+								target.insertBefore(node, afterRelative);
+							} else {
+								// maybe the target ends with relative
+								target.append(node);
+							}
+						} else {
+							target.append(node);
+						}
+					}
+					break;
+			}
+		}
+
+		Element.prototype.insertAdjacentText = proxyModule.wrapFunction(
+			Element.prototype.insertAdjacentText,
+			(target, that: Element, args) => {
+				const position = String(args[0]);
+				const node: Node = new Text(args[1]);
+
+				insert(node, insertAdjacentTarget(position, that), () =>
+					usePrototype(that, nativeElement, (element) =>
+						insertAdjacent(position, element, node)
+					)
+				);
+			}
+		);
+
 		// does not insert element
 		Node.prototype.removeChild = proxyModule.wrapFunction(
 			Node.prototype.removeChild,
 			(target, that, args) => {
 				const result = Reflect.apply(target, that, args);
 
-				// checkUpdateStyle(that);
+				textUpdatesStyle(that);
 
 				return result;
 			}
