@@ -6,10 +6,13 @@ import ProxyModule, {
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient, { getGlobalParsingState } from '../Client';
-import { nativeElement, nativeNode } from './DOM';
+import { CustomElement, nativeElement, nativeNode } from './DOM';
+import DOMAttributesModule from './DOMAttributes';
 
 export const nativeHTMLElement: HTMLElement = Object.create(nativeElement);
 export const nativeHTMLStyleElement: HTMLStyleElement =
+	Object.create(nativeHTMLElement);
+export const nativeHTMLFormElement: HTMLFormElement =
 	Object.create(nativeHTMLElement);
 export const nativeHTMLScriptElement: HTMLScriptElement =
 	Object.create(nativeHTMLElement);
@@ -19,6 +22,7 @@ applyDescriptors(nativeCharacterData, Text.prototype);
 applyDescriptors(nativeHTMLElement, HTMLElement.prototype);
 applyDescriptors(nativeHTMLStyleElement, HTMLStyleElement.prototype);
 applyDescriptors(nativeHTMLScriptElement, HTMLScriptElement.prototype);
+applyDescriptors(nativeHTMLFormElement, HTMLFormElement.prototype);
 
 export default class DOMStyleModule extends Module<DocumentClient> {
 	apply() {
@@ -196,6 +200,8 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 			});
 		}
 
+		const domAttributesModule = this.client.getModule(DOMAttributesModule)!;
+
 		const willInsertNode = (x: (inserted: Node, ...args: any[]) => any) =>
 			proxyModule.wrapFunction(x, (target, that, args) => {
 				const inserted: Element = args[0];
@@ -241,16 +247,24 @@ export default class DOMStyleModule extends Module<DocumentClient> {
 
 				const result = Reflect.apply(target, that, args);
 
-				if (inserted.nodeName === 'STYLE')
-					usePrototype(inserted, nativeHTMLStyleElement, (style) =>
+				usePrototype(inserted, nativeNode, (node) => {
+					switch (node.nodeName) {
+						case 'FORM':
+							usePrototype(inserted, CustomElement.prototype, (form) => {
+								domAttributesModule.formHook!(form);
+							});
+							break;
+						case 'STYLE':
+							usePrototype(inserted, nativeHTMLStyleElement, (style) =>
+								rewriteStyle(style)
+							);
+					}
+				});
+
+				for (const style of styles) {
+					usePrototype(style, nativeHTMLStyleElement, (style) =>
 						rewriteStyle(style)
 					);
-				else {
-					for (const style of styles) {
-						usePrototype(style, nativeHTMLStyleElement, (style) =>
-							rewriteStyle(style)
-						);
-					}
 				}
 
 				// element such as text was inserted

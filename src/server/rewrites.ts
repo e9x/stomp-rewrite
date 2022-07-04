@@ -232,6 +232,24 @@ export function registerRewrites(
 		)
 	);
 
+	router.routes.set(/^\/html:form\//, (serverRequest) => {
+		const oURL = new URL(serverRequest.url);
+		const { url } = parseRoutedURL(
+			`${oURL.origin}${oURL.pathname}${oURL.hash}`, // exclude query
+			rewriter.codec,
+			`${oURL.origin}${rewriter.directory}`
+		);
+
+		url.url.search = oURL.search;
+
+		return new Response(undefined, {
+			headers: {
+				location: routeHTML(url, url, rewriter.config),
+			},
+			status: 307,
+		});
+	});
+
 	// todo: parse more request headers
 	router.routes.set(
 		/^\/xhr\//,

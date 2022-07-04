@@ -6,13 +6,14 @@ import { routeManifest } from '../../../rewriteManifest';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
-import DOMModule from './DOM';
+import DOMModule, { CustomElement } from './DOM';
 
-export default class DOMHooksModule extends Module<DocumentClient> {
+export default class DOMAttributesModule extends Module<DocumentClient> {
+	formHook?: (element: CustomElement, appendHook?: boolean) => void;
 	apply() {
-		const domHooksModule = this.client.getModule(DOMModule)!;
+		const domModule = this.client.getModule(DOMModule)!;
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('href') &&
@@ -50,7 +51,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -87,7 +88,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('integrity')) {
 					element.setAttributeOG(
@@ -113,7 +114,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('href') &&
@@ -184,22 +185,14 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 							this.client.url.toString()
 						).toString(),
 				],
-				[
-					HTMLLinkElement,
-					'rel',
-					(element) =>
-						new URL(
-							element.getAttributeOG('href')!,
-							this.client.url.toString()
-						).toString(),
-				],
+				[HTMLLinkElement, 'rel', () => false],
 			]
 		);
 
 		// todo: mimes...?
 		// https://www.w3schools.com/tags/tag_embed.asp
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -244,7 +237,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('content') &&
@@ -274,10 +267,11 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 							this.client.url.toString()
 						).toString(),
 				],
+				[HTMLMetaElement, 'httpEquiv', () => false],
 			]
 		);
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -309,7 +303,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		domHooksModule.useAttributes(
+		domModule.useAttributes(
 			(element) => {
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
@@ -351,7 +345,77 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			]
 		);
 
-		domHooksModule.useAttributes(
+		const validMethods = ['GET', 'POST'];
+
+		this.formHook = (element, appendHook = false) => {
+			if (appendHook) {
+				if (
+					element.hasAttribute('action') &&
+					element.getAttribute('action') !== ''
+				) {
+					element.setAttributeOG('action', element.getAttribute('action')!);
+				}
+			}
+
+			/**
+			 * Absolute URL
+			 */
+			const action = element.hasAttributeOG('action')
+				? new URL(
+						element.getAttributeOG('action')!,
+						this.client.url.toString()
+				  ).toString()
+				: this.client.url.toString();
+
+			const methodIndex = validMethods.indexOf(
+				element.getAttribute('method')?.toUpperCase() || ''
+			);
+			const method = validMethods[methodIndex === -1 ? 0 : methodIndex];
+
+			switch (method) {
+				case 'GET':
+					element.setAttribute(
+						'action',
+						routeHTML(
+							new StompURL(action, this.client.url),
+							this.client.url,
+							this.client.config,
+							true
+						)
+					);
+					break;
+				case 'POST':
+					element.setAttribute(
+						'action',
+						routeHTML(
+							new StompURL(action, this.client.url),
+							this.client.url,
+							this.client.config
+						)
+					);
+
+					break;
+			}
+		};
+
+		domModule.useAttributes(this.formHook, [
+			['FORM', 'action'],
+			['FORM', 'method'],
+			[
+				HTMLFormElement,
+				'action',
+				(element) =>
+					element.hasAttribute('action') &&
+					element.getAttribute('action') !== '' &&
+					new URL(
+						element.getAttributeOG('action')!,
+						this.client.url.toString()
+					).toString(),
+			],
+			[HTMLFormElement, 'method', () => false],
+		]);
+
+		domModule.useAttributes(
 			(element) => {
 				if (
 					element.hasAttribute('href') &&

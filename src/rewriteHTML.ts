@@ -11,7 +11,12 @@ import { escapeText } from 'entities';
 
 export const ORIGINAL_ATTRIBUTE = `sO:`;
 
-export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
+export function routeHTML(
+	resource: StompURL,
+	url: StompURL,
+	config: Config,
+	form = false
+) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
 		return createDataURI({
@@ -21,7 +26,7 @@ export function routeHTML(resource: StompURL, url: StompURL, config: Config) {
 		});
 	}
 
-	return routeURL('html', resource);
+	return routeURL(form ? 'html:form' : 'html', resource);
 }
 
 export function modifyHTML(
