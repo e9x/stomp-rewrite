@@ -18,7 +18,7 @@ export function setGlobalParsingState(value: typeof globalParsingState) {
 
 const write = document.write;
 
-function documentWrite(script: string) {
+export function documentWrite(script: string) {
 	write.call(document, script);
 }
 

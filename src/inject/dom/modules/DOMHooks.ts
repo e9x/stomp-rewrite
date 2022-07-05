@@ -1,12 +1,19 @@
 import StompURL, { isUrlLike } from '../../../StompURL';
-import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../../rewriteHTML';
+import {
+	modifyHTML,
+	ORIGINAL_ATTRIBUTE,
+	routeHTML,
+} from '../../../rewriteHTML';
 import Module from '../../Module';
 import ProxyModule, {
 	applyDescriptors,
 	cleanupPrototype,
 	usePrototype,
 } from '../../modules/Proxy';
-import DocumentClient from '../Client';
+import DocumentClient, {
+	getGlobalParsingState,
+	setGlobalParsingState,
+} from '../Client';
 import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
@@ -263,6 +270,24 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 				return Reflect.apply(target, that, args);
 			}
 		);
+
+		type Write = (...text: string[]) => void;
+		const writeFactory = (target: Write): Write =>
+			proxyModule.wrapFunction(target, (target, that, args) => {
+				for (let i = 0; i < args.length; i++) {
+					const prevState = getGlobalParsingState();
+					setGlobalParsingState('parsingBeforeWrite');
+					const div = document.createElement('div');
+					div.append(cloneRawNode(parseHTMLFragment(String(args[i]))));
+					args[i] = div.innerHTML;
+					setGlobalParsingState(prevState);
+				}
+
+				return Reflect.apply(target, that, args);
+			});
+
+		document.write = writeFactory(document.write);
+		document.writeln = writeFactory(document.writeln);
 
 		Reflect.defineProperty(Node.prototype, 'baseURI', {
 			enumerable: true,

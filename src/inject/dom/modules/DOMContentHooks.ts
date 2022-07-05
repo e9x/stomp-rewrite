@@ -392,7 +392,7 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			Element.prototype.insertAdjacentText,
 			(target, that: Element, args) => {
 				catchRequiredArguments(args.length, 2, 'Element', 'insertAdjacentText');
-				
+
 				const position = String(args[0]);
 				const insertNode: Node = new Text(args[1]);
 				const targetElement = insertAdjacentTarget(
@@ -415,8 +415,13 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 		Element.prototype.insertAdjacentElement = proxyModule.wrapFunction(
 			Element.prototype.insertAdjacentElement,
 			(target, that: Element, args) => {
-				catchRequiredArguments(args.length, 2, 'Element', 'insertAdjacentElement');
-				
+				catchRequiredArguments(
+					args.length,
+					2,
+					'Element',
+					'insertAdjacentElement'
+				);
+
 				if (!(args[1] instanceof Element)) {
 					throw new TypeError(
 						`Failed to execute 'insertAdjacentElement' on 'Element': parameter 2 is not of type 'Element'.`
@@ -446,20 +451,24 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			Element.prototype.insertAdjacentHTML,
 			(target, that: Element, args) => {
 				catchRequiredArguments(args.length, 2, 'Element', 'insertAdjacentHTML');
-				
+
 				const position = String(args[0]);
-				const insertFragment: DocumentFragment = parseHTMLFragment(String(args[1]));
-				const targetElement = insertAdjacentTarget(position, that, 'Element', 'insertAdjacentHTML'), ;
+				const insertFragment: DocumentFragment = parseHTMLFragment(
+					String(args[1])
+				);
+				const targetElement = insertAdjacentTarget(
+					position,
+					that,
+					'Element',
+					'insertAdjacentHTML'
+				);
 
 				if (!targetElement) return;
 
-				insert(
-					insertFragment,
-					targetElement,
-					() =>
-						usePrototype(that, nativeElement, (element) =>
-							insertAdjacent(targetElement, position, element, insertFragment)
-						)
+				insert(insertFragment, targetElement, () =>
+					usePrototype(that, nativeElement, (element) =>
+						insertAdjacent(targetElement, position, element, insertFragment)
+					)
 				);
 			}
 		);
