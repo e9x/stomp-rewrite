@@ -1,13 +1,25 @@
 import StompURL from '../../../StompURL';
 import { modifyCSS, routeCSS } from '../../../rewriteCSS';
 import { modifyRefresh, routeHTML } from '../../../rewriteHTML';
-import { routeJS } from '../../../rewriteJS';
+import { routeJS, ScriptType } from '../../../rewriteJS';
 import { routeManifest } from '../../../rewriteManifest';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
 import DOMHooksModule, { CustomElement } from './DOMHooks';
 import { parseSrcset, stringifySrcset } from 'srcset';
+
+const jsTypes = ['text/javascript', 'application/javascript', 'module', ''];
+
+export function shouldRewriteScript(element: Element) {
+	return jsTypes.includes(element.getAttribute('type') || '');
+}
+
+export function scriptType(element: Element): ScriptType {
+	return element.getAttribute('type') === 'module'
+		? 'genericModule'
+		: 'generic';
+}
 
 export default class DOMAttributesModule extends Module<DocumentClient> {
 	formHook?: (element: CustomElement, appendHook?: boolean) => void;
@@ -55,7 +67,11 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
-				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
+				if (
+					element.hasAttribute('src') &&
+					element.getAttribute('src') !== '' &&
+					shouldRewriteScript(element)
+				) {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
 						'src',
@@ -69,9 +85,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 							),
 							this.client.url,
 							this.client.config,
-							element.getAttribute('type') === 'module'
-								? 'genericModule'
-								: 'generic'
+							scriptType(element)
 						)
 					);
 				}

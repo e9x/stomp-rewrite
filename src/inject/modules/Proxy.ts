@@ -7,7 +7,7 @@ import { isNative } from '../nativeUtil';
 // import { getOwnPropertyDescriptors, mirror_attributes } from './rewriteUtil.js';
 
 export const cleanupPrototype = Symbol();
-
+export const preparePrototype = Symbol();
 /*
  * Sets the prototype of an object while this script is working with it. This is to ensure we are only accessing the native functions and not any traps/shims.
  */
@@ -18,6 +18,14 @@ export function usePrototype<Prototype extends object, CallbackResult>(
 ): CallbackResult {
 	const prototype = Reflect.getPrototypeOf(target);
 	Reflect.setPrototypeOf(target, usePrototype);
+
+	const uses = <
+		{ [preparePrototype]?: () => void; [cleanupPrototype]?: () => void }
+	>target;
+
+	if (uses[preparePrototype]) {
+		uses[preparePrototype]();
+	}
 
 	let result: any[] = [];
 
@@ -31,12 +39,8 @@ export function usePrototype<Prototype extends object, CallbackResult>(
 		}
 	}
 
-	{
-		const set = <{ [cleanupPrototype]?: () => void }>target;
-
-		if (set[cleanupPrototype]) {
-			set[cleanupPrototype]();
-		}
+	if (uses[cleanupPrototype]) {
+		uses[cleanupPrototype]();
 	}
 
 	Reflect.setPrototypeOf(target, prototype);

@@ -42,7 +42,7 @@ function generatePartial(script: string, ctx: AcornContext) {
 	return result;
 }
 
-export type scriptType =
+export type ScriptType =
 	| 'generic'
 	| 'genericModule'
 	| 'worker'
@@ -52,7 +52,7 @@ export function routeJS(
 	resource: StompURL,
 	url: StompURL,
 	config: Config,
-	type: scriptType = 'generic'
+	type: ScriptType = 'generic'
 ) {
 	if (resource.url.protocol === 'data:') {
 		const { mime, data, attributes } = parseDataURI(resource.url.pathname);
@@ -70,7 +70,7 @@ export function modifyJS(
 	script: string,
 	url: StompURL,
 	config: Config,
-	type: scriptType = 'generic'
+	type: ScriptType = 'generic'
 ) {
 	const isModule = type === 'genericModule' || type === 'workerModule';
 	const isWorker = type === 'workerModule' || type === 'worker';

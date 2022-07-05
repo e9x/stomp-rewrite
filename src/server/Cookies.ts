@@ -39,7 +39,7 @@ interface FloatingCookie extends SessionCookie {
 	expires?: Date;
 }
 
-const flattenCookie = (cookie: Readonly<Cookie>): FloatingCookie => {
+const floatCookie = (cookie: Readonly<Cookie>): FloatingCookie => {
 	const result: Cookie & Partial<FloatingCookie> = { ...cookie };
 
 	if (cookie.maxAge) {
@@ -76,7 +76,7 @@ function cookieExpired(cookie: FloatingCookie): boolean {
 		return false;
 	}
 
-	return Date.now() < cookie.expires!.getTime();
+	return Date.now() > cookie.expires!.getTime();
 }
 
 function testCookieOwnership(cookie: FloatingCookie, url: URL): boolean {
@@ -84,6 +84,11 @@ function testCookieOwnership(cookie: FloatingCookie, url: URL): boolean {
 		`.${url.hostname}`.endsWith(cookie.domain) &&
 		url.pathname.startsWith(cookie.path)
 	);
+}
+function floatingCookieID(cookie: FloatingCookie): string {
+	return [cookie.domain, cookie.path, cookie.name]
+		.map((value) => JSON.stringify(value))
+		.join('@@');
 }
 
 export default class Cookies {
@@ -113,9 +118,10 @@ export default class Cookies {
 
 		for (const cookie of entries) {
 			if (cookieExpired(cookie)) {
+				console.log(cookie, 'expired');
 				this.db.delete(
 					cookie.session ? 'sessionCookies' : 'cookies',
-					cookie.name
+					floatingCookieID(cookie)
 				);
 			} else if (testCookieOwnership(cookie, url)) {
 				result.push(cookie);
@@ -136,12 +142,10 @@ export default class Cookies {
 				decodeValues: false,
 				silent: true,
 			})) {
-				const flat = flattenCookie(normalizeCookie(parsedCookie, url));
-				const id = [flat.domain, flat.path, flat.name]
-					.map((value) => JSON.stringify(value))
-					.join('@@');
-				this.db.put(flat.session ? 'sessionCookies' : 'cookies', {
-					...flat,
+				const floating = floatCookie(normalizeCookie(parsedCookie, url));
+				const id = floatingCookieID(floating);
+				this.db.put(floating.session ? 'sessionCookies' : 'cookies', {
+					...floating,
 					id,
 				});
 			}

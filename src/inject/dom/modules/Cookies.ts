@@ -42,8 +42,8 @@ export class CookiesModule extends Module<DocumentClient> {
 
 					syncModule.jsonAPI(
 						`${this.client.directory}cookies/set`,
-						this.client.url.toString(),
-						value
+						value,
+						this.client.url.toString()
 					);
 				}
 			),

@@ -1,13 +1,10 @@
 import StompURL, { isUrlLike } from '../../../StompURL';
-import {
-	modifyHTML,
-	ORIGINAL_ATTRIBUTE,
-	routeHTML,
-} from '../../../rewriteHTML';
+import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../../rewriteHTML';
 import Module from '../../Module';
 import ProxyModule, {
 	applyDescriptors,
 	cleanupPrototype,
+	preparePrototype,
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient, {
@@ -63,6 +60,18 @@ export class CustomElement extends Element {
 
 		attributeTab.delete(this);
 	}
+	/**
+	 * Wipes conflicting attributes and replaces them with original values.
+	 */
+	restoreOG() {
+		for (const name of this.getAttributeNamesOG()) {
+			this.setAttribute(name, this.getAttributeOG(name)!);
+			this.removeAttributeOG(name);
+		}
+	}
+	[preparePrototype]() {
+		this.restoreOG();
+	}
 	[cleanupPrototype]() {
 		this.applyAttributes();
 	}
@@ -74,6 +83,15 @@ export class CustomElement extends Element {
 		} else {
 			return null;
 		}
+	}
+	getAttributeNamesOG(): string[] {
+		const names: string[] = [];
+
+		for (const name of this.getAttributeNames())
+			if (name.startsWith(ORIGINAL_ATTRIBUTE))
+				names.push(name.slice(ORIGINAL_ATTRIBUTE.length));
+
+		return names;
 	}
 	setAttributeOG(attribute: string, value: string) {
 		const og = `${ORIGINAL_ATTRIBUTE}${attribute}`;
@@ -222,6 +240,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			)
 				continue;
 
+			element.restoreOG();
 			entry.callback(element);
 		}
 	}

@@ -6,7 +6,7 @@ import { capitalizeHeaders, trimNonStandardHeaders } from '../headers';
 import { modifyCSS, routeCSS } from '../rewriteCSS';
 import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
 import { modifyJS, routeJS } from '../rewriteJS';
-import { scriptType } from '../rewriteJS';
+import { ScriptType } from '../rewriteJS';
 import { modifyManifest, routeManifest } from '../rewriteManifest';
 import { parseRoutedURL, routeBinary } from '../routeURL';
 import Cookies from './Cookies';
@@ -160,7 +160,7 @@ export function registerRewrites(
 		});
 	});
 
-	const scriptTypeFactory = (type: scriptType) =>
+	const scriptTypeFactory = (type: ScriptType) =>
 		genericForward(
 			rewriter,
 			async (url, response) =>

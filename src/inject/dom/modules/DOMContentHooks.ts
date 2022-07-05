@@ -8,7 +8,10 @@ import ProxyModule, {
 } from '../../modules/Proxy';
 import DocumentClient, { getGlobalParsingState } from '../Client';
 import { parseHTMLFragment } from '../cloneNode';
-import DOMAttributesModule from './DOMAttributes';
+import DOMAttributesModule, {
+	scriptType,
+	shouldRewriteScript,
+} from './DOMAttributes';
 import { CustomElement, nativeElement, nativeNode } from './DOMHooks';
 
 export const nativeHTMLElement: HTMLElement = Object.create(nativeElement);
@@ -115,8 +118,9 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 
 		const rewriteScript = (script: HTMLScriptElement) => {
 			if (
-				!script.isConnected &&
-				getGlobalParsingState() !== 'parsingBeforeWrite'
+				!shouldRewriteScript(script) ||
+				(!script.isConnected &&
+					getGlobalParsingState() !== 'parsingBeforeWrite')
 			) {
 				// eventually we'll catch a connected script
 				return;
@@ -129,7 +133,7 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 				script.text,
 				this.client.url,
 				this.client.config,
-				'generic'
+				scriptType(script)
 			)}`;
 		};
 
