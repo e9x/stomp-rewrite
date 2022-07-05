@@ -150,7 +150,7 @@ export function modifyJS(
 						ctx.replaceWith(
 							b.conditionalExpression(
 								b.binaryExpression(
-									'==',
+									'===',
 									b.identifier('eval'),
 									b.memberExpression(
 										b.identifier(ACCESS_KEY),

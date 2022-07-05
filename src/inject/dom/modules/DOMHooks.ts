@@ -543,6 +543,23 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			}
 		);
 
+		Element.prototype.removeAttribute = proxyModule.wrapFunction(
+			Element.prototype.removeAttribute,
+			(target, that: Element, args) => {
+				// too many side effects
+				// illegal invocation error will throw by nature
+				// Reflect.apply(target, that, args);
+
+				const [attribute] = args;
+
+				usePrototype(that, CustomElement.prototype, (element) => {
+					element.removeAttribute(attribute);
+					element.removeAttributeOG(attribute);
+					this.updateAttributeHooks(element, attribute);
+				});
+			}
+		);
+
 		const trackProperties = new Map<ElementCtor, Set<string>>();
 
 		for (const entry of this.hooks) {
