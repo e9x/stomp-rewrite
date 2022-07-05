@@ -66,6 +66,8 @@ function genericForward(
 			(await rewriter.cookies.get(url.url)).toString()
 		);
 
+		requestHeaders.set('sec-fetch-dest', serverRequest.destination);
+
 		const response = await rewriter.bare.fetch(url.toString(), {
 			method: serverRequest.method,
 			cache: serverRequest.cache,
@@ -167,9 +169,7 @@ export function registerRewrites(
 				response.ok &&
 				modifyJS(await response.text(), url, rewriter.config, type),
 			(resource, url) => routeJS(resource, url, rewriter.config, type),
-			(headers, filteredHeaders) => {
-				filteredHeaders.set('sec-fetch-dest', 'worker');
-			},
+			undefined,
 			(headers, filteredHeaders) => {
 				for (const header of integrityHeaders) {
 					filteredHeaders.delete(header);

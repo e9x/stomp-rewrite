@@ -8,8 +8,8 @@ import { getCookie, setCookie } from './Cookies';
 const statusEmpty: number[] = [101, 204, 205, 304];
 
 // 10 seconds
-const maxCycles = 10 * 200000000;
-const maxLoopbackCycles = 10000;
+const maxCycles = 2e9;
+const maxLoopbackCycles = 2e5;
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

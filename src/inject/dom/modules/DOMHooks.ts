@@ -480,7 +480,6 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 						node.remove();
 					}
 
-					console.log(parseHTMLFragment(args[0]));
 					that.append(cloneRawNode(parseHTMLFragment(args[0])));
 				}
 			),
