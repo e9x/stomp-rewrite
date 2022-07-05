@@ -3,9 +3,11 @@ import { modifyJS } from '../../../rewriteJS';
 import Module from '../../Module';
 import ProxyModule, {
 	applyDescriptors,
+	catchRequiredArguments,
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient, { getGlobalParsingState } from '../Client';
+import { parseHTMLFragment } from '../cloneNode';
 import DOMAttributesModule from './DOMAttributes';
 import { CustomElement, nativeElement, nativeNode } from './DOMHooks';
 
@@ -322,7 +324,9 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 
 		function insertAdjacentTarget(
 			position: string,
-			relative: Element
+			relative: Element,
+			on: string,
+			api: string
 		): Element | null {
 			switch (position) {
 				case 'afterbegin':
@@ -330,48 +334,54 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 					return relative;
 				case 'beforebegin':
 				case 'afterend':
-				default:
 					return relative.parentElement;
+				default:
+					throw new DOMException(
+						`Failed to execute '${api}' on '${on}': The value provided ('${position}') is not one of 'beforeBegin', 'afterBegin', 'beforeEnd', or 'afterEnd'.`
+					);
 			}
 		}
 
-		function insertAdjacent(position: string, relative: Element, node: Node) {
-			const target = insertAdjacentTarget(position, relative);
-
-			if (!target) {
+		function insertAdjacent(
+			targetElement: Element,
+			position: string,
+			relative: Element,
+			node: Node
+		) {
+			if (!targetElement) {
 				return;
 			}
 
 			switch (position) {
 				case 'afterbegin':
-					if (target.childNodes.length) {
-						target.insertBefore(node, target.childNodes[0]);
+					if (targetElement.childNodes.length) {
+						targetElement.insertBefore(node, targetElement.childNodes[0]);
 					} else {
-						target.append(node, target.childNodes[0]);
+						targetElement.append(node, targetElement.childNodes[0]);
 					}
 					break;
 				case 'beforebegin':
-					target.insertBefore(node, relative);
+					targetElement.insertBefore(node, relative);
 					break;
 				case 'beforeend':
-					target.append(node);
+					targetElement.append(node);
 					break;
 				case 'afterend':
 					{
-						if (target.childNodes.length) {
-							const childNodes = [...target.childNodes];
+						if (targetElement.childNodes.length) {
+							const childNodes = [...targetElement.childNodes];
 							const afterRelative =
 								childNodes[childNodes.indexOf(relative) + 1];
 
 							if (afterRelative) {
 								console.log(afterRelative);
-								target.insertBefore(node, afterRelative);
+								targetElement.insertBefore(node, afterRelative);
 							} else {
 								// maybe the target ends with relative
-								target.append(node);
+								targetElement.append(node);
 							}
 						} else {
-							target.append(node);
+							targetElement.append(node);
 						}
 					}
 					break;
@@ -381,13 +391,75 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 		Element.prototype.insertAdjacentText = proxyModule.wrapFunction(
 			Element.prototype.insertAdjacentText,
 			(target, that: Element, args) => {
+				catchRequiredArguments(args.length, 2, 'Element', 'insertAdjacentText');
+				
 				const position = String(args[0]);
-				const node: Node = new Text(args[1]);
+				const insertNode: Node = new Text(args[1]);
+				const targetElement = insertAdjacentTarget(
+					position,
+					that,
+					'Element',
+					'insertAdjacentText'
+				);
 
-				insert(node, insertAdjacentTarget(position, that), () =>
+				if (!targetElement) return;
+
+				insert(insertNode, targetElement, () =>
 					usePrototype(that, nativeElement, (element) =>
-						insertAdjacent(position, element, node)
+						insertAdjacent(targetElement, position, element, insertNode)
 					)
+				);
+			}
+		);
+
+		Element.prototype.insertAdjacentElement = proxyModule.wrapFunction(
+			Element.prototype.insertAdjacentElement,
+			(target, that: Element, args) => {
+				catchRequiredArguments(args.length, 2, 'Element', 'insertAdjacentElement');
+				
+				if (!(args[1] instanceof Element)) {
+					throw new TypeError(
+						`Failed to execute 'insertAdjacentElement' on 'Element': parameter 2 is not of type 'Element'.`
+					);
+				}
+
+				const position = String(args[0]);
+				const insertElement = args[1];
+				const targetElement = insertAdjacentTarget(
+					position,
+					that,
+					'Element',
+					'insertAdjacentElement'
+				);
+
+				if (!targetElement) return;
+
+				insert(insertElement, targetElement, () =>
+					usePrototype(that, nativeElement, (element) =>
+						insertAdjacent(targetElement, position, element, insertElement)
+					)
+				);
+			}
+		);
+
+		Element.prototype.insertAdjacentHTML = proxyModule.wrapFunction(
+			Element.prototype.insertAdjacentHTML,
+			(target, that: Element, args) => {
+				catchRequiredArguments(args.length, 2, 'Element', 'insertAdjacentHTML');
+				
+				const position = String(args[0]);
+				const insertFragment: DocumentFragment = parseHTMLFragment(String(args[1]));
+				const targetElement = insertAdjacentTarget(position, that, 'Element', 'insertAdjacentHTML'), ;
+
+				if (!targetElement) return;
+
+				insert(
+					insertFragment,
+					targetElement,
+					() =>
+						usePrototype(that, nativeElement, (element) =>
+							insertAdjacent(targetElement, position, element, insertFragment)
+						)
 				);
 			}
 		);

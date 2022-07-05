@@ -29,7 +29,7 @@ type BodyTransform = (
 	url: StompURL,
 	response: Response,
 	responseHeaders: Headers
-) => Promise<BodyInit>;
+) => Promise<BodyInit | false>;
 
 interface Rewriter {
 	codec: GenericCodec;
@@ -42,7 +42,7 @@ interface Rewriter {
 
 function genericForward(
 	rewriter: Rewriter,
-	transformBody: BodyTransform,
+	transformBody: BodyTransform | void,
 	transformRoute: RouteTransform,
 	additionalRequestFilter: AdditionalFilter | void,
 	additionalResponseFilter: AdditionalFilter | void
@@ -94,7 +94,9 @@ function genericForward(
 		return new Response(
 			statusEmpty.includes(+response.status)
 				? undefined
-				: await transformBody(url, response, responseHeaders),
+				: (transformBody &&
+						(await transformBody(url, response, responseHeaders))) ||
+				  response.body,
 			{
 				status: response.status,
 				statusText: response.statusText,
@@ -135,7 +137,7 @@ export function registerRewrites(
 		/^\/binary\//,
 		genericForward(
 			rewriter,
-			async (_url, response) => response.body!,
+			undefined,
 			(resource) => routeBinary(resource),
 			undefined,
 			(headers, filteredHeaders) => {
@@ -162,6 +164,7 @@ export function registerRewrites(
 		genericForward(
 			rewriter,
 			async (url, response) =>
+				response.ok &&
 				modifyJS(await response.text(), url, rewriter.config, type),
 			(resource, url) => routeJS(resource, url, rewriter.config, type),
 			(headers, filteredHeaders) => {
@@ -188,7 +191,8 @@ export function registerRewrites(
 		/^\/css\//,
 		genericForward(
 			rewriter,
-			async (url, response) => modifyCSS(await response.text(), url),
+			async (url, response) =>
+				response.ok && modifyCSS(await response.text(), url),
 			(resource, url) => routeCSS(resource, url),
 			undefined,
 			(headers, filteredHeaders) => {
@@ -205,15 +209,10 @@ export function registerRewrites(
 		/^\/html\//,
 		genericForward(
 			rewriter,
-			async (url, response, responseHeaders) => {
-				if (
-					htmlMimes.includes(getMime(responseHeaders.get('content-type') || ''))
-				) {
-					return modifyHTML(await response.text(), url, rewriter.config);
-				}
-
-				return response.body!;
-			},
+			async (url, response, responseHeaders) =>
+				htmlMimes.includes(
+					getMime(responseHeaders.get('content-type') || '')
+				) && modifyHTML(await response.text(), url, rewriter.config),
 			(resource, url) => routeHTML(resource, url, rewriter.config),
 			(headers, filteredHeaders, url) => {
 				trimNonStandardHeaders(filteredHeaders);
@@ -265,6 +264,7 @@ export function registerRewrites(
 		genericForward(
 			rewriter,
 			async (url, response) =>
+				response.ok &&
 				modifyManifest(await response.text(), url, rewriter.config),
 			(resource, url) => routeManifest(resource, url, rewriter.config),
 			undefined,
