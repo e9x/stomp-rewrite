@@ -10,7 +10,7 @@ export function parseHTMLFragment(script: string): DocumentFragment {
 	const simulatedFragment = parsed.body.children[0];
 	const fragment = document.createDocumentFragment();
 
-	for (const child of simulatedFragment.childNodes) {
+	for (const child of [...simulatedFragment.childNodes]) {
 		fragment.append(child);
 	}
 

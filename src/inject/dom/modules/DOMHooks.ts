@@ -302,7 +302,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 					setGlobalParsingState(prevState);
 				}
 
-				return Reflect.apply(target, that, args);
+				Reflect.apply(target, that, args);
 			});
 
 		document.write = writeFactory(document.write);
@@ -480,6 +480,7 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 						node.remove();
 					}
 
+					console.log(parseHTMLFragment(args[0]));
 					that.append(cloneRawNode(parseHTMLFragment(args[0])));
 				}
 			),

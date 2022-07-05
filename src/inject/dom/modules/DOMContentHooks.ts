@@ -129,12 +129,12 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			/*document.currentScript.textContent = ${JSON.stringify(
 				script.textContent
 			)};*/
-			script.text = `${modifyJS(
+			script.text = modifyJS(
 				script.text,
 				this.client.url,
 				this.client.config,
 				scriptType(script)
-			)}`;
+			);
 		};
 
 		function cdUpdated(element: CharacterData, parent?: Element | null) {

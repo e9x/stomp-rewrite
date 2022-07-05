@@ -118,7 +118,6 @@ export default class Cookies {
 
 		for (const cookie of entries) {
 			if (cookieExpired(cookie)) {
-				console.log(cookie, 'expired');
 				this.db.delete(
 					cookie.session ? 'sessionCookies' : 'cookies',
 					floatingCookieID(cookie)
