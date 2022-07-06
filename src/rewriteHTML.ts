@@ -34,14 +34,12 @@ export function modifyHTML(
 	url: StompURL,
 	config: Config
 ): string {
-	const globalClient = `globalThis[${JSON.stringify(CLIENT_KEY)}]`;
-
 	// if(fragment) return '<script>document.currentScript.replaceWith(globalstomp.cloneIntoNewNode())
 	const injectInit = `if(typeof globalThis.createClient!=='function'){document.write("Stomp client failed to inject.")}else{createClient(${JSON.stringify(
 		config
 	)}, ${JSON.stringify(
 		url.codec.key
-	)});if(!${globalClient}.applied)${globalClient}.apply();${globalClient}.loadHTML(${escapeText(
+	)});if(!${CLIENT_KEY}.applied)${CLIENT_KEY}.apply();${CLIENT_KEY}.loadHTML(${escapeText(
 		JSON.stringify(script)
 	)})}`;
 

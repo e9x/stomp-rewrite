@@ -3,6 +3,7 @@ import { injectDocumentJS } from '../../../routeURL';
 import Module from '../../Module';
 import ProxyModule from '../../modules/Proxy';
 import DocumentClient from '../Client';
+import ContextModule from './Context';
 
 export default class IFrameModule extends Module<DocumentClient> {
 	apply() {
@@ -12,7 +13,7 @@ export default class IFrameModule extends Module<DocumentClient> {
 		config
 	)}, ${JSON.stringify(url.codec.key)});*/
 
-		function injectContext(this: IFrameModule, context: typeof global) {
+		const injectContext = (context: typeof globalThis) => {
 			if (CLIENT_KEY in context) return;
 
 			const http = new XMLHttpRequest();
@@ -23,32 +24,57 @@ export default class IFrameModule extends Module<DocumentClient> {
 			context.createClient(this.client.config, this.client.codec.key);
 
 			((context as any)[CLIENT_KEY] as DocumentClient).apply();
-		}
+		};
 
-		const getContentWindow = Reflect.getOwnPropertyDescriptor(
+		const getContentWindowDescriptor = Reflect.getOwnPropertyDescriptor(
 			HTMLIFrameElement.prototype,
 			'contentWindow'
-		)!.get!;
+		)!;
 
-		for (const ctxCursor of ['contentWindow', 'contentDocument']) {
-			Reflect.defineProperty(HTMLIFrameElement.prototype, ctxCursor, {
-				configurable: true,
-				enumerable: true,
-				get: proxyModule.wrapFunction(
-					Reflect.getOwnPropertyDescriptor(
-						HTMLIFrameElement.prototype,
-						ctxCursor
-					)!.get!,
-					(target, that, args) => {
-						const result = Reflect.apply(target, that, args);
-						const context = getContentWindow.call(that);
-						if (context) {
-							injectContext.call(this, <typeof global>(<unknown>context));
-						}
-						return result;
+		const windowModule = this.client.getModule(ContextModule)!;
+
+		const getContentWindow = (iframe: HTMLIFrameElement) => {
+			const context: typeof globalThis | null =
+				getContentWindowDescriptor.get!.call(iframe);
+
+			if (context) {
+				injectContext(context);
+				return windowModule.newRestricted(context);
+			}
+
+			return null;
+		};
+
+		Reflect.defineProperty(HTMLIFrameElement.prototype, 'contentWindow', {
+			configurable: true,
+			enumerable: true,
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(
+					HTMLIFrameElement.prototype,
+					'contentWindow'
+				)!.get!,
+				(target, that) => getContentWindow(that)
+			),
+		});
+
+		Reflect.defineProperty(HTMLIFrameElement.prototype, 'contentDocument', {
+			configurable: true,
+			enumerable: true,
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(
+					HTMLIFrameElement.prototype,
+					'contentDocument'
+				)!.get!,
+				(target, that) => {
+					const context = getContentWindow(that);
+
+					if (!context || windowModule.restrictedContexts.has(context)) {
+						return null;
 					}
-				),
-			});
-		}
+
+					return context.document;
+				}
+			),
+		});
 	}
 }

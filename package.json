@@ -21,6 +21,7 @@
 		"capture-stack-trace": "^1.0.1",
 		"crypto-js": "^4.1.1",
 		"css-tree": "^2.1.0",
+		"effective-domain-name-parser": "^0.0.10",
 		"entities": "^4.3.0",
 		"escodegen": "^2.0.0",
 		"http-errors": "^2.0.0",

@@ -22,12 +22,24 @@ export function documentWrite(script: string) {
 	write.call(document, script);
 }
 
-const getBaseURI = Reflect.getOwnPropertyDescriptor(Node.prototype, 'baseURI')!
-	.get!;
+const baseURIDescriptor = Reflect.getOwnPropertyDescriptor(
+	Node.prototype,
+	'baseURI'
+)!;
+
+const parentDescriptor = Reflect.getOwnPropertyDescriptor(global, 'parent')!;
+
+const topDescriptor = Reflect.getOwnPropertyDescriptor(global, 'top')!;
 
 // runtime document !== document in 0.001 ms!?!?!?
 
 export default class DocumentClient extends Client {
+	get parent(): typeof globalThis {
+		return parentDescriptor.get!.call(global);
+	}
+	get top(): typeof globalThis {
+		return topDescriptor.get!.call(global);
+	}
 	constructor(init: ParsedConfig) {
 		super(init);
 		this.isDOM = true;
@@ -48,7 +60,7 @@ export default class DocumentClient extends Client {
 		}
 	}
 	get baseURI(): URL {
-		return new URL(getBaseURI.call(document));
+		return new URL(baseURIDescriptor.get!.call(document));
 	}
 	loadHTML(script: string) {
 		setGlobalParsingState('parsingBeforeWrite');
@@ -80,11 +92,7 @@ export default class DocumentClient extends Client {
 
 		// jump out of the DOM "write stream" so we can start loading our own HTML
 		setTimeout(() => {
-			document.open();
-
 			documentWrite(newDocument);
-
-			document.close();
 		});
 	}
 }

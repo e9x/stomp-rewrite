@@ -1,13 +1,14 @@
 const VALID_NAME = /^[a-z0-9]*$/i;
-let nativeLeft: string;
-let nativeRight: string;
 
-{
-	const specimen = Object.toString();
-	const name = 'Object';
-	const occurs = specimen.indexOf(name);
-	nativeLeft = specimen.slice(0, occurs);
-	nativeRight = specimen.slice(occurs + name.length);
+const specimen = Object.toString();
+const name = 'Object';
+const occurs = specimen.indexOf(name);
+
+export const nativeLeft = specimen.slice(0, occurs);
+export const nativeRight = specimen.slice(occurs + name.length);
+
+export function nativeFunction(name: string) {
+	return `${nativeLeft}${name}${nativeRight}`;
 }
 
 export function isNative(source: string) {

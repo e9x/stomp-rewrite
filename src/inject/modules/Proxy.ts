@@ -151,7 +151,7 @@ export function contextThis(that: unknown): unknown {
 }
 
 export default class ProxyModule extends Module<Client> {
-	functionStrings = new WeakMap();
+	functionStrings = new WeakMap<Function, string>();
 	apply() {
 		Function.prototype.toString = this.wrapFunction(
 			Function.prototype.toString,

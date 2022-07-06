@@ -14,14 +14,13 @@ import { parse } from 'meriyah-loose';
 export const ACCESS_KEY = '$s$j';
 export const GLOBAL_PROXY = '$s$L';
 export const GLOBAL_NAME = '$s$N';
+export const CLIENT_KEY = '$P$s';
 
 // smaller range inside larger range = invalidates larger range
 // smaller modifications called later in script
 
 export const PROVIDERS = ['window', 'document'];
 export const UNDEFINABLE = ['eval', 'location', 'top'];
-
-export const CLIENT_KEY = '(stomp)';
 
 const cTarget = 't$t';
 const cProp = 't$p';
@@ -435,17 +434,15 @@ export function modifyJS(
 			}
 		}
 
-		const globalClient = JSON.stringify(CLIENT_KEY);
-
 		return (
 			(isWorker
 				? `if(!globalThis.createClient)importScripts(${JSON.stringify(
 						injectWorkerJS(url)
 				  )});` +
-				  `if(!(${globalClient} in globalThis))createClient(${JSON.stringify(
+				  `if(!(${CLIENT_KEY} in globalThis))createClient(${JSON.stringify(
 						config
 				  )}, ${JSON.stringify(url.codec.key)});` +
-				  `if(!${globalClient}.applied)globalThis[${globalClient}].apply();`
+				  `if(!${CLIENT_KEY}.applied)CLIENT_KEY.apply();`
 				: '') +
 			(isModule ? `import.meta.url = ${JSON.stringify(url.toString())};` : '') +
 			generate(tree)
