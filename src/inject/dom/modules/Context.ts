@@ -357,14 +357,8 @@ export default class ContextModule extends Module<DocumentClient> {
 				this.client.url.toString(),
 				((context as any)[CLIENT_KEY] as DocumentClient).url.toString()
 			)
-		) {
-			console.log(
-				this.client.url.toString(),
-				'same origin as',
-				((context as any)[CLIENT_KEY] as DocumentClient).url.toString()
-			);
+		)
 			return context;
-		}
 
 		if (!this.restricted.has(context)) {
 			const restricted = this.restrictContext(context);
@@ -437,11 +431,13 @@ export default class ContextModule extends Module<DocumentClient> {
 					isMessageData(event.data)
 				);*/
 				usePrototype(event, nativeMessageEvent, (event) => {
-					if (isMessageData(event.data)) {
-						messageData.set(event, event.data);
-					} else {
+					if (!isMessageData(event.data)) return;
+
+					messageData.set(event, event.data);
+
+					/* else {
 						console.warn('Unknown message', event.data);
-					}
+					}*/
 				});
 			});
 		});
