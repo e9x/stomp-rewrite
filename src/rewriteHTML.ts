@@ -9,8 +9,6 @@ import {
 } from './routeURL';
 import { escapeText } from 'entities';
 
-export const ORIGINAL_ATTRIBUTE = `sO:`;
-
 export function routeHTML(
 	resource: StompURL,
 	url: StompURL,
@@ -35,17 +33,30 @@ export function modifyHTML(
 	config: Config
 ): string {
 	// if(fragment) return '<script>document.currentScript.replaceWith(globalstomp.cloneIntoNewNode())
-	const injectInit = `if(typeof globalThis.createClient!=='function'){document.write("Stomp client failed to inject.")}else{createClient(${JSON.stringify(
-		config
-	)}, ${JSON.stringify(
-		url.codec.key
-	)});if(!${CLIENT_KEY}.applied)${CLIENT_KEY}.apply();${CLIENT_KEY}.loadHTML(${escapeText(
-		JSON.stringify(script)
-	)})}`;
+	const inject = `if (typeof globalThis.createClient !== 'function') {
+	document.write("Stomp bundle did not load. See devtools output for more information.");
+} else {
+	if (!(${JSON.stringify(CLIENT_KEY)} in globalThis))
+		createClient(${JSON.stringify(config)}, ${JSON.stringify(url.codec.key)});
+
+	if (!${CLIENT_KEY}.applied) try {
+		${CLIENT_KEY}.apply();
+	} catch(error) {
+		document.write("Failure applying Stomp hooks. See devtools output for more information.");
+		throw error;
+	}
+
+	try {
+		${CLIENT_KEY}.loadHTML(${escapeText(JSON.stringify(script))});
+	} catch(error) {
+		document.write("Failure loading Stomp HTML. See devtools output for more information.");
+		throw error;
+	}
+}`;
 
 	return `<!DOCTYPE HTML><html><head><meta charset="utf-8" /></head><body><script src="${injectDocumentJS(
 		url
-	)}"></script><script>${injectInit}</script></body></html>`;
+	)}"></script><script>${inject}</script></body></html>`;
 }
 
 const REFRESH = /(;\s*?|^)url=(?:(['"])(((?!\2).)*)\2?|(.*);?)/i;

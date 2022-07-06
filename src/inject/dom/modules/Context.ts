@@ -1,10 +1,14 @@
-import StompURL from '../../../StompURL';
+import StompURL, { isUrlLike } from '../../../StompURL';
 import { routeHTML } from '../../../rewriteHTML';
 import { CLIENT_KEY, GLOBAL_NAME } from '../../../rewriteJS';
 import Module from '../../Module';
-import ProxyModule, { catchRequiredArguments } from '../../modules/Proxy';
+import ProxyModule, {
+	applyDescriptors,
+	catchRequiredArguments,
+	usePrototype,
+} from '../../modules/Proxy';
 import { nativeFunction } from '../../nativeUtil';
-import DocumentClient from '../Client';
+import DocumentClient, { onDocumentOpen } from '../Client';
 import { urlLike } from '@tomphttp/bare-client';
 import domainNameParser from 'effective-domain-name-parser';
 
@@ -69,6 +73,30 @@ function isPostMessageArgs2(
 
 type Context = typeof globalThis;
 type RestrictedContext = typeof globalThis;
+
+const nativeMessageEvent: MessageEvent = Object.create({});
+
+applyDescriptors(nativeMessageEvent, MessageEvent.prototype);
+
+interface MessageData {
+	[GLOBAL_NAME]: 'stompMessage';
+	data: any;
+	origin: string;
+}
+
+function isMessageData(data: any): data is MessageData {
+	return (
+		typeof data === 'object' &&
+		data !== null &&
+		data[GLOBAL_NAME] === 'stompMessage'
+	);
+}
+
+interface ParsedPostMessageArgs {
+	data: any;
+	transfer: Transferable[];
+	targetOrigin: string;
+}
 
 export default class ContextModule extends Module<DocumentClient> {
 	restricted: WeakMap<Context, RestrictedContext>;
@@ -197,37 +225,32 @@ export default class ContextModule extends Module<DocumentClient> {
 			);
 		}*/
 
-		if (isPostMessageArgs2(args)) {
-			return <PostMessageArgs2>[
-				{
-					[GLOBAL_NAME]: 'stompMessage',
-					message: args[0],
-					origin: this.client.url.url.origin,
-				},
-				{
-					targetOrigin: this.client.url.url.origin,
-					transfer: args[1]?.transfer,
-				},
-			];
-		} else {
-			const result = <PostMessageArgs>[
-				{
-					[GLOBAL_NAME]: 'stompMessage',
-					message: args[0],
-					origin: this.client.url.url.origin,
-				},
-				this.client.url.url.origin,
-			];
+		const message: ParsedPostMessageArgs = isPostMessageArgs2(args)
+			? {
+					data: args[0],
+					transfer: Array.isArray(args[1]?.transfer) ? args[1]!.transfer : [],
+					targetOrigin: isUrlLike(args[1]) ? String(args[1]) : '*',
+			  }
+			: {
+					data: args[0],
+					transfer: Array.isArray(args[2]) ? args[2] : [],
+					targetOrigin: isUrlLike(args[1]) ? String(args[1]) : '*',
+			  };
 
-			if (args[2]) {
-				result.push(args[2]);
-			}
-
-			return result;
-		}
+		return <PostMessageArgs2>[
+			<MessageData>{
+				[GLOBAL_NAME]: 'stompMessage',
+				data: message.data,
+				origin: this.client.url.url.origin,
+			},
+			{
+				targetOrigin: location.origin,
+				transfer: message.transfer,
+			},
+		];
 	}
 	restrictContext(context: Context): RestrictedContext {
-		// PLS FIX API
+		const proxyModule = this.client.getModule(ProxyModule)!;
 
 		const restrictedLocation = this.restrictObject({
 			replace: {
@@ -313,11 +336,10 @@ export default class ContextModule extends Module<DocumentClient> {
 				},
 			},
 			postMessage: {
-				value: (...args: any) => {
+				value: proxyModule.wrapFunction(postMessage, (target, that, args) => {
 					catchRequiredArguments(args.length, 1, 'Window', 'postMessage');
-
-					return this.postMessage(args);
-				},
+					return Reflect.apply(target, context, this.postMessage(<any>args));
+				}),
 			},
 		});
 	}
@@ -373,5 +395,63 @@ export default class ContextModule extends Module<DocumentClient> {
 			configurable: true,
 			enumerable: true,
 		});
+
+		const messageData = new WeakMap<MessageEvent, MessageData>();
+
+		Reflect.defineProperty(MessageEvent.prototype, 'origin', {
+			configurable: true,
+			enumerable: true,
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(MessageEvent.prototype, 'origin')!
+					.get!,
+				(target, that: MessageEvent, args) => {
+					if (messageData.has(that)) {
+						return messageData.get(that)!.origin;
+					}
+
+					return Reflect.apply(target, that, args);
+				}
+			),
+		});
+
+		Reflect.defineProperty(MessageEvent.prototype, 'data', {
+			configurable: true,
+			enumerable: true,
+			get: proxyModule.wrapFunction(
+				Reflect.getOwnPropertyDescriptor(MessageEvent.prototype, 'data')!.get!,
+				(target, that: MessageEvent, args) => {
+					if (messageData.has(that)) {
+						return messageData.get(that)!.data;
+					}
+
+					return Reflect.apply(target, that, args);
+				}
+			),
+		});
+
+		onDocumentOpen.push(() => {
+			global.addEventListener('message', (event) => {
+				/*console.error(
+					this.client.url.url.toString(),
+					event.data,
+					isMessageData(event.data)
+				);*/
+				usePrototype(event, nativeMessageEvent, (event) => {
+					if (isMessageData(event.data)) {
+						messageData.set(event, event.data);
+					} else {
+						console.warn('Unknown message', event.data);
+					}
+				});
+			});
+		});
+
+		global.postMessage = proxyModule.wrapFunction(
+			global.postMessage,
+			(target, that, args) => {
+				catchRequiredArguments(args.length, 1, 'Window', 'postMessage');
+				return Reflect.apply(target, global, this.postMessage(<any>args));
+			}
+		);
 	}
 }

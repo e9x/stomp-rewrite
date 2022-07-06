@@ -22,12 +22,14 @@ export function scriptType(element: Element): ScriptType {
 }
 
 export default class DOMAttributesModule extends Module<DocumentClient> {
-	formHook?: (element: CustomElement, appendHook?: boolean) => void;
+	formHook?: (element: CustomElement) => void;
 	apply() {
 		const domHooksModule = this.client.getModule(DOMHooksModule)!;
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('href');
+
 				if (
 					element.hasAttribute('href') &&
 					element.getAttribute('href') !== ''
@@ -63,10 +65,13 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 						).toString(),
 				],
 			]
+			// URL attributes do not mixin with element attributes
 		);
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('src');
+
 				if (
 					element.hasAttribute('src') &&
 					element.getAttribute('src') !== '' &&
@@ -108,6 +113,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('integrity');
+
 				if (element.hasAttribute('integrity')) {
 					element.setAttributeOG(
 						'integrity',
@@ -140,6 +147,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('href');
+
 				if (
 					element.hasAttribute('href') &&
 					element.hasAttribute('rel') &&
@@ -220,6 +229,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('src');
+
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -269,6 +280,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('content');
+
 				if (
 					element.hasAttribute('content') &&
 					element.getAttribute('content') !== '' &&
@@ -305,6 +318,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('src');
+
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -339,6 +354,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('srcset');
+
 				if (
 					element.hasAttribute('srcset') &&
 					element.getAttribute('srcset') !== ''
@@ -388,6 +405,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('src');
+
 				if (element.hasAttribute('src') && element.getAttribute('src') !== '') {
 					element.setAttributeOG('src', element.getAttribute('src')!);
 					element.setAttribute(
@@ -435,6 +454,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('style');
+
 				if (
 					element.hasAttribute('style') &&
 					element.getAttribute('style') !== ''
@@ -457,15 +478,17 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		const validMethods = ['GET', 'POST'];
 
-		this.formHook = (element, appendHook = false) => {
-			if (appendHook) {
-				if (
-					element.hasAttribute('action') &&
-					element.getAttribute('action') !== ''
-				) {
-					element.setAttributeOG('action', element.getAttribute('action')!);
-				}
+		this.formHook = (element) => {
+			element.restoreOG('action');
+
+			// if (appendHook) {
+			if (
+				element.hasAttribute('action') &&
+				element.getAttribute('action') !== ''
+			) {
+				element.setAttributeOG('action', element.getAttribute('action')!);
 			}
+			// }
 
 			/**
 			 * Absolute URL
@@ -527,6 +550,8 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 
 		domHooksModule.useAttributes(
 			(element) => {
+				element.restoreOG('href');
+
 				if (
 					element.hasAttribute('href') &&
 					element.getAttribute('href') !== ''

@@ -6,6 +6,8 @@ import Client from '../Client';
 import cloneRawNode, { parseHTML } from './cloneNode';
 import { decode } from 'entities';
 
+export const onDocumentOpen: (() => void)[] = [];
+
 let globalParsingState: 'parsingBeforeWrite' | void = undefined;
 
 export function getGlobalParsingState(): typeof globalParsingState {
@@ -69,8 +71,6 @@ export default class DocumentClient extends Client {
 		const fragment = document.createDocumentFragment();
 		fragment.append(parsed.documentElement);
 
-		document.documentElement.remove();
-
 		const node = document.createElement('div');
 		node.append(cloneRawNode(fragment));
 
@@ -80,9 +80,7 @@ export default class DocumentClient extends Client {
 			if (script.text) {
 				script.text = `document.currentScript.textContent = ${JSON.stringify(
 					script.textContent
-				)};
-				${modifyJS(script.text, this.url, this.config, 'generic')}
-				`;
+				)};${modifyJS(script.text, this.url, this.config, 'generic')}`;
 			}
 		}
 
@@ -92,7 +90,10 @@ export default class DocumentClient extends Client {
 
 		// jump out of the DOM "write stream" so we can start loading our own HTML
 		setTimeout(() => {
+			document.open();
+			for (const callback of onDocumentOpen) callback();
 			documentWrite(newDocument);
+			document.close();
 		});
 	}
 }

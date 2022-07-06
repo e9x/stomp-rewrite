@@ -46,7 +46,7 @@ export default class LocationModule extends Module<DocumentClient> {
 
 		const proxy = {};
 
-		// all getters/setters
+		// both URL.prototype and location share these descriptors
 		for (const common of [
 			'href',
 			'origin',
@@ -70,7 +70,7 @@ export default class LocationModule extends Module<DocumentClient> {
 
 			if (!urlDescriptor || !locationDescriptor) {
 				console.error(
-					`Common property ${common} was missing on either url or location`
+					`Common property ${common} was missing on URL.prototype/location`
 				);
 				continue;
 			}

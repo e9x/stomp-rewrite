@@ -86,7 +86,7 @@ export default class XMLHttpRequestModule extends Module<DocumentClient> {
 				return this.#readyState === LOADING || this.#readyState === DONE;
 			}
 			get responseText() {
-				if (this.responseType !== '' && this.responseType !== 'text')
+				if (this.#responseType !== '' && this.#responseType !== 'text')
 					throw new DOMException(
 						`Failed to read the 'responseText' property from 'XMLHttpRequest': The value is only accessible if the object's 'responseType' is '' or 'text' (was '${
 							this.#responseType
@@ -183,13 +183,16 @@ export default class XMLHttpRequestModule extends Module<DocumentClient> {
 				this.#readyState = DONE;
 				this.#response = buffer!;
 
-				switch (this.responseType) {
+				switch (this.#responseType) {
 					case 'arraybuffer':
 						this.#response = buffer!;
 						break;
 					case 'document':
 						this.#response = null;
 						break;
+					default:
+					// console.log(this.#responseType, 'DEFAULT');
+					// fall through
 					case 'text':
 						this.#response = decoder.decode(this.#response);
 						this.#responseText = this.#response;

@@ -87,10 +87,6 @@ export default class Client {
 	}
 }
 
-declare global {
-	function createClient(config: Config, codecKey: string): void;
-}
-
 export function createClientFactory<T>(
 	Client: {
 		new (init: ParsedConfig): T;

@@ -12,3 +12,5 @@ export const navigator: Navigator = bindDescriptors(
 	global.navigator,
 	Navigator.prototype
 );
+
+export const postMessage = global.postMessage;

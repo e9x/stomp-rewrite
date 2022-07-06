@@ -1,5 +1,5 @@
 import StompURL, { isUrlLike } from '../../../StompURL';
-import { ORIGINAL_ATTRIBUTE, routeHTML } from '../../../rewriteHTML';
+import { routeHTML } from '../../../rewriteHTML';
 import Module from '../../Module';
 import ProxyModule, {
 	applyDescriptors,
@@ -14,6 +14,8 @@ import DocumentClient, {
 import cloneRawNode, { parseHTMLFragment } from '../cloneNode';
 
 const attributeTab = new WeakMap<CustomElement, Map<string, string | null>>();
+
+const ORIGINAL_ATTRIBUTE = `s_o:`;
 
 export class CustomElement extends Element {
 	get attributeTab() {
@@ -63,14 +65,16 @@ export class CustomElement extends Element {
 	/**
 	 * Wipes conflicting attributes and replaces them with original values.
 	 */
-	restoreOG() {
-		for (const name of this.getAttributeNamesOG()) {
+	restoreOG(...names: string[]) {
+		// this.getAttributeNamesOG()
+		for (const name of names) {
+			if (!this.hasAttributeOG(name)) {
+				continue;
+			}
+
 			this.setAttribute(name, this.getAttributeOG(name)!);
 			this.removeAttributeOG(name);
 		}
-	}
-	[preparePrototype]() {
-		this.restoreOG();
 	}
 	[cleanupPrototype]() {
 		this.applyAttributes();
@@ -90,6 +94,8 @@ export class CustomElement extends Element {
 		for (const name of this.getAttributeNames())
 			if (name.startsWith(ORIGINAL_ATTRIBUTE))
 				names.push(name.slice(ORIGINAL_ATTRIBUTE.length));
+
+		console.log(names, ORIGINAL_ATTRIBUTE, this.getAttributeNames());
 
 		return names;
 	}
@@ -240,7 +246,6 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 			)
 				continue;
 
-			element.restoreOG();
 			entry.callback(element);
 		}
 	}

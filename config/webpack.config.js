@@ -99,7 +99,7 @@ export default [
 			snapshot,
 			new webpack.ProvidePlugin({
 				...Object.fromEntries(
-					['DOMParser', 'navigator'].map((name) => [
+					['DOMParser', 'navigator', 'postMessage'].map((name) => [
 						name,
 						[resolve('./src/inject/dom/snapshot.ts'), name],
 					])

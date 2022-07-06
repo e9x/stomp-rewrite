@@ -55,14 +55,19 @@ export default class AccessModule extends Module<Client> {
 				return api.get(target[key], key);
 			},
 			get: (object: any, key: any): any => {
-				if (
-					typeof key === 'string' &&
-					UNDEFINABLE.includes(key) &&
-					((typeof object === 'object' && object !== null) ||
-						typeof object === 'function') &&
-					GLOBAL_PROXY in object
-				) {
-					return object[GLOBAL_PROXY];
+				try {
+					if (
+						typeof key === 'string' &&
+						UNDEFINABLE.includes(key) &&
+						((typeof object === 'object' && object !== null) ||
+							typeof object === 'function') &&
+						GLOBAL_PROXY in object
+					) {
+						return object[GLOBAL_PROXY];
+					}
+				} catch (error) {
+					// error was thrown during an accessor
+					// should not be introduced into normal execution
 				}
 
 				return object;

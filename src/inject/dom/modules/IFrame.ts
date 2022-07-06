@@ -22,8 +22,6 @@ export default class IFrameModule extends Module<DocumentClient> {
 			new context.Function(http.responseText!)();
 
 			context.createClient(this.client.config, this.client.codec.key);
-
-			((context as any)[CLIENT_KEY] as DocumentClient).apply();
 		};
 
 		const getContentWindowDescriptor = Reflect.getOwnPropertyDescriptor(
@@ -39,7 +37,13 @@ export default class IFrameModule extends Module<DocumentClient> {
 
 			if (context) {
 				injectContext(context);
-				return windowModule.newRestricted(context);
+
+				const restricted = windowModule.newRestricted(context);
+				if (!context[CLIENT_KEY]!.applied) {
+					context[CLIENT_KEY]!.apply();
+				}
+
+				return restricted;
 			}
 
 			return null;

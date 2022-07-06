@@ -1,6 +1,7 @@
 import { createClientFactory } from '../Client';
 import baseModules from '../modules';
 import DocumentClient from './Client';
+import AnchorModule from './modules/Anchor';
 import AudioModule from './modules/Audio';
 import ContextModule from './modules/Context';
 import { CookiesModule } from './modules/Cookies';
@@ -21,6 +22,7 @@ export default createClientFactory(DocumentClient, (client) => {
 	client.addModule(HistoryModule);
 	client.addModule(NavigatorModule);
 	client.addModule(LocationModule);
+	client.addModule(AnchorModule);
 	client.addModule(DOMAttributesModule);
 	client.addModule(DOMContentHooks);
 	client.addModule(DOMHooksModule);
