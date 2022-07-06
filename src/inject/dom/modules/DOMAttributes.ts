@@ -2,7 +2,6 @@ import StompURL from '../../../StompURL';
 import { modifyCSS, routeCSS } from '../../../rewriteCSS';
 import { modifyRefresh, routeHTML } from '../../../rewriteHTML';
 import { routeJS, ScriptType } from '../../../rewriteJS';
-import { routeManifest } from '../../../rewriteManifest';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
@@ -173,20 +172,7 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 							break;
 						case 'manifest':
 							element.setAttributeOG('href', element.getAttribute('href')!);
-							element.setAttribute(
-								'href',
-								routeManifest(
-									new StompURL(
-										new URL(
-											element.getAttribute('href')!,
-											this.client.url.toString()
-										),
-										this.client.url
-									),
-									this.client.url,
-									this.client.config
-								)
-							);
+							element.removeAttribute('href');
 							break;
 						default:
 							element.setAttributeOG('href', element.getAttribute('href')!);

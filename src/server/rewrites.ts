@@ -7,7 +7,6 @@ import { modifyCSS, routeCSS } from '../rewriteCSS';
 import { modifyHTML, modifyRefresh, routeHTML } from '../rewriteHTML';
 import { modifyJS, routeJS } from '../rewriteJS';
 import { ScriptType } from '../rewriteJS';
-import { modifyManifest, routeManifest } from '../rewriteManifest';
 import { parseRoutedURL, routeBinary } from '../routeURL';
 import Cookies from './Cookies';
 import Router from './Router';
@@ -260,25 +259,6 @@ export function registerRewrites(
 			rewriter,
 			async (_url, response) => response.body!,
 			(resource) => routeBinary(resource)
-		)
-	);
-
-	router.routes.set(
-		/^\/manifest\//,
-		genericForward(
-			rewriter,
-			async (url, response) =>
-				response.ok &&
-				modifyManifest(await response.text(), url, rewriter.config),
-			(resource, url) => routeManifest(resource, url, rewriter.config),
-			undefined,
-			(headers, filteredHeaders) => {
-				trimNonStandardHeaders(filteredHeaders);
-
-				for (const header of integrityHeaders) {
-					filteredHeaders.delete(header);
-				}
-			}
 		)
 	);
 }
