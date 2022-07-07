@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@javascript-obfuscator/escodegen": "^2.3.0",
-		"@tomphttp/bare-client": "file:../../tomp/bare-client",
+		"@tomphttp/bare-client": "@tomphttp/bare-client",
 		"ast-types": "^0.14.2",
 		"capture-stack-trace": "^1.0.1",
 		"crypto-js": "^4.1.1",
