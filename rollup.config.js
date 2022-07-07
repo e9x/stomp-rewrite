@@ -37,7 +37,7 @@ export default [
 			name: 'createClient',
 			exports: 'default',
 			sourcemap: true,
-			intro: 'const global = window;',
+			intro: 'const global = globalThis;',
 		},
 		plugins: [
 			typescript({
@@ -61,11 +61,11 @@ export default [
 				...additionalInject,
 				exclude: /\.json$/,
 			}),
-			babel({ babelHelpers: 'bundled', extensions: ['.ts'] }),
 			nodeResolve({ browser: true }),
 			commonjs({
 				include: /node_modules/,
 			}),
+			babel({ babelHelpers: 'bundled', extensions: ['.ts'] }),
 			terser(),
 			json(),
 			sourcemaps(),
@@ -76,18 +76,18 @@ export default [
 		output: {
 			file: `dist/serviceWorker.js`,
 			sourcemap: true,
-			intro: 'const global = window;',
+			intro: 'const global = globalThis;',
 		},
 		plugins: [
-			nodeResolve(),
-			commonjs({
-				include: /node_modules/,
-			}),
 			typescript({
 				tsconfig: './src/server/tsconfig.json',
 			}),
+			nodeResolve({ browser: true }),
+			commonjs({
+				include: /node_modules/,
+			}),
 			babel({ babelHelpers: 'bundled', extensions: ['.ts'] }),
-			// terser(),
+			terser(),
 			json(),
 			sourcemaps(),
 		],
@@ -111,7 +111,7 @@ export default [
 			name: outputName,
 			exports: 'default',
 			sourcemap: true,
-			intro: 'const global = window;',
+			intro: 'const global = globalThis;',
 		},
 		plugins: [
 			typescript({
