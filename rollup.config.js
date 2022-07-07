@@ -4,6 +4,7 @@ import inject from '@rollup/plugin-inject';
 import json from '@rollup/plugin-json';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import { resolve } from 'path';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import { terser } from 'rollup-plugin-terser';
 import typescript from 'rollup-plugin-typescript2';
 
@@ -35,6 +36,7 @@ export default [
 			format: 'umd',
 			name: 'createClient',
 			exports: 'default',
+			sourcemap: true,
 			intro: 'const global = window;',
 		},
 		plugins: [
@@ -66,12 +68,14 @@ export default [
 			}),
 			terser(),
 			json(),
+			sourcemaps(),
 		],
 	})),
 	{
 		input: './src/server/serviceWorker.ts',
 		output: {
 			file: `dist/serviceWorker.js`,
+			sourcemap: true,
 			intro: 'const global = window;',
 		},
 		plugins: [
@@ -85,6 +89,7 @@ export default [
 			babel({ babelHelpers: 'bundled', extensions: ['.ts'] }),
 			// terser(),
 			json(),
+			sourcemaps(),
 		],
 	},
 	...[
@@ -105,6 +110,7 @@ export default [
 			format: 'umd',
 			name: outputName,
 			exports: 'default',
+			sourcemap: true,
 			intro: 'const global = window;',
 		},
 		plugins: [
@@ -117,6 +123,7 @@ export default [
 			}),
 			babel({ babelHelpers: 'bundled', extensions: ['.ts'] }),
 			terser(),
+			sourcemaps(),
 		],
 	})),
 ];
