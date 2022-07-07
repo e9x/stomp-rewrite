@@ -215,6 +215,7 @@ export function registerRewrites(
 					getMime(responseHeaders.get('content-type') || '')
 				) && modifyHTML(await response.text(), url, rewriter.config),
 			(resource, url) => routeHTML(resource, url, rewriter.config),
+			undefined,
 			(headers, filteredHeaders, url) => {
 				trimNonStandardHeaders(filteredHeaders);
 

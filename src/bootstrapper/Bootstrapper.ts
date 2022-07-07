@@ -51,7 +51,7 @@ export default class Bootstrapper {
 			),
 			{
 				scope: this.directory.toString(),
-				updateViaCache: 'none',
+				updateViaCache: 'all',
 			}
 		);
 	}
