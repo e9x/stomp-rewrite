@@ -1,5 +1,4 @@
 import StompURL from '../StompURL';
-import { trimNonStandardHeaders } from '../headers';
 
 const cspHeaders: string[] = [
 	'Content-Security-Policy',
@@ -64,7 +63,7 @@ export function filterResponseHeaders(
 	transformRoute: RouteTransform,
 	additionalFilter: AdditionalFilter | void
 ): Headers {
-	const filteredHeaders = trimNonStandardHeaders(headers);
+	const filteredHeaders = new Headers(headers);
 
 	if (headers.has('location')) {
 		filteredHeaders.set(
@@ -79,12 +78,12 @@ export function filterResponseHeaders(
 		);
 	}
 
-	if (additionalFilter) {
-		additionalFilter(headers, filteredHeaders, url);
-	}
-
 	for (const header of removeHeaders) {
 		filteredHeaders.delete(header);
+	}
+
+	if (additionalFilter) {
+		additionalFilter(headers, filteredHeaders, url);
 	}
 
 	return filteredHeaders;

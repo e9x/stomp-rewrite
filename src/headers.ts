@@ -160,12 +160,12 @@ export function isStandardHeader(header: string) {
 	return lowercaseStandardHeaderNames.includes(header.toLowerCase());
 }
 
-export function trimNonStandardHeaders(headers: Readonly<Headers>): Headers {
+export function trimNonStandardHeaders(headers: Headers): Headers {
 	const result = new Headers();
 
-	for (const [header, value] of headers) {
-		if (isStandardHeader(header)) {
-			result.set(header, value);
+	for (const [header] of headers) {
+		if (!isStandardHeader(header)) {
+			result.delete(header);
 		}
 	}
 

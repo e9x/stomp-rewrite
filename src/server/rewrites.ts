@@ -170,6 +170,8 @@ export function registerRewrites(
 			(resource, url) => routeJS(resource, url, rewriter.config, type),
 			undefined,
 			(headers, filteredHeaders) => {
+				trimNonStandardHeaders(filteredHeaders);
+
 				for (const header of integrityHeaders) {
 					filteredHeaders.delete(header);
 				}
@@ -255,10 +257,6 @@ export function registerRewrites(
 	// todo: parse more request headers
 	router.routes.set(
 		/^\/xhr\//,
-		genericForward(
-			rewriter,
-			async (_url, response) => response.body!,
-			(resource) => routeBinary(resource)
-		)
+		genericForward(rewriter, undefined, (resource) => routeBinary(resource))
 	);
 }
