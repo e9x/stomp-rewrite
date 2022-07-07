@@ -1,4 +1,4 @@
-import StompURL, { isUrlLike } from '../../../StompURL';
+import StompURL from '../../../StompURL';
 import { routeHTML } from '../../../rewriteHTML';
 import Module from '../../Module';
 import ProxyModule, {
@@ -279,16 +279,15 @@ export default class DOMHooksModule extends Module<DocumentClient> {
 		window.open = proxyModule.wrapFunction(
 			window.open,
 			(target, that, args) => {
-				if (isUrlLike(args[0])) {
+				if (args[0] !== undefined)
 					args[0] = routeHTML(
 						new StompURL(
-							new URL(args[0], this.client.url.toString()),
+							new URL(String(args[0]), this.client.url.toString()),
 							this.client.url
 						),
 						this.client.url,
 						this.client.config
 					);
-				}
 
 				return Reflect.apply(target, that, args);
 			}

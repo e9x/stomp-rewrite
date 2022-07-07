@@ -1,4 +1,4 @@
-import StompURL, { isUrlLike } from '../../../StompURL';
+import StompURL from '../../../StompURL';
 import { routeBinary } from '../../../routeURL';
 import Module from '../../Module';
 import ProxyModule from '../../modules/Proxy';
@@ -11,14 +11,13 @@ export default class ImageModule extends Module<DocumentClient> {
 		global.Image = proxyModule.wrapFunction(
 			global.Image,
 			(target, that, args, newTarget) => {
-				if (isUrlLike(args[0])) {
+				if (args[0] !== undefined)
 					args[0] = routeBinary(
 						new StompURL(
-							new URL(args[0], this.client.url.toString()),
+							new URL(String(args[0]), this.client.url.toString()),
 							this.client.url
 						)
 					);
-				}
 
 				return Reflect.construct(target, args, newTarget);
 			},

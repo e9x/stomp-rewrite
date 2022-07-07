@@ -1,4 +1,4 @@
-import StompURL, { isUrlLike } from '../../../StompURL';
+import StompURL from '../../../StompURL';
 import { routeHTML } from '../../../rewriteHTML';
 import Module from '../../Module';
 import ProxyModule from '../../modules/Proxy';
@@ -14,7 +14,7 @@ export default class HistoryModule extends Module<DocumentClient> {
 			that: History,
 			args: any[]
 		) {
-			if (isUrlLike(args[2])) {
+			if (args[2] !== undefined)
 				args[2] = routeHTML(
 					new StompURL(
 						new URL(args[2], this.client.url.toString()),
@@ -23,7 +23,6 @@ export default class HistoryModule extends Module<DocumentClient> {
 					this.client.url,
 					this.client.config
 				);
-			}
 
 			return Reflect.apply(target, that, args);
 		}

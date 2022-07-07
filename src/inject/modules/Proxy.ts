@@ -132,12 +132,16 @@ export function catchRequiredArguments(
 	api: string
 ) {
 	if (args < requiredArguments) {
+		const message = `${
+			requiredArguments === 1
+				? '1 argument required'
+				: `${requiredArguments} required`
+		}, but only ${args} present.`;
+
 		throw new TypeError(
-			`Failed to execute '${api}' on '${on}: ${
-				requiredArguments === 1
-					? '1 argument required'
-					: `${requiredArguments} required`
-			}, but only ${args} present.`
+			on === 'constructor'
+				? `Failed to construct ${api}: ${message}`
+				: `Failed to execute '${api}' on '${on}: ${message}`
 		);
 	}
 }

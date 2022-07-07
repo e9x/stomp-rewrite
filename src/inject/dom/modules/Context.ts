@@ -1,4 +1,4 @@
-import StompURL, { isUrlLike } from '../../../StompURL';
+import StompURL from '../../../StompURL';
 import { routeHTML } from '../../../rewriteHTML';
 import { CLIENT_KEY, GLOBAL_NAME } from '../../../rewriteJS';
 import Module from '../../Module';
@@ -229,12 +229,12 @@ export default class ContextModule extends Module<DocumentClient> {
 			? {
 					data: args[0],
 					transfer: Array.isArray(args[1]?.transfer) ? args[1]!.transfer : [],
-					targetOrigin: isUrlLike(args[1]) ? String(args[1]) : '*',
+					targetOrigin: args[1] ? String(args[1]) : '*',
 			  }
 			: {
 					data: args[0],
 					transfer: Array.isArray(args[2]) ? args[2] : [],
-					targetOrigin: isUrlLike(args[1]) ? String(args[1]) : '*',
+					targetOrigin: args[1] ? String(args[1]) : '*',
 			  };
 
 		return <PostMessageArgs2>[
