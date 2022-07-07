@@ -241,7 +241,8 @@ export default class XMLHttpRequestModule extends Module<DocumentClient> {
 					}
 				}
 			}
-			overrideMimeType(_mime: string) {}
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
+			overrideMimeType(mime: string) {}
 			abort() {
 				if (!this.#async) {
 					return;

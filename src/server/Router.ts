@@ -120,7 +120,7 @@ console.error(error);
 	}
 }
 
-export function jsonAPI(callback: (...args: any[]) => unknown) {
+export function jsonAPI(callback: (...args: any[]) => any) {
 	return async (request: Request): Promise<Response> => {
 		try {
 			const result = await callback(...(await request.json()));

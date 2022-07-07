@@ -163,12 +163,12 @@ export function modifyJS(
 												b.identifier(ACCESS_KEY),
 												b.identifier('evalScope')
 											),
-											ctx.node.arguments.map((arg: any) => result(arg))
+											ctx.node.arguments.map((arg: unknown) => result(arg))
 										),
 									]),
 									b.callExpression(
 										b.identifier('eval'),
-										ctx.node.arguments.map((arg: any) => result(arg))
+										ctx.node.arguments.map((arg: unknown) => result(arg))
 									)
 								)
 							);

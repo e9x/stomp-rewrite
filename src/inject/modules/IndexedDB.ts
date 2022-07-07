@@ -1,4 +1,3 @@
-import { modifyJS } from '../../rewriteJS';
 import Client from '../Client';
 import Module from '../Module';
 import ProxyModule from './Proxy';

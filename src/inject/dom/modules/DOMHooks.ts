@@ -4,7 +4,6 @@ import Module from '../../Module';
 import ProxyModule, {
 	applyDescriptors,
 	cleanupPrototype,
-	preparePrototype,
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient, {
