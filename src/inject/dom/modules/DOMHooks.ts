@@ -64,7 +64,7 @@ export class CustomElement extends Element {
 	/**
 	 * Wipes conflicting attributes and replaces them with original values.
 	 */
-	restoreOG(...names: string[]) {
+	restoreAttributesOG(...names: string[]) {
 		// this.getAttributeNamesOG()
 		for (const name of names) {
 			if (!this.hasAttributeOG(name)) {

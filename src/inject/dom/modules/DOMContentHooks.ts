@@ -22,12 +22,33 @@ export const nativeHTMLFormElement: HTMLFormElement =
 export const nativeHTMLScriptElement: HTMLScriptElement =
 	Object.create(nativeHTMLElement);
 export const nativeCharacterData: CharacterData = Object.create(nativeNode);
+export const nativeDocumentFragment: DocumentFragment =
+	Object.create(nativeNode);
 
 applyDescriptors(nativeCharacterData, Text.prototype);
+applyDescriptors(nativeDocumentFragment, DocumentFragment.prototype);
 applyDescriptors(nativeHTMLElement, HTMLElement.prototype);
 applyDescriptors(nativeHTMLStyleElement, HTMLStyleElement.prototype);
 applyDescriptors(nativeHTMLScriptElement, HTMLScriptElement.prototype);
 applyDescriptors(nativeHTMLFormElement, HTMLFormElement.prototype);
+
+function getSupportedQueryInterface(
+	node: Node
+): DocumentFragment | Element | undefined {
+	if (node.nodeName === '#document-fragment') {
+		return nativeDocumentFragment;
+	}
+
+	try {
+		usePrototype(node, nativeElement, (element) => {
+			element.querySelector('');
+		});
+
+		return nativeElement;
+	} catch (error) {
+		// unable to interface
+	}
+}
 
 export default class DOMContentHooks extends Module<DocumentClient> {
 	apply() {
@@ -247,27 +268,24 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			that: Node | null,
 			insertElement: () => T
 		): T => {
-			try {
-				// we're about to render
-				// usePrototype(inserted, nativeHTMLElement, (element: HTMLElement) => {
-				if (insert.nodeName === 'SCRIPT') {
+			// we're about to render
+			usePrototype(insert, nativeNode, (node) => {
+				if (node.nodeName === 'SCRIPT') {
 					usePrototype(insert, nativeHTMLScriptElement, (script) =>
 						rewriteScript(script)
 					);
-				} else
-					for (const script of (insert as Element).querySelectorAll('script'))
-						usePrototype(script, nativeHTMLScriptElement, (script) =>
-							rewriteScript(script)
-						);
-				// });
-			} catch (error) {
-				if (
-					!(error instanceof Error) ||
-					!error.message.includes('.querySelectorAll')
-				) {
-					console.error(error, insert);
+				} else {
+					const queryInterface = getSupportedQueryInterface(node);
+
+					if (queryInterface)
+						usePrototype(node, queryInterface, (queryable) => {
+							for (const script of queryable.querySelectorAll('script'))
+								usePrototype(script, nativeHTMLScriptElement, (script) =>
+									rewriteScript(script)
+								);
+						});
 				}
-			}
+			});
 
 			const styles: HTMLStyleElement[] = [];
 
