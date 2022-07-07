@@ -51,9 +51,7 @@ export default class AnchorModule extends Module<DocumentClient> {
 					? proxyModule?.wrapFunction(
 							anchorDescriptor.get,
 							(target, that, args) => {
-								if (common === 'hash') {
-									return Reflect.apply(target, location, args);
-								}
+								if (common === 'hash') return Reflect.apply(target, that, args);
 
 								const temp = new URL(this.client.location.toString());
 
@@ -65,9 +63,7 @@ export default class AnchorModule extends Module<DocumentClient> {
 					? proxyModule?.wrapFunction(
 							anchorDescriptor.set,
 							(target, that, args) => {
-								if (common === 'hash') {
-									return Reflect.apply(target, location, args);
-								}
+								if (common === 'hash') return Reflect.apply(target, that, args);
 
 								const temp = new URL(this.client.location.toString());
 

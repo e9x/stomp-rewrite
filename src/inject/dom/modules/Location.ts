@@ -81,9 +81,8 @@ export default class LocationModule extends Module<DocumentClient> {
 					? proxyModule?.wrapFunction(
 							locationDescriptor.get,
 							(target, that, args) => {
-								if (common === 'hash') {
+								if (common === 'hash')
 									return Reflect.apply(target, location, args);
-								}
 
 								const temp = new URL(this.client.location.toString());
 
@@ -95,9 +94,8 @@ export default class LocationModule extends Module<DocumentClient> {
 					? proxyModule?.wrapFunction(
 							locationDescriptor.set,
 							(target, that, args) => {
-								if (common === 'hash') {
+								if (common === 'hash')
 									return Reflect.apply(target, location, args);
-								}
 
 								const temp = new URL(this.client.location.toString());
 
