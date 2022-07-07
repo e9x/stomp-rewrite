@@ -137,6 +137,27 @@ export default class LocationModule extends Module<DocumentClient> {
 			configurable: false,
 		});
 
+		Reflect.defineProperty(proxy, 'replace', {
+			value: proxyModule.wrapFunction(
+				location.replace,
+				(target, that, [url]) => {
+					return Reflect.apply(target, location, [
+						routeHTML(
+							new StompURL(
+								new URL(url, this.client.url.toString()),
+								this.client.url
+							),
+							this.client.url,
+							this.client.config
+						),
+					]);
+				}
+			),
+			writable: false,
+			enumerable: true,
+			configurable: false,
+		});
+
 		Reflect.defineProperty(proxy, 'toString', {
 			value: proxyModule.wrapFunction(location.assign, (target, that) => {
 				invokeGlobal(that, proxy);
