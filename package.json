@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@javascript-obfuscator/escodegen": "^2.3.0",
-		"@tomphttp/bare-client": "^1.0.2-beta-readme5",
+		"@tomphttp/bare-client": "^1.0.2-beta-rollup6",
 		"ast-types": "^0.14.2",
 		"capture-stack-trace": "^1.0.1",
 		"crypto-js": "^4.1.1",
@@ -48,6 +48,7 @@
 		"husky": "^8.0.1",
 		"prettier": "^2.6.2",
 		"resolve-typescript-plugin": "^1.2.0",
+		"source-map-loader": "^4.0.0",
 		"ts-loader": "^9.3.1",
 		"webpack-cli": "^4.10.0"
 	}

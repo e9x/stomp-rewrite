@@ -45,8 +45,14 @@ const common = (config) => ({
 				},
 				exclude: /node_modules/,
 			},
+			{
+				test: /\.js$/,
+				enforce: 'pre',
+				use: 'source-map-loader',
+			},
 		],
 	},
+	ignoreWarnings: [/Failed to parse source map/],
 	resolve: {
 		extensions: ['.ts', '.js'],
 		plugins: [new ResolveTypescriptPlugin()],
