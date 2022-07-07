@@ -76,7 +76,7 @@ export function registerXhr(router: Router) {
 		let mainCookieValue =
 			(long.length < split - 2
 				? '0'
-				: Math.ceil(long.length / split).toString()) + ',';
+				: (Math.ceil(long.length / split) - 1).toString()) + ',';
 
 		if (mainCookieValue.length < split) {
 			const end = long.slice(0, split - mainCookieValue.length);
