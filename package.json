@@ -15,9 +15,7 @@
 	},
 	"dependencies": {
 		"@javascript-obfuscator/escodegen": "^2.3.0",
-		"@rollup/plugin-typescript": "^8.3.3",
 		"@tomphttp/bare-client": "file:../../tomp/bare-client",
-		"@types/set-cookie-parser": "^2.4.2",
 		"ast-types": "^0.14.2",
 		"capture-stack-trace": "^1.0.1",
 		"crypto-js": "^4.1.1",
@@ -46,6 +44,7 @@
 		"@types/escodegen": "^0.0.7",
 		"@types/http-errors": "^1.8.2",
 		"@types/serviceworker": "^0.0.47",
+		"@types/set-cookie-parser": "^2.4.2",
 		"@typescript-eslint/eslint-plugin": "^5.27.1",
 		"@typescript-eslint/parser": "^5.27.1",
 		"eslint": "^8.17.0",
