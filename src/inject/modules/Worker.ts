@@ -11,6 +11,12 @@ export default class WorkerModule extends Module<Client> {
 		global.Worker = proxyModule.wrapFunction(
 			global.Worker,
 			(target, that, args, newTarget) => {
+				if (!newTarget) {
+					throw new TypeError(
+						`Failed to construct 'Worker': Please use the 'new' operator, this DOM object constructor cannot be called as a function.`
+					);
+				}
+
 				catchRequiredArguments(args.length, 1, 'Worker', 'constructor');
 
 				const isModule =

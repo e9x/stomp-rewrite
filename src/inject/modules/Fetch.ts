@@ -7,7 +7,7 @@ import {
 } from '../../routeURL';
 import Client from '../Client';
 import Module from '../Module';
-import ProxyModule from './Proxy';
+import ProxyModule, { catchRequiredArguments } from './Proxy';
 
 export default class FetchModule extends Module<Client> {
 	apply() {
@@ -19,6 +19,8 @@ export default class FetchModule extends Module<Client> {
 		global.EventSource = proxyModule.wrapFunction(
 			global.EventSource,
 			(target, that, args) => {
+				catchRequiredArguments(args.length, 1, 'EventSource', 'constructor');
+
 				const url = new URL(args[0], this.client.url.toString());
 
 				const result = Reflect.construct(

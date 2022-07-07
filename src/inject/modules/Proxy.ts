@@ -103,21 +103,36 @@ export function onEventTarget(target: any, event: string) {
 	});
 }
 
-export function domObjectConstructor(original: Function) {
+export function newConstructor<T extends Function>(target: T) {
 	function result(...args: any[]) {
 		if (new.target) {
-			return Reflect.construct(original, args, new.target);
+			return Reflect.construct(target, args, new.target);
+		} else {
+			throw new TypeError(`Illegal constructor`);
+		}
+	}
+
+	result.prototype = target.prototype;
+	result.prototype.constructor = result;
+
+	return <T>(<unknown>result);
+}
+
+export function domObjectConstructor<T extends Function>(target: T): T {
+	function result(...args: any[]) {
+		if (new.target) {
+			return Reflect.construct(target, args, new.target);
 		} else {
 			throw new TypeError(
-				`Failed to construct '${original.name}': Please use the 'new' operator, this DOM object constructor cannot be called as a function.`
+				`Failed to construct '${target.name}': Please use the 'new' operator, this DOM object constructor cannot be called as a function.`
 			);
 		}
 	}
 
-	result.prototype = original.prototype;
+	result.prototype = target.prototype;
 	result.prototype.constructor = result;
 
-	return result;
+	return <T>(<unknown>result);
 }
 
 /**

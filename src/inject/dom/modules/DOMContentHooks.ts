@@ -41,7 +41,7 @@ function getSupportedQueryInterface(
 
 	try {
 		usePrototype(node, nativeElement, (element) => {
-			element.querySelector('');
+			element.querySelector('*');
 		});
 
 		return nativeElement;
@@ -268,6 +268,10 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 			that: Node | null,
 			insertElement: () => T
 		): T => {
+			// if insert is a DocumentFragment, its childNodes will be cleared upon insertion
+			// we need to snapshot the childNodes or run a query before its childNodes are cleared
+			const styles: HTMLStyleElement[] = [];
+
 			// we're about to render
 			usePrototype(insert, nativeNode, (node) => {
 				if (node.nodeName === 'SCRIPT') {
@@ -279,6 +283,12 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 
 					if (queryInterface)
 						usePrototype(node, queryInterface, (queryable) => {
+							for (const style of (insert as Element).querySelectorAll(
+								'style'
+							)) {
+								styles.push(style);
+							}
+
 							for (const script of queryable.querySelectorAll('script'))
 								usePrototype(script, nativeHTMLScriptElement, (script) =>
 									rewriteScript(script)
@@ -286,23 +296,6 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 						});
 				}
 			});
-
-			const styles: HTMLStyleElement[] = [];
-
-			// if insert is a DocumentFragment, its childNodes will be cleared upon insertion
-			// we need to snapshot the childNodes or run a query before its childNodes are cleared
-			try {
-				for (const style of (insert as Element).querySelectorAll('style')) {
-					styles.push(style);
-				}
-			} catch (error) {
-				if (
-					!(error instanceof Error) ||
-					!error.message.includes('.querySelectorAll')
-				) {
-					console.error(error, insert);
-				}
-			}
 
 			const result = insertElement();
 

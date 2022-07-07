@@ -11,6 +11,12 @@ export default class AudioModule extends Module<DocumentClient> {
 		global.Audio = proxyModule.wrapFunction(
 			global.Audio,
 			(target, that, args, newTarget) => {
+				if (!newTarget) {
+					throw new TypeError(
+						`Failed to construct 'Worker': Please use the 'Image' operator, this DOM object constructor cannot be called as a function.`
+					);
+				}
+
 				if (args[0] !== undefined)
 					args[0] = routeBinary(
 						new StompURL(

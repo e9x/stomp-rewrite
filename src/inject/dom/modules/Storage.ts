@@ -2,6 +2,7 @@ import Module from '../../Module';
 import ProxyModule, {
 	catchRequiredArguments,
 	contextThis,
+	newConstructor,
 	usePrototype,
 } from '../../modules/Proxy';
 import DocumentClient from '../Client';
@@ -92,10 +93,12 @@ export default class StorageModule extends Module<DocumentClient> {
 			}
 		}
 
+		const globalStorageProxy = newConstructor(StorageProxy);
+
 		const natives = new WeakMap<object, StorageProxy>();
 
-		proxyModule.bindNatives(StorageProxy.prototype, natives);
-		proxyModule.mirrorClass(Storage, StorageProxy, instances);
+		proxyModule.bindNatives(globalStorageProxy.prototype, natives);
+		proxyModule.mirrorClass(Storage, globalStorageProxy, instances);
 
 		function isStorageKey(
 			target: StorageProxy,
@@ -211,7 +214,7 @@ export default class StorageModule extends Module<DocumentClient> {
 		building = false;
 
 		// constructor becomes equivalent to constructor() when building = false
-		global.Storage = <{ new (): StorageProxy }>StorageProxy;
+		global.Storage = <{ new (): StorageProxy }>globalStorageProxy;
 
 		Reflect.defineProperty(global, 'localStorage', {
 			get: proxyModule.wrapFunction(
