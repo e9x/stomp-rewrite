@@ -128,10 +128,10 @@ export default class DOMContentHooks extends Module<DocumentClient> {
 				style.sheet!.deleteRule(rules.length - i - 1);
 			}
 
-			for (const rule of rules) {
+			for (let i = 0; i < rules.length; i++) {
 				const added = style.sheet!.insertRule(
-					modifyCSS(rule.cssText, this.client.url),
-					0
+					modifyCSS(rules[i].cssText, this.client.url),
+					i
 				);
 				(style.sheet!.cssRules[added] as any)[rewrittenRule] = true;
 			}

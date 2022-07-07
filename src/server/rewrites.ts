@@ -92,18 +92,23 @@ function genericForward(
 			}
 		}
 
-		return new Response(
-			statusEmpty.includes(+response.status)
-				? undefined
-				: (transformBody &&
-						(await transformBody(url, response, responseHeaders))) ||
-				  response.body,
-			{
-				status: response.status,
-				statusText: response.statusText,
-				headers: responseHeaders,
-			}
-		);
+		let body: BodyInit | undefined;
+
+		if (statusEmpty.includes(+response.status)) {
+			body = undefined;
+		} else {
+			const transformed = transformBody
+				? await transformBody(url, response, responseHeaders)
+				: false;
+
+			body = transformed !== false ? transformed : response.body!;
+		}
+
+		return new Response(body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: responseHeaders,
+		});
 	};
 }
 
