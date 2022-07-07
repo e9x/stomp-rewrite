@@ -88,7 +88,9 @@ export default class FunctionModule extends Module<Client> {
 						args.push(code);
 					}
 
-					return Reflect.construct(target, args, newTarget);
+					return newTarget
+						? Reflect.construct(target, args, newTarget)
+						: Reflect.apply(target, that, args);
 				},
 				true
 			);

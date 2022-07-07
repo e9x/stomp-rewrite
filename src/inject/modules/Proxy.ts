@@ -297,16 +297,10 @@ export default class ProxyModule extends Module<Client> {
 				? function attach(this: any, ...args: any[]) {
 						let newTarget: Function = new.target;
 
-						if (construct) {
-							if (new.target === undefined) {
-								// should throw an error if fn was a class
-								throw new Error('Placeholder');
-								// fn();
-							} else if (new.target === wrapped) {
-								newTarget = fn;
-								Reflect.setPrototypeOf(this, fn.prototype);
-								this.constructor = fn;
-							}
+						if (construct && new.target === wrapped) {
+							newTarget = fn;
+							Reflect.setPrototypeOf(this, fn.prototype);
+							this.constructor = fn;
 						}
 
 						// @ts-ignore

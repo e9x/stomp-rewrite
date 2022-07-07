@@ -124,7 +124,7 @@ export function modifyJS(
 									),
 									url,
 									config,
-									'generic'
+									'genericModule'
 								)
 							)
 						)
