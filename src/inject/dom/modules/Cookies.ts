@@ -9,14 +9,6 @@ const cookieDescriptor = Reflect.getOwnPropertyDescriptor(
 	'cookie'
 )!;
 
-export function getCookie(): string {
-	return cookieDescriptor.get!.call(document);
-}
-
-export function setCookie(value: string) {
-	cookieDescriptor.set!.call(document, value);
-}
-
 export class CookiesModule extends Module<DocumentClient> {
 	apply() {
 		const proxyModule = this.client.getModule(ProxyModule)!;

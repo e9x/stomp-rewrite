@@ -21,6 +21,12 @@ export const Reflect: typeof globalThis.Reflect = {
 
 export const fetch = global.fetch;
 
+export const URL = global.URL;
+
+export const Request = global.Request;
+
+export const Response = global.Response;
+
 export const XMLHttpRequest = global.XMLHttpRequest;
 
 export const XMLHttpRequestEventTarget = global.XMLHttpRequestEventTarget;

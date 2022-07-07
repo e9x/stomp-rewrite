@@ -3,7 +3,6 @@ import { decodeCookie } from '../../../encodeCookie';
 import { geckoXHR, queueXHR } from '../../../routeURL';
 import Module from '../../Module';
 import DocumentClient from '../Client';
-import { getCookie, setCookie } from './Cookies';
 
 const statusEmpty: number[] = [101, 204, 205, 304];
 
@@ -49,6 +48,19 @@ function createResponse(init: SyncResponseInit): SyncResponse {
 	response.rawArrayBuffer = rawArrayBuffer;
 
 	return <SyncResponse>response;
+}
+
+const cookieDescriptor = Reflect.getOwnPropertyDescriptor(
+	Document.prototype,
+	'cookie'
+)!;
+
+function getCookie(): string {
+	return cookieDescriptor.get!.call(document);
+}
+
+function setCookie(value: string) {
+	cookieDescriptor.set!.call(document, value);
 }
 
 export default class SyncModule extends Module<DocumentClient> {
