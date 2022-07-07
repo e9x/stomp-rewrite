@@ -53,7 +53,9 @@ export default class XMLHttpRequestModule extends Module<DocumentClient> {
 			constructor() {
 				super(real);
 			}
-			#headers = new Headers();
+			#headers = new Headers({
+				'sec-fetch-dest': 'empty',
+			});
 			#responseHeaders = new Headers();
 			#method = '';
 			#url = '';
