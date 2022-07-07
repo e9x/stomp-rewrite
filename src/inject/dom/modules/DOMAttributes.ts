@@ -490,10 +490,6 @@ export default class DOMAttributesModule extends Module<DocumentClient> {
 				element.hasAttribute('action') &&
 				element.getAttribute('action') !== ''
 			) {
-				console.trace(
-					'found "reel" attribute',
-					element.getAttribute('action')!
-				);
 				element.setAttributeOG('action', element.getAttribute('action')!);
 			} else {
 				element.setAttributeOG('action', '');
