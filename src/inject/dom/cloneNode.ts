@@ -26,16 +26,19 @@ type stackFinalizeData = [parent: ParentNode, node: Node];
 /**
  * Clones or re-creates the node using the hooked DOM apis
  * @param node Node to clone
- * @param target Destination for the cloned node
  */
-export default function cloneRawNode(fragment: ParentNode): DocumentFragment {
-	const tempTarget = document.createDocumentFragment();
+export default function cloneRawNode(
+	fragment: ParentNode | ParentNode[]
+): DocumentFragment {
+	const tempTarget = new DocumentFragment();
 
 	const stack: [symbol, ...(stackIterateData | stackFinalizeData)][] = [];
 
-	const max = fragment.childNodes.length;
+	const childNodes = Array.isArray(fragment) ? fragment : fragment.childNodes;
+	const max = childNodes.length;
+
 	for (let i = 0; i < max; i++) {
-		const child = fragment.childNodes[max - i - 1];
+		const child = childNodes[max - i - 1];
 		stack.push([STACK_ITERATE, child, tempTarget]);
 	}
 
@@ -56,6 +59,10 @@ export default function cloneRawNode(fragment: ParentNode): DocumentFragment {
 						continue;
 					} else if (d[0] instanceof Comment) {
 						d[1].append(new Comment(d[0].nodeValue!));
+						continue;
+					} else if (!(d[0] instanceof Element)) {
+						// may be a document-fragment or CharacterData
+						console.error('skip', d[0]);
 						continue;
 					}
 

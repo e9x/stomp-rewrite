@@ -68,11 +68,13 @@ export default class DocumentClient extends Client {
 		setGlobalParsingState('parsingBeforeWrite');
 
 		const parsed = parseHTML(decode(script));
-		const fragment = document.createDocumentFragment();
-		fragment.append(parsed.documentElement);
+
+		// workaround:
+		// we cannot append any descendants of parsed into any element (whether it is attached or detached) because it will pre-fetch the images in parsed
+		// pass the entirety of parsed into cloneRawNode
 
 		const node = document.createElement('div');
-		node.append(cloneRawNode(fragment));
+		node.append(cloneRawNode([parsed.documentElement]));
 
 		setGlobalParsingState();
 
