@@ -126,6 +126,7 @@ export const standardHeaderNames: string[] = [
 	'CDN-Loop',
 	'Warning',
 	'WWW-Authenticate',
+	'X-Frame-Options',
 ];
 
 export const lowercaseStandardHeaderNames = standardHeaderNames.map((header) =>
@@ -160,7 +161,7 @@ export function isStandardHeader(header: string) {
 }
 
 export function trimNonStandardHeaders(headers: Readonly<Headers>): Headers {
-	const result = new Headers(headers);
+	const result = new Headers();
 
 	for (const [header, value] of headers) {
 		if (isStandardHeader(header)) {

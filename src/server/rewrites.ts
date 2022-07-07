@@ -216,7 +216,7 @@ export function registerRewrites(
 			(headers, filteredHeaders, url) => {
 				trimNonStandardHeaders(filteredHeaders);
 
-				if (filteredHeaders.has('x-frame-options')) {
+				if (headers.has('x-frame-options')) {
 					filteredHeaders.delete('x-frame-options');
 				}
 
